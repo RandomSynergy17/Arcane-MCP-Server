@@ -2,7 +2,6 @@
  * HTTP client for Arcane API
  */
 
-import https from "https";
 import { getConfig, type ArcaneConfig } from "../config.js";
 import { getAuthManager } from "../auth/auth-manager.js";
 import { ArcaneApiError, NetworkError, parseApiError } from "../utils/error-handler.js";
@@ -53,6 +52,13 @@ export class ArcaneClient {
 
   constructor() {
     this.config = getConfig();
+
+    // Node.js native fetch (undici) ignores the https.Agent property.
+    // Set the env var to disable TLS verification when explicitly configured.
+    if (this.config.skipSslVerify) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+      logger.warn("SSL verification disabled via ARCANE_SKIP_SSL_VERIFY — not for production use");
+    }
   }
 
   /**
@@ -95,17 +101,11 @@ export class ArcaneClient {
       ...headers,
     };
 
-    // Create fetch options with SSL bypass if configured
-    const fetchOptions: RequestInit & { agent?: https.Agent } = {
+    const fetchOptions: RequestInit = {
       method,
       headers: requestHeaders,
       body: body ? JSON.stringify(body) : undefined,
     };
-
-    // Add custom HTTPS agent for SSL verification bypass
-    if (this.config.skipSslVerify && url.startsWith("https://")) {
-      fetchOptions.agent = new https.Agent({ rejectUnauthorized: false });
-    }
 
     let lastError: unknown;
 
