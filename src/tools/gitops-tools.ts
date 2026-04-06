@@ -6,6 +6,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { validatePath } from "../utils/format.js";
 import { logger } from "../utils/logger.js";
 
 interface GitOpsSync {
@@ -428,6 +429,8 @@ export function registerGitopsTools(server: McpServer): void {
     },
     },
     toolHandler(async ({ repositoryId, branch, path }, client) => {
+      if (path) validatePath(path);
+
       const response = await client.get<{
         data: Array<{ name: string; type: string; path: string }>;
       }>(`/customize/git-repositories/${repositoryId}/files`, { branch, path });

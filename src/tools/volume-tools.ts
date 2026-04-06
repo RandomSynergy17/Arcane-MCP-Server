@@ -6,7 +6,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { formatSize, formatSizeCompact, formatSizeMB } from "../utils/format.js";
+import { formatSize, formatSizeCompact, formatSizeMB, validatePath } from "../utils/format.js";
 import { logger } from "../utils/logger.js";
 
 interface Volume {
@@ -266,6 +266,8 @@ export function registerVolumeTools(server: McpServer): void {
     },
     },
     toolHandler(async ({ environmentId, volumeName, path }, client) => {
+      if (path) validatePath(path);
+
       const response = await client.get<{ data: FileEntry[] }>(
         `/environments/${environmentId}/volumes/${volumeName}/browse`,
         { path }
@@ -305,6 +307,8 @@ export function registerVolumeTools(server: McpServer): void {
     },
     },
     toolHandler(async ({ environmentId, volumeName, path }, client) => {
+      validatePath(path);
+
       const response = await client.get<{ data: { content: string } }>(
         `/environments/${environmentId}/volumes/${volumeName}/browse/content`,
         { path }
@@ -333,6 +337,8 @@ export function registerVolumeTools(server: McpServer): void {
     },
     },
     toolHandler(async ({ environmentId, volumeName, path }, client) => {
+      validatePath(path);
+
       await client.post(`/environments/${environmentId}/volumes/${volumeName}/browse/mkdir`, { path });
       return `Directory created: ${path}`;
     })
@@ -473,6 +479,8 @@ export function registerVolumeTools(server: McpServer): void {
     },
     },
     toolHandler(async ({ environmentId, volumeName, backupId, path }, client) => {
+      if (path) validatePath(path);
+
       const response = await client.get<{ data: FileEntry[] }>(
         `/environments/${environmentId}/volumes/${volumeName}/backups/${backupId}/files`,
         { path }

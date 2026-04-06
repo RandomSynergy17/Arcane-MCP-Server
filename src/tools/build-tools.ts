@@ -5,6 +5,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { validatePath } from "../utils/format.js";
 import { logger } from "../utils/logger.js";
 
 interface Build {
@@ -196,6 +197,8 @@ export function registerBuildTools(server: McpServer): void {
       },
     },
     toolHandler(async ({ environmentId, path }, client) => {
+      if (path) validatePath(path);
+
       const response = await client.get<{ data: WorkspaceFile[] }>(
         `/environments/${environmentId}/builds/browse`,
         { path }
@@ -234,6 +237,8 @@ export function registerBuildTools(server: McpServer): void {
       },
     },
     toolHandler(async ({ environmentId, path }, client) => {
+      validatePath(path);
+
       const response = await client.get<{ data: { content: string; path: string } }>(
         `/environments/${environmentId}/builds/browse/content`,
         { path }
@@ -262,6 +267,8 @@ export function registerBuildTools(server: McpServer): void {
       },
     },
     toolHandler(async ({ environmentId, path, content }, client) => {
+      validatePath(path);
+
       await client.post(
         `/environments/${environmentId}/builds/browse/upload`,
         { path, content }
