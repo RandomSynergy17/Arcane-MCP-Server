@@ -27,6 +27,8 @@ import { registerSwarmTools } from "./swarm-tools.js";
 import { registerWebhookTools } from "./webhook-tools.js";
 import { registerVulnerabilityTools } from "./vulnerability-tools.js";
 import { registerImageUpdateTools } from "./image-update-tools.js";
+import { registerBuildTools } from "./build-tools.js";
+import { registerNetworkTopologyTools } from "./network-topology-tools.js";
 import { registerDashboardTools } from "./dashboard-tools.js";
 import { registerPortTools } from "./port-tools.js";
 import { registerUpdaterTools } from "./updater-tools.js";
@@ -96,6 +98,12 @@ export function registerAllTools(server: McpServer): void {
 
   // Image Update Checking
   registerImageUpdateTools(server);
+
+  // Image Builds
+  registerBuildTools(server);
+
+  // Network Topology
+  registerNetworkTopologyTools(server);
 
   // Dashboard
   registerDashboardTools(server);
