@@ -16,13 +16,13 @@
 
 ---
 
-A comprehensive [Model Context Protocol](https://modelcontextprotocol.io) server that exposes the [Arcane](https://github.com/getarcaneapp/arcane) Docker Management API to AI assistants like Claude. **165+ tools** covering containers, images, volumes, networks, Docker Compose stacks, Swarm clusters, vulnerability scanning, GitOps, and more.
+A comprehensive [Model Context Protocol](https://modelcontextprotocol.io) server that exposes the [Arcane](https://github.com/getarcaneapp/arcane) Docker Management API to AI assistants like Claude. **180+ tools** covering containers, images, volumes, networks, Docker Compose stacks, Swarm clusters, vulnerability scanning, GitOps, and more.
 
 ## Highlights
 
 | | |
 |---|---|
-| **165+ Tools** | Full Docker lifecycle management via MCP |
+| **180+ Tools** | Full Docker lifecycle management via MCP |
 | **Dual Transport** | stdio (Claude Code/Desktop) and Streamable HTTP |
 | **Docker Swarm** | Cluster init, service CRUD, scaling, logs |
 | **Vulnerability Scanning** | Image security scans with severity filtering |
@@ -261,6 +261,23 @@ The skill provides:
 | `arcane_updater_get_status` | Get updater status and schedule |
 | `arcane_updater_get_history` | Get update history |
 
+### Image Builds (6 tools)
+
+| Tool | Description |
+|------|-------------|
+| `arcane_build_image` | Build a Docker image from Dockerfile or Git URL |
+| `arcane_build_list` | List image builds |
+| `arcane_build_get` | Get build details and logs |
+| `arcane_build_workspace_browse` | Browse build workspace files |
+| `arcane_build_workspace_content` | Read file content from build workspace |
+| `arcane_build_workspace_upload` | Upload files to build workspace |
+
+### Network Topology (1 tool)
+
+| Tool | Description |
+|------|-------------|
+| `arcane_network_topology` | Get full network topology with container connections |
+
 ### Additional Tool Categories
 
 | Category | Tools | Description |
@@ -277,6 +294,22 @@ The skill provides:
 | **Settings** | 8 | Server configuration and API keys |
 | **Authentication** | 8 | Login, logout, JWT, OIDC device flow |
 | **System** | 9 | Health checks, pruning, upgrades |
+
+---
+
+## Resources & Prompts
+
+In addition to tools, the server exposes MCP Resources and Prompts:
+
+**Resources** (read-only context):
+- `arcane://environments` — Lists all available environments
+- `arcane://version` — Server version and configuration
+
+**Prompts** (workflow templates):
+- `/deploy-stack` — Guided Docker Compose deployment
+- `/troubleshoot-container` — Systematic container diagnostics
+- `/security-audit` — Vulnerability scanning workflow
+- `/cleanup-environment` — Safe resource cleanup
 
 ---
 
@@ -354,7 +387,7 @@ src/
     arcane-client.ts    # HTTP client with retry logic
   auth/
     auth-manager.ts     # JWT + API key authentication
-  tools/                # 23 tool modules (165+ tools)
+  tools/                # Tool modules (180+ tools)
     index.ts            # Tool registry
     container-tools.ts
     swarm-tools.ts
