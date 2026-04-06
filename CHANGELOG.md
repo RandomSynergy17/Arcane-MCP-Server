@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-04-06
+
+### Fixed
+- **EH-01**: `toolHandler` now returns `isError: true` on failures per MCP spec
+- **SEC-01**: Updated `@modelcontextprotocol/sdk` to resolve cross-client data leak CVE (GHSA-345p-7cg4-v4c7)
+- **SEC-02**: SSL bypass (`ARCANE_SKIP_SSL_VERIFY`) now works with Node.js native fetch via `NODE_TLS_REJECT_UNAUTHORIZED`
+- **SEC-03**: Path traversal validation (`validatePath`) added to all 8 file browse tools
+- **CQ-01/CQ-02**: Replaced remaining magic numbers with utility functions
+- **MCP-01**: Added `inputSchema: {}` to `arcane_system_get_health` and `arcane_version_get`
+- **MCP-02**: Set `openWorldHint: true` on tools that reach external services (image pull, registry sync/test, build, git test)
+- **MCP-03**: Protocol version in resources now uses `MCP_PROTOCOL_VERSION` constant
+- **PERF-02**: Reduced `MAX_RESPONSE_SIZE` from 50MB to 10MB
+- **DEP-01**: Resolved 9 dependency vulnerabilities (5 moderate remain in dev-only vitest chain)
+- LICENSE copyright year corrected to 2026
+
+### Added
+- Initial test suite: 50 tests across 4 files (tool-helpers, format, error-handler, config)
+- `validatePath()` utility in `src/utils/format.ts` for path traversal prevention
+- `CLAUDE.md` project context file for Claude Code
+- `.gitignore` entry for `.tgz` files
+- CI pipeline: `npm test` and `npm audit --audit-level=high --omit=dev` steps
+
+### Changed
+- CI tool count threshold raised from 170 to 180
+
+---
+
 ## [2.0.0] - 2026-04-06
 
 ### Added
