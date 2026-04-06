@@ -1,12 +1,18 @@
 ---
 name: arcane-docker
-description: Docker infrastructure management via Arcane MCP tools. Use when the user asks about Docker containers, images, volumes, networks, stacks, deployments, swarm, or any infrastructure management task — and the arcane_* MCP tools are available.
+description: >
+  Manages Docker infrastructure via 180+ Arcane MCP tools. Use when
+  working with Docker containers, images, volumes, networks, stacks,
+  Compose projects, Swarm services, registries, or environments.
+  Covers deployment, rollback, troubleshooting, cleanup, GitOps sync,
+  auto-updates, vulnerability scanning, image builds, and backup
+  operations. Activates when arcane_* tools are available.
 compatibility: Requires the Arcane MCP server running and a configured Arcane Docker Management instance.
 ---
 
 # Arcane Docker Management
 
-Guides effective use of the Arcane MCP server's 165+ tools for Docker infrastructure management. This skill activates when users ask about Docker operations and `arcane_*` tools are available.
+Guides effective use of the Arcane MCP server's 180+ tools for Docker infrastructure management. This skill activates when users ask about Docker operations and `arcane_*` tools are available.
 
 **Announce:** "Using the arcane-docker skill to guide this Docker operation."
 
@@ -142,6 +148,19 @@ When creating registries (`arcane_registry_create`) or git repos (`arcane_git_re
 - Never echo back passwords or tokens in your response
 - Mask sensitive values: "Registry created with credentials for user ***"
 - For ECR: remind users that AWS credentials should use IAM roles when possible
+
+## Gotchas
+
+- `environmentId` is required for almost every tool. Container registries and git repositories are the exceptions — they're global.
+- `arcane_updater_run` without `dryRun: true` will immediately update containers. Always dry-run first unless the user explicitly says otherwise.
+- Volume prune deletes data permanently. Always offer backup via `arcane_volume_backup_create` before pruning.
+- Swarm manager nodes require `force: true` to leave a cluster. Worker nodes do not.
+- ECR registry credentials expire. Remind users to use IAM roles when possible.
+- The webhook update endpoint uses PATCH, not PUT. The `arcane_webhook_update` tool handles this correctly.
+- Pagination defaults to 20 items. Use `limit: 100` for larger listings.
+- `arcane_project_create` accepts a `directory` parameter for nested/symlinked project paths.
+- Image builds support both inline Dockerfile content and Git URL context — use `arcane_build_image`.
+- Use `arcane_dashboard_get` as the first tool for any "what's the status?" question — it returns everything in one call.
 
 ## Quick Reference
 

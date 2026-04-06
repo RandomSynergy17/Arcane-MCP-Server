@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### MCP Protocol Enhancements
+- MCP tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`) on all 180 tools
+- Human-readable `title` field on all tools
+- MCP Resources: `arcane://environments` (list environments), `arcane://version` (server info)
+- MCP Prompts: `/deploy-stack`, `/troubleshoot-container`, `/security-audit`, `/cleanup-environment`
+
+#### Image Build Tools (6 tools)
+- `arcane_build_image` - Build Docker image from Dockerfile or Git URL
+- `arcane_build_list` - List image builds
+- `arcane_build_get` - Get build details and logs
+- `arcane_build_workspace_browse` - Browse build workspace files
+- `arcane_build_workspace_content` - Read file content from build workspace
+- `arcane_build_workspace_upload` - Upload files to build workspace
+
+#### Network Topology (1 tool)
+- `arcane_network_topology` - Get full network topology with container connections
+
+#### Additional Vulnerability Tools (4 tools)
+- `arcane_vulnerability_get_scanner_status` - Get scanner status
+- `arcane_vulnerability_list_all` - List all vulnerabilities across environments
+- `arcane_vulnerability_list_ignored` - List ignored vulnerabilities
+- `arcane_vulnerability_get_image_options` - Get image scan options
+
+#### Project Build
+- `arcane_project_build` - Build project images locally
+
+#### Claude Code Plugin Format
+- `.claude-plugin/` directory with plugin manifest
+- `.mcp.json` for Claude Code auto-discovery
+- `marketplace.json` for future plugin marketplace support
+
 #### Docker Swarm Management (11 tools)
 - `arcane_swarm_list_services` - List swarm services with pagination
 - `arcane_swarm_get_service` - Get service details including tasks
@@ -74,11 +105,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added nested/symlinked directory support (`directory` parameter on create)
 
 ### Fixed
+- Webhook update now uses PATCH method (was PUT)
 - Updated Express from ^4.21.0 to ^4.21.2 (CVE-2024-47764 fix)
 
 ### Changed
-- Version bumped to 2.0.0 (significant new features aligned with Arcane v1.17.0)
-- Total tool count: 165+ (up from 130+)
+- Migrated all tools from deprecated `server.tool()` to `server.registerTool()`
+- OpenAPI spec updated from v1.14.1 to v1.17.0
+- TypeScript types regenerated from v1.17.0 spec
+- Total tool count: 180 (up from 130)
+- Server version reported as 2.0.0
 
 ---
 
