@@ -31,4 +31,7 @@ jobs:
         run: npm run build
 
       - name: Verify tool count
-        run: grep -c "registerTool(" dist/tools/*.js | awk -F: '{sum+=$2} END {if (sum < 170) {print "FAIL: Only " sum " tools found"; exit 1} else {print "OK: " sum " tools"}}'
+        run: |
+          TOTAL=$(grep -rc "registerTool(" dist/tools/*.js | awk -F: '{sum+=$2} END {print sum}')
+          echo "Found $TOTAL tool registrations"
+          if [ "$TOTAL" -lt 170 ]; then echo "FAIL: Expected 170+"; exit 1; fi
