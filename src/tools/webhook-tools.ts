@@ -101,7 +101,7 @@ export function registerWebhookTools(server: McpServer): void {
       if (events) body.events = events;
       if (enabled !== undefined) body.enabled = enabled;
 
-      await client.put(`/environments/${environmentId}/webhooks/${webhookId}`, body);
+      await client.patch(`/environments/${environmentId}/webhooks/${webhookId}`, body);
       return `Webhook ${webhookId} updated.`;
     })
   );

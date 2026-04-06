@@ -245,5 +245,21 @@ export function registerProjectTools(server: McpServer): void {
     })
   );
 
+  // arcane_project_build
+  server.tool(
+    "arcane_project_build",
+    "Build images for a Docker Compose project",
+    {
+      environmentId: z.string().describe("Environment ID"),
+      projectId: z.string().describe("Project ID"),
+    },
+    toolHandler(async ({ environmentId, projectId }, client) => {
+      await client.post(
+        `/environments/${environmentId}/projects/${projectId}/build`
+      );
+      return `Build started for project ${projectId}.`;
+    })
+  );
+
   logger.debug("Registered project tools");
 }
