@@ -30,8 +30,14 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
+      - name: Run tests
+        run: npm test
+
       - name: Verify tool count
         run: |
           TOTAL=$(grep -rc "registerTool(" dist/tools/*.js | awk -F: '{sum+=$2} END {print sum}')
           echo "Found $TOTAL tool registrations"
-          if [ "$TOTAL" -lt 170 ]; then echo "FAIL: Expected 170+"; exit 1; fi
+          if [ "$TOTAL" -lt 180 ]; then echo "FAIL: Expected 180+"; exit 1; fi
+
+      - name: Audit production dependencies
+        run: npm audit --audit-level=high --omit=dev
