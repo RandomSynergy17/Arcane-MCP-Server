@@ -3,13 +3,15 @@
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { createRequire } from "module";
 import { loadConfig } from "./config.js";
 import { logger } from "./utils/logger.js";
 import { registerAllTools } from "./tools/index.js";
 import { registerResources } from "./resources/index.js";
 import { registerPrompts } from "./prompts/index.js";
 
-const VERSION = "2.0.1";
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require("../package.json") as { version: string };
 
 /**
  * Create and configure the Arcane MCP Server

@@ -119,7 +119,7 @@ export function registerImageTools(server: McpServer): void {
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageName: z.string().describe("Image name (e.g., nginx, library/ubuntu, ghcr.io/owner/repo)"),
-      tag: z.string().optional().default("latest").describe("Image tag (e.g., latest, v1.0, alpine)"),
+      tag: z.string().describe("Image tag (e.g., latest, v1.0, alpine) — required"),
       registryId: z.string().optional().describe("Container registry ID for private images (credentials will be fetched automatically)"),
     },
     },
