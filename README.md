@@ -436,3 +436,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [Installation Guide](install_arcane_skill-mcp.md) - Interactive installer
 - [Model Context Protocol](https://modelcontextprotocol.io) - MCP specification
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - SDK used by this server
+
+---
+
+<p align="center">
+  A <a href="http://randomsynergy.com">RandomSynergy</a> production
+</p>
