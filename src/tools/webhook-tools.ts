@@ -21,11 +21,20 @@ interface Webhook {
 export function registerWebhookTools(server: McpServer): void {
 
   // arcane_webhook_list
-  server.tool(
+  server.registerTool(
     "arcane_webhook_list",
-    "List configured webhooks for an environment",
     {
+      title: "List webhooks",
+      description: "List configured webhooks for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: Webhook[] }>(
@@ -53,14 +62,23 @@ export function registerWebhookTools(server: McpServer): void {
   );
 
   // arcane_webhook_create
-  server.tool(
+  server.registerTool(
     "arcane_webhook_create",
-    "Create a new inbound webhook for an environment",
     {
+      title: "Create webhook",
+      description: "Create a new inbound webhook for an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       name: z.string().describe("Webhook name"),
       events: z.array(z.string()).optional().describe("Event types to trigger on"),
       enabled: z.boolean().optional().default(true).describe("Enable the webhook"),
+    },
     },
     toolHandler(async ({ environmentId, name, events, enabled }, client) => {
       const response = await client.post<{ data: Webhook }>(
@@ -85,15 +103,24 @@ export function registerWebhookTools(server: McpServer): void {
   );
 
   // arcane_webhook_update
-  server.tool(
+  server.registerTool(
     "arcane_webhook_update",
-    "Update a webhook configuration",
     {
+      title: "Update webhook",
+      description: "Update a webhook configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       webhookId: z.string().describe("Webhook ID"),
       name: z.string().optional().describe("New name"),
       events: z.array(z.string()).optional().describe("Updated event types"),
       enabled: z.boolean().optional().describe("Enable/disable the webhook"),
+    },
     },
     toolHandler(async ({ environmentId, webhookId, name, events, enabled }, client) => {
       const body: Record<string, unknown> = {};
@@ -107,12 +134,21 @@ export function registerWebhookTools(server: McpServer): void {
   );
 
   // arcane_webhook_delete
-  server.tool(
+  server.registerTool(
     "arcane_webhook_delete",
-    "Delete a webhook configuration",
     {
+      title: "Delete webhook",
+      description: "Delete a webhook configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       webhookId: z.string().describe("Webhook ID"),
+    },
     },
     toolHandler(async ({ environmentId, webhookId }, client) => {
       await client.delete(`/environments/${environmentId}/webhooks/${webhookId}`);

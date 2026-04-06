@@ -20,16 +20,25 @@ interface Image {
 
 export function registerImageTools(server: McpServer): void {
   // arcane_image_list
-  server.tool(
+  server.registerTool(
     "arcane_image_list",
-    "List Docker images in an environment",
     {
+      title: "List images",
+      description: "List Docker images in an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter images"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
@@ -56,12 +65,21 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_get
-  server.tool(
+  server.registerTool(
     "arcane_image_get",
-    "Get detailed information about a Docker image",
     {
+      title: "Get image details",
+      description: "Get detailed information about a Docker image",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageId: z.string().describe("Image ID or tag"),
+    },
     },
     toolHandler(async ({ environmentId, imageId }, client) => {
       const response = await client.get<{ data: Image & { config?: Record<string, unknown> } }>(
@@ -87,14 +105,23 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_pull
-  server.tool(
+  server.registerTool(
     "arcane_image_pull",
-    "Pull a Docker image from a registry",
     {
+      title: "Pull image",
+      description: "Pull a Docker image from a registry",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageName: z.string().describe("Image name (e.g., nginx, library/ubuntu, ghcr.io/owner/repo)"),
       tag: z.string().optional().default("latest").describe("Image tag (e.g., latest, v1.0, alpine)"),
       registryId: z.string().optional().describe("Container registry ID for private images (credentials will be fetched automatically)"),
+    },
     },
     toolHandler(async ({ environmentId, imageName, tag, registryId }, client) => {
       const body: Record<string, unknown> = { imageName, tag };
@@ -107,14 +134,23 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_delete
-  server.tool(
+  server.registerTool(
     "arcane_image_delete",
-    "[HIGH RISK] Remove a Docker image from the host",
     {
+      title: "Delete image",
+      description: "[HIGH RISK] Remove a Docker image from the host",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageId: z.string().describe("Image ID or tag to delete"),
       force: z.boolean().optional().default(false).describe("Force removal even if in use"),
       pruneChildren: z.boolean().optional().default(false).describe("Also remove child images"),
+    },
     },
     toolHandler(async ({ environmentId, imageId, force, pruneChildren }, client) => {
       await client.delete(`/environments/${environmentId}/images/${imageId}`, { force, pruneChildren });
@@ -123,12 +159,21 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_prune
-  server.tool(
+  server.registerTool(
     "arcane_image_prune",
-    "[HIGH RISK] Remove all unused Docker images. This frees disk space but cannot be undone.",
     {
+      title: "Prune images",
+      description: "[HIGH RISK] Remove all unused Docker images. This frees disk space but cannot be undone.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       all: z.boolean().optional().default(false).describe("Remove all unused images, not just dangling ones"),
+    },
     },
     toolHandler(async ({ environmentId, all }, client) => {
       const response = await client.post<{ imagesDeleted?: string[]; spaceReclaimed?: number }>(
@@ -146,11 +191,20 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_get_counts
-  server.tool(
+  server.registerTool(
     "arcane_image_get_counts",
-    "Get image counts and size statistics for an environment",
     {
+      title: "Get image counts",
+      description: "Get image counts and size statistics for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -164,12 +218,21 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_check_update
-  server.tool(
+  server.registerTool(
     "arcane_image_check_update",
-    "Check if a newer version of an image is available",
     {
+      title: "Check image update",
+      description: "Check if a newer version of an image is available",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       image: z.string().describe("Image name with tag to check"),
+    },
     },
     toolHandler(async ({ environmentId, image }, client) => {
       const response = await client.post<{
@@ -189,11 +252,20 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_check_updates_all
-  server.tool(
+  server.registerTool(
     "arcane_image_check_updates_all",
-    "Check for updates on all images in an environment",
     {
+      title: "Check all image updates",
+      description: "Check for updates on all images in an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{
@@ -215,11 +287,20 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_get_update_summary
-  server.tool(
+  server.registerTool(
     "arcane_image_get_update_summary",
-    "Get a summary of available image updates across all containers",
     {
+      title: "Get image update summary",
+      description: "Get a summary of available image updates across all containers",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{

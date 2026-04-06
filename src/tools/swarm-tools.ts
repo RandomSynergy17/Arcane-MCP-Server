@@ -31,16 +31,25 @@ interface SwarmClusterInfo {
 export function registerSwarmTools(server: McpServer): void {
 
   // arcane_swarm_list_services
-  server.tool(
+  server.registerTool(
     "arcane_swarm_list_services",
-    "List Docker Swarm services in an environment with pagination",
     {
+      title: "List Swarm services",
+      description: "List Docker Swarm services in an environment with pagination",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter services"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
@@ -71,12 +80,21 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_get_service
-  server.tool(
+  server.registerTool(
     "arcane_swarm_get_service",
-    "Get detailed information about a Swarm service",
     {
+      title: "Get Swarm service details",
+      description: "Get detailed information about a Swarm service",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       serviceId: z.string().describe("Swarm service ID"),
+    },
     },
     toolHandler(async ({ environmentId, serviceId }, client) => {
       const response = await client.get<{ data: SwarmService & { tasks?: Array<{ id: string; status: string; node?: string }> } }>(
@@ -112,22 +130,31 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_create_service
-  server.tool(
+  server.registerTool(
     "arcane_swarm_create_service",
-    "Create a new Docker Swarm service",
     {
-      environmentId: z.string().describe("Environment ID"),
-      name: z.string().describe("Service name"),
-      image: z.string().describe("Docker image"),
-      replicas: z.number().optional().default(1).describe("Number of replicas"),
-      ports: z.array(z.object({
-        publishedPort: z.number().describe("Published port"),
-        targetPort: z.number().describe("Target port"),
-        protocol: z.enum(["tcp", "udp"]).optional().default("tcp"),
-      })).optional().describe("Port mappings"),
-      env: z.record(z.string()).optional().describe("Environment variables"),
-      networks: z.array(z.string()).optional().describe("Networks to attach"),
-      command: z.array(z.string()).optional().describe("Command to run"),
+      title: "Create Swarm service",
+      description: "Create a new Docker Swarm service",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        name: z.string().describe("Service name"),
+        image: z.string().describe("Docker image"),
+        replicas: z.number().optional().default(1).describe("Number of replicas"),
+        ports: z.array(z.object({
+          publishedPort: z.number().describe("Published port"),
+          targetPort: z.number().describe("Target port"),
+          protocol: z.enum(["tcp", "udp"]).optional().default("tcp"),
+        })).optional().describe("Port mappings"),
+        env: z.record(z.string()).optional().describe("Environment variables"),
+        networks: z.array(z.string()).optional().describe("Networks to attach"),
+        command: z.array(z.string()).optional().describe("Command to run"),
+      },
     },
     toolHandler(async ({ environmentId, name, image, replicas, ports, env, networks, command }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -140,16 +167,25 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_update_service
-  server.tool(
+  server.registerTool(
     "arcane_swarm_update_service",
-    "Update a Docker Swarm service configuration",
     {
+      title: "Update Swarm service",
+      description: "Update a Docker Swarm service configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       serviceId: z.string().describe("Swarm service ID"),
       image: z.string().optional().describe("New Docker image"),
       replicas: z.number().optional().describe("New replica count"),
       env: z.record(z.string()).optional().describe("Updated environment variables"),
       command: z.array(z.string()).optional().describe("Updated command"),
+    },
     },
     toolHandler(async ({ environmentId, serviceId, image, replicas, env, command }, client) => {
       const body: Record<string, unknown> = {};
@@ -164,12 +200,21 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_delete_service
-  server.tool(
+  server.registerTool(
     "arcane_swarm_delete_service",
-    "[HIGH RISK] Delete a Docker Swarm service permanently",
     {
+      title: "Delete Swarm service",
+      description: "[HIGH RISK] Delete a Docker Swarm service permanently",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       serviceId: z.string().describe("Swarm service ID"),
+    },
     },
     toolHandler(async ({ environmentId, serviceId }, client) => {
       await client.delete(`/environments/${environmentId}/swarm/services/${serviceId}`);
@@ -178,13 +223,22 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_scale_service
-  server.tool(
+  server.registerTool(
     "arcane_swarm_scale_service",
-    "Scale a Swarm service to a specific number of replicas",
     {
+      title: "Scale Swarm service",
+      description: "Scale a Swarm service to a specific number of replicas",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       serviceId: z.string().describe("Swarm service ID"),
       replicas: z.number().describe("Desired number of replicas"),
+    },
     },
     toolHandler(async ({ environmentId, serviceId, replicas }, client) => {
       await client.post(`/environments/${environmentId}/swarm/services/${serviceId}/scale`, { replicas });
@@ -193,14 +247,23 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_get_service_logs
-  server.tool(
+  server.registerTool(
     "arcane_swarm_get_service_logs",
-    "Get logs from a Swarm service",
     {
+      title: "Get Swarm service logs",
+      description: "Get logs from a Swarm service",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       serviceId: z.string().describe("Swarm service ID"),
       tail: z.number().optional().default(100).describe("Number of log lines to return"),
       timestamps: z.boolean().optional().default(false).describe("Include timestamps"),
+    },
     },
     toolHandler(async ({ environmentId, serviceId, tail, timestamps }, client) => {
       const response = await client.get<{ data: string }>(
@@ -213,14 +276,23 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_init_cluster
-  server.tool(
+  server.registerTool(
     "arcane_swarm_init_cluster",
-    "[CRITICAL] Initialize a new Docker Swarm cluster on this node",
     {
+      title: "Initialize Swarm cluster",
+      description: "[CRITICAL] Initialize a new Docker Swarm cluster on this node",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       advertiseAddr: z.string().optional().describe("Advertise address for the swarm manager"),
       listenAddr: z.string().optional().describe("Listen address for inter-node communication"),
       forceNewCluster: z.boolean().optional().default(false).describe("Force creation of a new cluster"),
+    },
     },
     toolHandler(async ({ environmentId, advertiseAddr, listenAddr, forceNewCluster }, client) => {
       const response = await client.post<{ data: { nodeId: string; joinToken?: string } }>(
@@ -241,15 +313,24 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_join_cluster
-  server.tool(
+  server.registerTool(
     "arcane_swarm_join_cluster",
-    "Join an existing Docker Swarm cluster",
     {
+      title: "Join Swarm cluster",
+      description: "Join an existing Docker Swarm cluster",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       joinToken: z.string().describe("Swarm join token"),
       remoteAddrs: z.array(z.string()).describe("Manager addresses to join (host:port)"),
       advertiseAddr: z.string().optional().describe("Advertise address for this node"),
       listenAddr: z.string().optional().describe("Listen address for inter-node communication"),
+    },
     },
     toolHandler(async ({ environmentId, joinToken, remoteAddrs, advertiseAddr, listenAddr }, client) => {
       await client.post(`/environments/${environmentId}/swarm/join`, {
@@ -260,12 +341,21 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_leave_cluster
-  server.tool(
+  server.registerTool(
     "arcane_swarm_leave_cluster",
-    "[CRITICAL RISK] Leave the Docker Swarm cluster. Use force=true for managers.",
     {
+      title: "Leave Swarm cluster",
+      description: "[CRITICAL RISK] Leave the Docker Swarm cluster. Use force=true for managers.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       force: z.boolean().optional().default(false).describe("Force leave (required for managers)"),
+    },
     },
     toolHandler(async ({ environmentId, force }, client) => {
       await client.post(`/environments/${environmentId}/swarm/leave`, { force });
@@ -274,11 +364,20 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_get_cluster_info
-  server.tool(
+  server.registerTool(
     "arcane_swarm_get_cluster_info",
-    "Get Docker Swarm cluster information and node counts",
     {
+      title: "Get Swarm cluster info",
+      description: "Get Docker Swarm cluster information and node counts",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: SwarmClusterInfo }>(

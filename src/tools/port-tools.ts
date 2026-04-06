@@ -19,16 +19,25 @@ interface PortMapping {
 export function registerPortTools(server: McpServer): void {
 
   // arcane_port_list
-  server.tool(
+  server.registerTool(
     "arcane_port_list",
-    "List all port mappings across containers in an environment with pagination",
     {
+      title: "List port mappings",
+      description: "List all port mappings across containers in an environment with pagination",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter ports"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{

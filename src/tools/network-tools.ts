@@ -26,16 +26,25 @@ interface Network {
 export function registerNetworkTools(server: McpServer): void {
 
   // arcane_network_list
-  server.tool(
+  server.registerTool(
     "arcane_network_list",
-    "List Docker networks in an environment",
     {
+      title: "List networks",
+      description: "List Docker networks in an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter networks"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
@@ -64,12 +73,21 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_get
-  server.tool(
+  server.registerTool(
     "arcane_network_get",
-    "Get detailed information about a Docker network",
     {
+      title: "Get network details",
+      description: "Get detailed information about a Docker network",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       networkId: z.string().describe("Network ID or name"),
+    },
     },
     toolHandler(async ({ environmentId, networkId }, client) => {
       const response = await client.get<{ data: Network }>(
@@ -104,10 +122,18 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_create
-  server.tool(
+  server.registerTool(
     "arcane_network_create",
-    "Create a new Docker network",
     {
+      title: "Create network",
+      description: "Create a new Docker network",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       name: z.string().describe("Network name"),
       driver: z.enum(["bridge", "overlay", "host", "none", "macvlan"]).optional().default("bridge").describe("Network driver"),
@@ -116,6 +142,7 @@ export function registerNetworkTools(server: McpServer): void {
       subnet: z.string().optional().describe("Subnet in CIDR format (e.g., 172.20.0.0/16)"),
       gateway: z.string().optional().describe("Gateway IP address"),
       ipRange: z.string().optional().describe("IP range for allocation"),
+    },
     },
     toolHandler(async ({ environmentId, name, driver, internal, attachable, subnet, gateway, ipRange }, client) => {
       const body: Record<string, unknown> = { name, driver, internal, attachable };
@@ -137,12 +164,21 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_delete
-  server.tool(
+  server.registerTool(
     "arcane_network_delete",
-    "[HIGH RISK] Delete a Docker network. Connected containers will be disconnected.",
     {
+      title: "Delete network",
+      description: "[HIGH RISK] Delete a Docker network. Connected containers will be disconnected.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       networkId: z.string().describe("Network ID or name to delete"),
+    },
     },
     toolHandler(async ({ environmentId, networkId }, client) => {
       await client.delete(`/environments/${environmentId}/networks/${networkId}`);
@@ -151,11 +187,20 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_prune
-  server.tool(
+  server.registerTool(
     "arcane_network_prune",
-    "[HIGH RISK] Remove all unused Docker networks. This cannot be undone.",
     {
+      title: "Prune networks",
+      description: "[HIGH RISK] Remove all unused Docker networks. This cannot be undone.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ networksDeleted?: string[] }>(
@@ -170,11 +215,20 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_get_counts
-  server.tool(
+  server.registerTool(
     "arcane_network_get_counts",
-    "Get network counts for an environment",
     {
+      title: "Get network counts",
+      description: "Get network counts for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{

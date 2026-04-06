@@ -20,11 +20,20 @@ interface Job {
 
 export function registerJobTools(server: McpServer): void {
   // arcane_job_list
-  server.tool(
+  server.registerTool(
     "arcane_job_list",
-    "List scheduled jobs in an environment",
     {
+      title: "List jobs",
+      description: "List scheduled jobs in an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: Job[] }>(
@@ -52,12 +61,21 @@ export function registerJobTools(server: McpServer): void {
   );
 
   // arcane_job_run
-  server.tool(
+  server.registerTool(
     "arcane_job_run",
-    "Run a job immediately",
     {
+      title: "Run job",
+      description: "Run a job immediately",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       jobId: z.string().describe("Job ID to run"),
+    },
     },
     toolHandler(async ({ environmentId, jobId }, client) => {
       await client.post(`/environments/${environmentId}/jobs/${jobId}/run`);
@@ -66,11 +84,20 @@ export function registerJobTools(server: McpServer): void {
   );
 
   // arcane_job_schedule_get
-  server.tool(
+  server.registerTool(
     "arcane_job_schedule_get",
-    "Get job schedules for an environment",
     {
+      title: "Get job schedules",
+      description: "Get job schedules for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -97,16 +124,25 @@ export function registerJobTools(server: McpServer): void {
   );
 
   // arcane_job_schedule_update
-  server.tool(
+  server.registerTool(
     "arcane_job_schedule_update",
-    "Update job schedules for an environment",
     {
-      environmentId: z.string().describe("Environment ID"),
-      schedules: z.array(z.object({
-        jobId: z.string().describe("Job ID"),
-        schedule: z.string().optional().describe("Cron schedule expression"),
-        enabled: z.boolean().optional().describe("Enable or disable"),
-      })).describe("Schedule updates"),
+      title: "Update job schedules",
+      description: "Update job schedules for an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        schedules: z.array(z.object({
+          jobId: z.string().describe("Job ID"),
+          schedule: z.string().optional().describe("Cron schedule expression"),
+          enabled: z.boolean().optional().describe("Enable or disable"),
+        })).describe("Schedule updates"),
+      },
     },
     toolHandler(async ({ environmentId, schedules }, client) => {
       await client.put(`/environments/${environmentId}/job-schedules`, { schedules });

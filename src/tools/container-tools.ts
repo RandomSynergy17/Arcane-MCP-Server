@@ -22,10 +22,18 @@ interface Container {
 export function registerContainerTools(server: McpServer): void {
 
   // arcane_container_list
-  server.tool(
+  server.registerTool(
     "arcane_container_list",
-    "List Docker containers in an environment with pagination and filtering",
     {
+      title: "List containers",
+      description: "List Docker containers in an environment with pagination and filtering",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter containers"),
       sort: z.string().optional().describe("Column to sort by"),
@@ -33,6 +41,7 @@ export function registerContainerTools(server: McpServer): void {
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
       includeInternal: z.boolean().optional().default(false).describe("Include internal containers"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit, includeInternal }, client) => {
       const response = await client.get<{
@@ -66,12 +75,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_get
-  server.tool(
+  server.registerTool(
     "arcane_container_get",
-    "Get detailed information about a specific container",
     {
+      title: "Get container details",
+      description: "Get detailed information about a specific container",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       const response = await client.get<{ data: Container & { config?: Record<string, unknown> } }>(
@@ -110,27 +128,36 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_create
-  server.tool(
+  server.registerTool(
     "arcane_container_create",
-    "Create a new Docker container",
     {
-      environmentId: z.string().describe("Environment ID"),
-      name: z.string().describe("Container name"),
-      image: z.string().describe("Docker image to use"),
-      ports: z.array(z.object({
-        containerPort: z.number().describe("Port inside container"),
-        hostPort: z.number().optional().describe("Port on host"),
-        protocol: z.enum(["tcp", "udp"]).optional().default("tcp"),
-      })).optional().describe("Port mappings"),
-      env: z.record(z.string()).optional().describe("Environment variables"),
-      volumes: z.array(z.object({
-        hostPath: z.string().describe("Path on host"),
-        containerPath: z.string().describe("Path in container"),
-        readOnly: z.boolean().optional().default(false),
-      })).optional().describe("Volume mounts"),
-      restart: z.enum(["no", "always", "unless-stopped", "on-failure"]).optional().describe("Restart policy"),
-      network: z.string().optional().describe("Network to connect to"),
-      command: z.array(z.string()).optional().describe("Command to run"),
+      title: "Create container",
+      description: "Create a new Docker container",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        name: z.string().describe("Container name"),
+        image: z.string().describe("Docker image to use"),
+        ports: z.array(z.object({
+          containerPort: z.number().describe("Port inside container"),
+          hostPort: z.number().optional().describe("Port on host"),
+          protocol: z.enum(["tcp", "udp"]).optional().default("tcp"),
+        })).optional().describe("Port mappings"),
+        env: z.record(z.string()).optional().describe("Environment variables"),
+        volumes: z.array(z.object({
+          hostPath: z.string().describe("Path on host"),
+          containerPath: z.string().describe("Path in container"),
+          readOnly: z.boolean().optional().default(false),
+        })).optional().describe("Volume mounts"),
+        restart: z.enum(["no", "always", "unless-stopped", "on-failure"]).optional().describe("Restart policy"),
+        network: z.string().optional().describe("Network to connect to"),
+        command: z.array(z.string()).optional().describe("Command to run"),
+      },
     },
     toolHandler(async ({ environmentId, name, image, ports, env, volumes, restart, network, command }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -143,12 +170,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_start
-  server.tool(
+  server.registerTool(
     "arcane_container_start",
-    "Start a stopped container",
     {
+      title: "Start container",
+      description: "Start a stopped container",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name to start"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       await client.post(`/environments/${environmentId}/containers/${containerId}/start`);
@@ -157,12 +193,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_stop
-  server.tool(
+  server.registerTool(
     "arcane_container_stop",
-    "Stop a running container",
     {
+      title: "Stop container",
+      description: "Stop a running container",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name to stop"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       await client.post(`/environments/${environmentId}/containers/${containerId}/stop`);
@@ -171,12 +216,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_restart
-  server.tool(
+  server.registerTool(
     "arcane_container_restart",
-    "Restart a container",
     {
+      title: "Restart container",
+      description: "Restart a container",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name to restart"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       await client.post(`/environments/${environmentId}/containers/${containerId}/restart`);
@@ -185,12 +239,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_update
-  server.tool(
+  server.registerTool(
     "arcane_container_update",
-    "Pull the latest image and recreate a container with the same configuration. Automatically pulls latest image before recreating.",
     {
+      title: "Update container",
+      description: "Pull the latest image and recreate a container with the same configuration. Automatically pulls latest image before recreating.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name to update"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       await client.post(`/environments/${environmentId}/containers/${containerId}/update`);
@@ -199,14 +262,23 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_delete
-  server.tool(
+  server.registerTool(
     "arcane_container_delete",
-    "[HIGH RISK] Delete a Docker container permanently. Use force=true to delete running containers, volumes=true to remove associated volumes.",
     {
+      title: "Delete container",
+      description: "[HIGH RISK] Delete a Docker container permanently. Use force=true to delete running containers, volumes=true to remove associated volumes.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name to delete"),
       force: z.boolean().optional().default(false).describe("Force delete even if running"),
       volumes: z.boolean().optional().default(false).describe("Remove associated anonymous volumes"),
+    },
     },
     toolHandler(async ({ environmentId, containerId, force, volumes }, client) => {
       await client.delete(`/environments/${environmentId}/containers/${containerId}`, { force, volumes });
@@ -215,12 +287,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_redeploy
-  server.tool(
+  server.registerTool(
     "arcane_container_redeploy",
-    "Redeploy a single container (pull latest image and recreate)",
     {
+      title: "Redeploy container",
+      description: "Redeploy a single container (pull latest image and recreate)",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name to redeploy"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       await client.post(`/environments/${environmentId}/containers/${containerId}/redeploy`);
@@ -229,13 +310,22 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_set_auto_update
-  server.tool(
+  server.registerTool(
     "arcane_container_set_auto_update",
-    "Enable or disable automatic updates for a specific container",
     {
+      title: "Set container auto-update",
+      description: "Enable or disable automatic updates for a specific container",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID or name"),
       enabled: z.boolean().describe("Enable (true) or disable (false) auto-update"),
+    },
     },
     toolHandler(async ({ environmentId, containerId, enabled }, client) => {
       await client.put(`/environments/${environmentId}/containers/${containerId}/auto-update`, { enabled });
@@ -244,12 +334,21 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_get_counts
-  server.tool(
+  server.registerTool(
     "arcane_container_get_counts",
-    "Get container status counts for an environment (running, stopped, etc.)",
     {
+      title: "Get container counts",
+      description: "Get container status counts for an environment (running, stopped, etc.)",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       includeInternal: z.boolean().optional().default(false).describe("Include internal containers"),
+    },
     },
     toolHandler(async ({ environmentId, includeInternal }, client) => {
       const response = await client.get<{

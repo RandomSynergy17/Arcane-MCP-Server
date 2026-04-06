@@ -18,13 +18,22 @@ interface User {
 
 export function registerUserTools(server: McpServer): void {
   // arcane_user_list
-  server.tool(
+  server.registerTool(
     "arcane_user_list",
-    "List all users in Arcane",
     {
+      title: "List users",
+      description: "List all users in Arcane",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       search: z.string().optional().describe("Search query"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
@@ -56,11 +65,20 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_get
-  server.tool(
+  server.registerTool(
     "arcane_user_get",
-    "Get details of a specific user",
     {
+      title: "Get user details",
+      description: "Get details of a specific user",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       userId: z.string().describe("User ID"),
+    },
     },
     toolHandler(async ({ userId }, client) => {
       const response = await client.get<{ data: User }>(`/users/${userId}`);
@@ -80,13 +98,22 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_create
-  server.tool(
+  server.registerTool(
     "arcane_user_create",
-    "Create a new user",
     {
+      title: "Create user",
+      description: "Create a new user",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       username: z.string().describe("Username"),
       password: z.string().min(8).describe("Password (minimum 8 characters)"),
       role: z.enum(["admin", "user", "readonly"]).optional().default("user").describe("User role"),
+    },
     },
     toolHandler(async ({ username, password, role }, client) => {
       const response = await client.post<{ data: { id: string; username: string } }>("/users", {
@@ -100,13 +127,22 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_update
-  server.tool(
+  server.registerTool(
     "arcane_user_update",
-    "Update a user's settings",
     {
+      title: "Update user",
+      description: "Update a user's settings",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       userId: z.string().describe("User ID"),
       username: z.string().optional().describe("New username"),
       role: z.enum(["admin", "user", "readonly"]).optional().describe("New role"),
+    },
     },
     toolHandler(async ({ userId, username, role }, client) => {
       const body: Record<string, unknown> = {};
@@ -119,11 +155,20 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_delete
-  server.tool(
+  server.registerTool(
     "arcane_user_delete",
-    "[HIGH RISK] Delete a user account permanently",
     {
+      title: "Delete user",
+      description: "[HIGH RISK] Delete a user account permanently",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       userId: z.string().describe("User ID to delete"),
+    },
     },
     toolHandler(async ({ userId }, client) => {
       await client.delete(`/users/${userId}`);

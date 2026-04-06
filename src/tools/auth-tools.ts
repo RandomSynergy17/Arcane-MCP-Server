@@ -9,12 +9,21 @@ import { logger } from "../utils/logger.js";
 
 export function registerAuthTools(server: McpServer): void {
   // arcane_auth_login
-  server.tool(
+  server.registerTool(
     "arcane_auth_login",
-    "Authenticate with Arcane using username and password. Returns JWT tokens.",
     {
+      title: "Login",
+      description: "Authenticate with Arcane using username and password. Returns JWT tokens.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       username: z.string().describe("Username for authentication"),
       password: z.string().describe("Password for authentication"),
+    },
     },
     toolHandler(async ({ username, password }, client) => {
       const response = await client.post<{
@@ -29,10 +38,18 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_logout
-  server.tool(
+  server.registerTool(
     "arcane_auth_logout",
-    "Log out of the current session and invalidate tokens",
-    {},
+    {
+      title: "Logout",
+      description: "Log out of the current session and invalidate tokens",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       await client.post("/auth/logout");
       return "Logged out successfully.";
@@ -40,10 +57,18 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_me
-  server.tool(
+  server.registerTool(
     "arcane_auth_me",
-    "Get information about the currently authenticated user",
-    {},
+    {
+      title: "Get current user",
+      description: "Get information about the currently authenticated user",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         data: { id: string; username: string; role: string; createdAt: string };
@@ -55,11 +80,20 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_refresh
-  server.tool(
+  server.registerTool(
     "arcane_auth_refresh",
-    "Refresh the authentication token using the refresh token",
     {
+      title: "Refresh token",
+      description: "Refresh the authentication token using the refresh token",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       refreshToken: z.string().describe("Refresh token to use"),
+    },
     },
     toolHandler(async ({ refreshToken }, client) => {
       const response = await client.post<{
@@ -73,12 +107,21 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_change_password
-  server.tool(
+  server.registerTool(
     "arcane_auth_change_password",
-    "Change the password for the current user",
     {
+      title: "Change password",
+      description: "Change the password for the current user",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       currentPassword: z.string().optional().describe("Current password (required for non-OIDC users)"),
       newPassword: z.string().min(8).describe("New password (minimum 8 characters)"),
+    },
     },
     toolHandler(async ({ currentPassword, newPassword }, client) => {
       await client.post("/auth/password", { currentPassword, newPassword });
@@ -88,10 +131,18 @@ export function registerAuthTools(server: McpServer): void {
 
   // OIDC Tools
   // arcane_oidc_get_status
-  server.tool(
+  server.registerTool(
     "arcane_oidc_get_status",
-    "Get OIDC configuration status (enabled, provider name, etc.)",
-    {},
+    {
+      title: "Get OIDC status",
+      description: "Get OIDC configuration status (enabled, provider name, etc.)",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         envForced: boolean;
@@ -114,10 +165,18 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_oidc_get_config
-  server.tool(
+  server.registerTool(
     "arcane_oidc_get_config",
-    "Get OIDC client configuration details",
-    {},
+    {
+      title: "Get OIDC config",
+      description: "Get OIDC client configuration details",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         clientId: string;
@@ -131,10 +190,18 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_oidc_device_code
-  server.tool(
+  server.registerTool(
     "arcane_oidc_device_code",
-    "Initiate OIDC device authorization flow. Returns a user code to enter at the verification URL.",
-    {},
+    {
+      title: "Start OIDC device flow",
+      description: "Initiate OIDC device authorization flow. Returns a user code to enter at the verification URL.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.post<{
         deviceCode: string;

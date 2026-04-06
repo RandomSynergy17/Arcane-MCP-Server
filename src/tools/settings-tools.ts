@@ -9,11 +9,20 @@ import { logger } from "../utils/logger.js";
 
 export function registerSettingsTools(server: McpServer): void {
   // arcane_settings_get
-  server.tool(
+  server.registerTool(
     "arcane_settings_get",
-    "Get environment settings",
     {
+      title: "Get settings",
+      description: "Get environment settings",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -31,12 +40,21 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_update
-  server.tool(
+  server.registerTool(
     "arcane_settings_update",
-    "Update environment settings",
     {
+      title: "Update settings",
+      description: "Update environment settings",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       settings: z.record(z.unknown()).describe("Settings to update (key-value pairs)"),
+    },
     },
     toolHandler(async ({ environmentId, settings }, client) => {
       await client.put(`/environments/${environmentId}/settings`, settings);
@@ -45,10 +63,18 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_get_public
-  server.tool(
+  server.registerTool(
     "arcane_settings_get_public",
-    "Get public settings (no authentication required)",
-    {},
+    {
+      title: "Get public settings",
+      description: "Get public settings (no authentication required)",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         data: Record<string, unknown>;
@@ -65,10 +91,18 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_get_categories
-  server.tool(
+  server.registerTool(
     "arcane_settings_get_categories",
-    "Get available settings categories",
-    {},
+    {
+      title: "Get settings categories",
+      description: "Get available settings categories",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         data: Array<{ id: string; name: string; description?: string }>;
@@ -91,11 +125,20 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_search
-  server.tool(
+  server.registerTool(
     "arcane_settings_search",
-    "Search settings and customization options",
     {
+      title: "Search settings",
+      description: "Search settings and customization options",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       query: z.string().describe("Search query"),
+    },
     },
     toolHandler(async ({ query }, client) => {
       const response = await client.post<{
@@ -126,12 +169,21 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_api_key_list
-  server.tool(
+  server.registerTool(
     "arcane_apikey_list",
-    "List API keys for the current user",
     {
+      title: "List API keys",
+      description: "List API keys for the current user",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ start, limit }, client) => {
       const response = await client.get<{
@@ -166,13 +218,22 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_api_key_create
-  server.tool(
+  server.registerTool(
     "arcane_apikey_create",
-    "Create a new API key",
     {
+      title: "Create API key",
+      description: "Create a new API key",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       name: z.string().describe("Name for the API key"),
       description: z.string().optional().describe("Description"),
       expiresAt: z.string().optional().describe("Expiration date (ISO 8601 format)"),
+    },
     },
     toolHandler(async ({ name, description, expiresAt }, client) => {
       const response = await client.post<{
@@ -184,11 +245,20 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_api_key_delete
-  server.tool(
+  server.registerTool(
     "arcane_apikey_delete",
-    "Delete an API key (revoke access immediately)",
     {
+      title: "Delete API key",
+      description: "Delete an API key (revoke access immediately)",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       keyId: z.string().describe("API key ID to delete"),
+    },
     },
     toolHandler(async ({ keyId }, client) => {
       await client.delete(`/api-keys/${keyId}`);

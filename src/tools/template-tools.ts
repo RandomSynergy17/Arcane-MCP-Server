@@ -19,14 +19,23 @@ interface Template {
 
 export function registerTemplateTools(server: McpServer): void {
   // arcane_template_list
-  server.tool(
+  server.registerTool(
     "arcane_template_list",
-    "List available Docker Compose templates",
     {
+      title: "List templates",
+      description: "List available Docker Compose templates",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       search: z.string().optional().describe("Search query"),
       category: z.string().optional().describe("Filter by category"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ search, category, start, limit }, client) => {
       const response = await client.get<{
@@ -52,11 +61,20 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_get
-  server.tool(
+  server.registerTool(
     "arcane_template_get",
-    "Get details of a Docker Compose template",
     {
+      title: "Get template details",
+      description: "Get details of a Docker Compose template",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       templateId: z.string().describe("Template ID"),
+    },
     },
     toolHandler(async ({ templateId }, client) => {
       const response = await client.get<{ data: Template }>(`/templates/${templateId}`);
@@ -75,11 +93,20 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_get_content
-  server.tool(
+  server.registerTool(
     "arcane_template_get_content",
-    "Get the Docker Compose YAML content of a template",
     {
+      title: "Get template content",
+      description: "Get the Docker Compose YAML content of a template",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       templateId: z.string().describe("Template ID"),
+    },
     },
     toolHandler(async ({ templateId }, client) => {
       const response = await client.get<{ data: { content: string } }>(
@@ -91,14 +118,23 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_create
-  server.tool(
+  server.registerTool(
     "arcane_template_create",
-    "Create a new Docker Compose template",
     {
+      title: "Create template",
+      description: "Create a new Docker Compose template",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       name: z.string().describe("Template name"),
       description: z.string().optional().describe("Template description"),
       category: z.string().optional().describe("Category"),
       content: z.string().describe("Docker Compose YAML content"),
+    },
     },
     toolHandler(async ({ name, description, category, content }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -111,15 +147,24 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_update
-  server.tool(
+  server.registerTool(
     "arcane_template_update",
-    "Update a Docker Compose template",
     {
+      title: "Update template",
+      description: "Update a Docker Compose template",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       templateId: z.string().describe("Template ID"),
       name: z.string().optional().describe("New name"),
       description: z.string().optional().describe("New description"),
       category: z.string().optional().describe("New category"),
       content: z.string().optional().describe("New YAML content"),
+    },
     },
     toolHandler(async ({ templateId, name, description, category, content }, client) => {
       const body: Record<string, unknown> = {};
@@ -134,11 +179,20 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_delete
-  server.tool(
+  server.registerTool(
     "arcane_template_delete",
-    "Delete a Docker Compose template",
     {
+      title: "Delete template",
+      description: "Delete a Docker Compose template",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       templateId: z.string().describe("Template ID"),
+    },
     },
     toolHandler(async ({ templateId }, client) => {
       await client.delete(`/templates/${templateId}`);
@@ -147,10 +201,18 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_get_variables
-  server.tool(
+  server.registerTool(
     "arcane_template_get_variables",
-    "Get global template variables",
-    {},
+    {
+      title: "Get template variables",
+      description: "Get global template variables",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{ data: Record<string, string> }>("/templates/variables");
 
@@ -168,11 +230,20 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_update_variables
-  server.tool(
+  server.registerTool(
     "arcane_template_update_variables",
-    "Update global template variables",
     {
+      title: "Update template variables",
+      description: "Update global template variables",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       variables: z.record(z.string()).describe("Variables to set (key-value pairs)"),
+    },
     },
     toolHandler(async ({ variables }, client) => {
       await client.put("/templates/variables", { variables });

@@ -11,10 +11,18 @@ import { logger } from "../utils/logger.js";
 
 export function registerSystemTools(server: McpServer): void {
   // arcane_system_get_health
-  server.tool(
+  server.registerTool(
     "arcane_system_get_health",
-    "Check the health status of the Arcane server",
-    {},
+    {
+      title: "Get system health",
+      description: "Check the health status of the Arcane server",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         status: string;
@@ -29,11 +37,20 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_get_docker_info
-  server.tool(
+  server.registerTool(
     "arcane_system_get_docker_info",
-    "Get Docker system information for an environment",
     {
+      title: "Get Docker system info",
+      description: "Get Docker system information for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -70,13 +87,22 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_prune
-  server.tool(
+  server.registerTool(
     "arcane_system_prune",
-    "[CRITICAL RISK] Perform Docker system prune - removes unused containers, networks, images, and optionally volumes. This cannot be undone!",
     {
+      title: "System prune",
+      description: "[CRITICAL RISK] Perform Docker system prune - removes unused containers, networks, images, and optionally volumes. This cannot be undone!",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumes: z.boolean().optional().default(false).describe("Also prune volumes (DATA LOSS!)"),
       all: z.boolean().optional().default(false).describe("Remove all unused images, not just dangling"),
+    },
     },
     toolHandler(async ({ environmentId, volumes, all }, client) => {
       const response = await client.post<{
@@ -105,11 +131,20 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_check_upgrade
-  server.tool(
+  server.registerTool(
     "arcane_system_check_upgrade",
-    "Check if an Arcane upgrade is available",
     {
+      title: "Check for upgrade",
+      description: "Check if an Arcane upgrade is available",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -131,11 +166,20 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_upgrade
-  server.tool(
+  server.registerTool(
     "arcane_system_upgrade",
-    "[HIGH RISK] Perform an Arcane system upgrade",
     {
+      title: "Upgrade system",
+      description: "[HIGH RISK] Perform an Arcane system upgrade",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       await client.post(`/environments/${environmentId}/system/upgrade`);
@@ -144,11 +188,20 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_containers_start_all
-  server.tool(
+  server.registerTool(
     "arcane_system_containers_start_all",
-    "Start all stopped containers in an environment",
     {
+      title: "Start all containers",
+      description: "Start all stopped containers in an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ started: number }>(
@@ -159,11 +212,20 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_containers_stop_all
-  server.tool(
+  server.registerTool(
     "arcane_system_containers_stop_all",
-    "[HIGH RISK] Stop ALL running containers in an environment",
     {
+      title: "Stop all containers",
+      description: "[HIGH RISK] Stop ALL running containers in an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ stopped: number }>(
@@ -174,11 +236,20 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_containers_start_stopped
-  server.tool(
+  server.registerTool(
     "arcane_system_containers_start_stopped",
-    "Start all previously stopped containers in an environment",
     {
+      title: "Start stopped containers",
+      description: "Start all previously stopped containers in an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ started: number }>(
@@ -189,10 +260,18 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_version_get
-  server.tool(
+  server.registerTool(
     "arcane_version_get",
-    "Get the Arcane server version information",
-    {},
+    {
+      title: "Get server version",
+      description: "Get the Arcane server version information",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
         version: string;

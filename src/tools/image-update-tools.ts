@@ -32,12 +32,21 @@ interface ImageUpdateSummary {
 export function registerImageUpdateTools(server: McpServer): void {
 
   // arcane_image_update_check
-  server.tool(
+  server.registerTool(
     "arcane_image_update_check",
-    "Check if an image update is available by image reference",
     {
+      title: "Check image update",
+      description: "Check if an image update is available by image reference",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageRef: z.string().describe("Image reference (e.g., nginx:latest, ghcr.io/org/app:v1)"),
+    },
     },
     toolHandler(async ({ environmentId, imageRef }, client) => {
       const response = await client.get<{ data: ImageUpdateResponse }>(
@@ -54,12 +63,21 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_check_by_id
-  server.tool(
+  server.registerTool(
     "arcane_image_update_check_by_id",
-    "Check if an image update is available by image ID",
     {
+      title: "Check image update by ID",
+      description: "Check if an image update is available by image ID",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageId: z.string().describe("Image ID"),
+    },
     },
     toolHandler(async ({ environmentId, imageId }, client) => {
       const response = await client.get<{ data: ImageUpdateResponse }>(
@@ -75,12 +93,21 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_check_multiple
-  server.tool(
+  server.registerTool(
     "arcane_image_update_check_multiple",
-    "Check for updates on multiple images at once",
     {
+      title: "Check multiple image updates",
+      description: "Check for updates on multiple images at once",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       imageIds: z.array(z.string()).describe("List of image IDs to check"),
+    },
     },
     toolHandler(async ({ environmentId, imageIds }, client) => {
       const response = await client.post<{ data: BatchImageUpdateResponse }>(
@@ -103,11 +130,20 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_check_all
-  server.tool(
+  server.registerTool(
     "arcane_image_update_check_all",
-    "Check all images in an environment for available updates",
     {
+      title: "Check all image updates",
+      description: "Check all images in an environment for available updates",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ data: BatchImageUpdateResponse }>(
@@ -134,11 +170,20 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_get_summary
-  server.tool(
+  server.registerTool(
     "arcane_image_update_get_summary",
-    "Get a summary of image update status for an environment",
     {
+      title: "Get update summary",
+      description: "Get a summary of image update status for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: ImageUpdateSummary }>(
