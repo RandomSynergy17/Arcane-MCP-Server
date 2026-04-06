@@ -1,5 +1,5 @@
 ---
-name: arcane-docker
+name: arcane-mcp-server
 description: >
   Manages Docker infrastructure via 180+ Arcane MCP tools. Use when
   working with Docker containers, images, volumes, networks, stacks,
@@ -14,7 +14,7 @@ compatibility: Requires the Arcane MCP server running and a configured Arcane Do
 
 Guides effective use of the Arcane MCP server's 180+ tools for Docker infrastructure management. This skill activates when users ask about Docker operations and `arcane_*` tools are available.
 
-**Announce:** "Using the arcane-docker skill to guide this Docker operation."
+**Announce:** "Using the arcane-mcp-server skill to guide this Docker operation."
 
 ## Prerequisites
 

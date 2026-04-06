@@ -310,4 +310,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable reference
 - Claude Code and Claude Desktop integration guides
 
-[1.0.0]: https://github.com/RandomSynergy17/ArcaneClaude/releases/tag/v1.0.0
+[1.0.0]: https://github.com/RandomSynergy17/Arcane-MCP-Server/releases/tag/v1.0.0

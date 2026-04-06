@@ -1,6 +1,6 @@
-# Contributing to ArcaneClaude
+# Contributing to Arcane MCP Server
 
-Thank you for your interest in contributing to ArcaneClaude! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Arcane MCP Server! This document provides guidelines and instructions for contributing.
 
 ## Development Setup
 
@@ -14,8 +14,8 @@ Thank you for your interest in contributing to ArcaneClaude! This document provi
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/RandomSynergy17/ArcaneClaude.git
-   cd ArcaneClaude
+   git clone https://github.com/RandomSynergy17/Arcane-MCP-Server.git
+   cd Arcane-MCP-Server
    ```
 
 2. **Install dependencies**

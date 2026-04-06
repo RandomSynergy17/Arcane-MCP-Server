@@ -1,8 +1,8 @@
-# ArcaneClaude Installer
+# Arcane MCP Server Installer
 
 > **Drop this file into a Claude Code prompt to auto-install, or read it for manual setup.**
 
-This installs ArcaneClaude — 180+ MCP tools for Docker management via [Arcane](https://github.com/getarcaneapp/arcane), with an optional companion skill for workflow guidance.
+This installs Arcane MCP Server — 180+ MCP tools for Docker management via [Arcane](https://github.com/getarcaneapp/arcane), with an optional companion skill for workflow guidance.
 
 ---
 
@@ -81,13 +81,13 @@ If the user chose "Everything" or "Skill only", run these commands:
 
 ```bash
 # Clone the repo to get the skill file
-git clone --depth 1 https://github.com/RandomSynergy17/ArcaneClaude.git /tmp/arcane-claude-install
+git clone --depth 1 https://github.com/RandomSynergy17/Arcane-MCP-Server.git /tmp/arcane-claude-install
 
 # Create skills directory if it doesn't exist
-mkdir -p ~/.claude/skills/arcane-docker
+mkdir -p ~/.claude/skills/arcane-mcp-server
 
 # Copy the skill
-cp /tmp/arcane-claude-install/skills/arcane-docker/SKILL.md ~/.claude/skills/arcane-docker/SKILL.md
+cp /tmp/arcane-claude-install/skills/arcane-mcp-server/SKILL.md ~/.claude/skills/arcane-mcp-server/SKILL.md
 
 # Clean up
 rm -rf /tmp/arcane-claude-install
@@ -95,7 +95,7 @@ rm -rf /tmp/arcane-claude-install
 
 Verify the skill is in place:
 ```bash
-ls -la ~/.claude/skills/arcane-docker/SKILL.md
+ls -la ~/.claude/skills/arcane-mcp-server/SKILL.md
 ```
 
 ### Step 5: Verify Installation
@@ -116,7 +116,7 @@ Tell the user what was installed and provide a quick-start example:
 > **Installation complete!** Here's what's ready:
 >
 > - **MCP Server**: 180 tools connected to your Arcane instance at `{url}`
-> - **Skill**: Workflow guidance active in `~/.claude/skills/arcane-docker/`
+> - **Skill**: Workflow guidance active in `~/.claude/skills/arcane-mcp-server/`
 >
 > **Try it out** — ask Claude:
 > - "What's running in my Docker environment?"
@@ -148,9 +148,9 @@ claude mcp add --transport stdio \
 **3. Install the companion skill:**
 
 ```bash
-git clone --depth 1 https://github.com/RandomSynergy17/ArcaneClaude.git /tmp/arcane-install
-mkdir -p ~/.claude/skills/arcane-docker
-cp /tmp/arcane-install/skills/arcane-docker/SKILL.md ~/.claude/skills/arcane-docker/SKILL.md
+git clone --depth 1 https://github.com/RandomSynergy17/Arcane-MCP-Server.git /tmp/arcane-install
+mkdir -p ~/.claude/skills/arcane-mcp-server
+cp /tmp/arcane-install/skills/arcane-mcp-server/SKILL.md ~/.claude/skills/arcane-mcp-server/SKILL.md
 rm -rf /tmp/arcane-install
 ```
 
@@ -187,8 +187,8 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 ### Option D: Plugin (when marketplace is available)
 
 ```
-/plugin marketplace add RandomSynergy17/ArcaneClaude
-/plugin install arcane-docker@arcane-tools
+/plugin marketplace add RandomSynergy17/Arcane-MCP-Server
+/plugin install arcane-mcp-server
 ```
 
 ---
@@ -257,14 +257,14 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 - Try `npx @randomsynergy/arcane-mcp-server --version` to test
 
 **"Skill not loading"**
-- Verify the file exists: `ls ~/.claude/skills/arcane-docker/SKILL.md`
+- Verify the file exists: `ls ~/.claude/skills/arcane-mcp-server/SKILL.md`
 - Restart Claude Code after installing skills
 
 ---
 
 ## Links
 
-- [ArcaneClaude GitHub](https://github.com/RandomSynergy17/ArcaneClaude)
+- [Arcane MCP Server GitHub](https://github.com/RandomSynergy17/Arcane-MCP-Server)
 - [Arcane Docker Management](https://github.com/getarcaneapp/arcane)
 - [Arcane Setup Docs](https://getarcane.app/docs)
 - [MCP Protocol](https://modelcontextprotocol.io)

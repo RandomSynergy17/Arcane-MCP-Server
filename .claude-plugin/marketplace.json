@@ -1,12 +1,12 @@
 {
-  "name": "arcane-tools",
+  "name": "arcane-mcp-server",
   "owner": {
     "name": "RandomSynergy",
     "url": "https://github.com/RandomSynergy17"
   },
   "plugins": [
     {
-      "name": "arcane-docker",
+      "name": "arcane-mcp-server",
       "source": ".",
       "description": "Docker infrastructure management with 180+ MCP tools, workflow guidance, and safety guardrails",
       "version": "2.0.0",

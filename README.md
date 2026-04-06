@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/RandomSynergy17/ArcaneClaude/releases"><img src="https://img.shields.io/github/v/release/RandomSynergy17/ArcaneClaude?style=flat-square&color=7c3aed" alt="Release" /></a>
+  <a href="https://github.com/RandomSynergy17/Arcane-MCP-Server/releases"><img src="https://img.shields.io/github/v/release/RandomSynergy17/Arcane-MCP-Server?style=flat-square&color=7c3aed" alt="Release" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-7c3aed?style=flat-square" alt="License" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2025--11--25-7c3aed?style=flat-square" alt="MCP Protocol" /></a>
   <a href="https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server"><img src="https://img.shields.io/badge/npm-@randomsynergy/arcane--mcp--server-7c3aed?style=flat-square" alt="npm" /></a>
@@ -38,7 +38,7 @@ A comprehensive [Model Context Protocol](https://modelcontextprotocol.io) server
 Paste this into Claude Code for guided installation:
 
 ```
-Fetch and follow the instructions at: https://raw.githubusercontent.com/RandomSynergy17/ArcaneClaude/main/install_arcane_skill-mcp.md
+Fetch and follow the instructions at: https://raw.githubusercontent.com/RandomSynergy17/Arcane-MCP-Server/main/install_arcane_skill-mcp.md
 ```
 
 Or see the full [Installation Guide](install_arcane_skill-mcp.md) for manual setup and all options.
@@ -107,18 +107,18 @@ Connect at `http://localhost:3000/mcp`. Set `ARCANE_HTTP_PORT` to change the por
 
 ## Companion Skill
 
-ArcaneClaude ships with an optional Claude Code skill that teaches Claude *how* to use the tools — not just *that* they exist.
+Arcane MCP Server ships with an optional Claude Code skill that teaches Claude *how* to use the tools — not just *that* they exist.
 
 ### As a Plugin (Recommended)
 
-Install ArcaneClaude as a Claude Code plugin for the best experience — MCP server and skill together:
+Install Arcane MCP Server as a Claude Code plugin for the best experience — MCP server and skill together:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add RandomSynergy17/ArcaneClaude
+/plugin marketplace add RandomSynergy17/Arcane-MCP-Server
 
 # Install the plugin
-/plugin install arcane-docker@arcane-tools
+/plugin install arcane-mcp-server
 ```
 
 You'll be prompted for your Arcane URL and API key during setup.
@@ -135,7 +135,7 @@ claude mcp add --transport stdio \
   arcane -- npx @randomsynergy/arcane-mcp-server
 
 # Companion skill (optional)
-cp -r skills/arcane-docker ~/.claude/skills/arcane-docker
+cp -r skills/arcane-mcp-server ~/.claude/skills/arcane-mcp-server
 ```
 
 The skill provides:
@@ -402,8 +402,8 @@ These tools perform irreversible actions. The companion skill enforces pre-fligh
 ## Development
 
 ```bash
-git clone https://github.com/RandomSynergy17/ArcaneClaude.git
-cd ArcaneClaude
+git clone https://github.com/RandomSynergy17/Arcane-MCP-Server.git
+cd Arcane-MCP-Server
 npm install
 npm run build
 npm run dev          # stdio mode
@@ -436,7 +436,7 @@ src/
     format.ts           # Display formatting
     tool-helpers.ts     # Shared tool handler wrapper
 skills/
-  arcane-docker/
+  arcane-mcp-server/
     SKILL.md            # Companion Claude Code skill
 ```
 

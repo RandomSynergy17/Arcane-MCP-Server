@@ -1,5 +1,5 @@
 /**
- * Shared constants for ArcaneClaude MCP Server
+ * Shared constants for Arcane MCP Server
  */
 
 // ============= Timing Constants =============
