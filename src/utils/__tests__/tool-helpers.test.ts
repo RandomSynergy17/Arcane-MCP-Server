@@ -60,7 +60,7 @@ describe("toolHandler", () => {
     const handler = toolHandler(fn);
     const result = await handler({ id: 42 });
 
-    expect(result.content[0].text).toBe("got 42");
+    expect((result.content[0] as { type: "text"; text: string }).text).toBe("got 42");
     expect(fn).toHaveBeenCalledWith({ id: 42 }, mockClient);
   });
 });
