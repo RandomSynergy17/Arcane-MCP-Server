@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "arcane": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/index.js"],
+      "env": {
+        "ARCANE_BASE_URL": "${user_config.arcane_base_url}",
+        "ARCANE_API_KEY": "${user_config.arcane_api_key}"
+      }
+    }
+  }
+}

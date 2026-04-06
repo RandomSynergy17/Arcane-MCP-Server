@@ -1,0 +1,19 @@
+{
+  "name": "arcane-docker",
+  "version": "2.0.0",
+  "description": "Docker infrastructure management with 165+ MCP tools, workflow guidance, and safety guardrails. Connects to the Arcane Docker Management platform.",
+  "author": "RandomSynergy",
+  "license": "MIT",
+  "homepage": "https://github.com/RandomSynergy17/ArcaneClaude",
+  "keywords": ["docker", "containers", "infrastructure", "devops", "compose", "swarm", "portainer"],
+  "userConfig": {
+    "arcane_base_url": {
+      "description": "Your Arcane instance URL (e.g., https://arcane.example.com:3552)",
+      "sensitive": false
+    },
+    "arcane_api_key": {
+      "description": "Arcane API key for authentication",
+      "sensitive": true
+    }
+  }
+}
