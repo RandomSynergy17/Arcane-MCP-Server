@@ -24,6 +24,7 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src/",
+    "update-api-spec": "curl -so _docs/arcane_api_docs.json https://arcane.randomsynergy.xyz/api/openapi.json && npx openapi-typescript _docs/arcane_api_docs.json -o src/types/generated/arcane-api.ts",
     "prepublishOnly": "npm run build:types && npm run build"
   },
   "keywords": [
