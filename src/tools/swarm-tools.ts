@@ -283,7 +283,7 @@ export function registerSwarmTools(server: McpServer): void {
       description: "[CRITICAL] Initialize a new Docker Swarm cluster on this node",
       annotations: {
         readOnlyHint: false,
-        destructiveHint: false,
+        destructiveHint: true,
         idempotentHint: false,
         openWorldHint: false,
       },
