@@ -49,3 +49,14 @@ export function formatSizeMB(bytes: number): string {
 export function formatSizeGB(bytes: number): string {
   return `${(bytes / BYTES_PER_GB).toFixed(2)} GB`;
 }
+
+/**
+ * Validate a file path parameter to prevent path traversal attacks.
+ * Rejects paths containing ".." sequences.
+ */
+export function validatePath(path: string): string {
+  if (path.includes("..")) {
+    throw new Error("Path traversal not allowed: path cannot contain '..'");
+  }
+  return path;
+}
