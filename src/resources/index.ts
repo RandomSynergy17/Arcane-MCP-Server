@@ -6,6 +6,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getArcaneClient } from "../client/arcane-client.js";
 import { formatError } from "../utils/error-handler.js";
+import { MCP_PROTOCOL_VERSION } from "../constants.js";
 import { logger } from "../utils/logger.js";
 
 interface Environment {
@@ -87,7 +88,7 @@ export function registerResources(server: McpServer): void {
           "Arcane MCP Server",
           `API Base URL: ${baseUrl}`,
           `Default Environment: ${defaultEnvId || "not set"}`,
-          `Protocol: MCP 2025-11-25`,
+          `Protocol: MCP ${MCP_PROTOCOL_VERSION}`,
         ];
 
         return {

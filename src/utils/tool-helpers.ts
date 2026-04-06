@@ -26,7 +26,7 @@ export function toolHandler<P>(
       const text = await fn(params, client);
       return { content: [{ type: "text" as const, text }] };
     } catch (error) {
-      return { content: [{ type: "text" as const, text: formatError(error) }] };
+      return { content: [{ type: "text" as const, text: formatError(error) }], isError: true };
     }
   };
 }

@@ -21,8 +21,8 @@ export const SESSION_CLEANUP_INTERVAL_MS = 60 * 1000;
 /** Maximum concurrent sessions */
 export const MAX_SESSIONS = 100;
 
-/** Maximum response body size (50MB) */
-export const MAX_RESPONSE_SIZE = 50 * 1024 * 1024;
+/** Maximum response body size (10MB) */
+export const MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
 
 /** Maximum retries for transient failures */
 export const MAX_RETRIES = 3;

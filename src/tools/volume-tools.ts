@@ -211,7 +211,7 @@ export function registerVolumeTools(server: McpServer): void {
 
       const deleted = response.volumesDeleted?.length || 0;
       const space = response.spaceReclaimed
-        ? `${(response.spaceReclaimed / 1e6).toFixed(2)} MB`
+        ? formatSize(response.spaceReclaimed)
         : "unknown";
 
       return `Pruned ${deleted} volumes, reclaimed ${space} of disk space.`;

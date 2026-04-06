@@ -22,6 +22,7 @@ export function registerSystemTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
+      inputSchema: {},
     },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
@@ -271,6 +272,7 @@ export function registerSystemTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
+      inputSchema: {},
     },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
