@@ -1,5 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
-*.tgz
-.DS_Store
+
+# Environment & secrets
 .env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Package artifacts
+*.tgz
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Claude Code worktrees
+.claude/worktrees/
