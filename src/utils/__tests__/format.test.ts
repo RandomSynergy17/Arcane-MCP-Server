@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatSize, formatSizeCompact, formatSizeMB, formatSizeGB } from "../format.js";
+import { formatSize, formatSizeCompact, formatSizeMB, formatSizeGB, validatePath } from "../format.js";
 
 describe("formatSize", () => {
   it("returns 'unknown' for undefined", () => {
@@ -64,5 +64,27 @@ describe("formatSizeMB", () => {
 describe("formatSizeGB", () => {
   it("formats bytes as GB", () => {
     expect(formatSizeGB(1230000000)).toBe("1.23 GB");
+  });
+});
+
+describe("validatePath", () => {
+  it("allows normal paths", () => {
+    expect(validatePath("foo/bar")).toBe("foo/bar");
+    expect(validatePath("./valid")).toBe("./valid");
+    expect(validatePath("data")).toBe("data");
+    expect(validatePath("/absolute/path")).toBe("/absolute/path");
+  });
+
+  it("rejects paths with ..", () => {
+    expect(() => validatePath("..")).toThrow("Path traversal not allowed");
+    expect(() => validatePath("../etc/passwd")).toThrow("Path traversal not allowed");
+    expect(() => validatePath("foo/../bar")).toThrow("Path traversal not allowed");
+    expect(() => validatePath("foo/../../etc")).toThrow("Path traversal not allowed");
+  });
+
+  it("allows paths with dots that are not traversal", () => {
+    expect(validatePath(".hidden")).toBe(".hidden");
+    expect(validatePath("file.txt")).toBe("file.txt");
+    expect(validatePath("path/to/.env")).toBe("path/to/.env");
   });
 });

@@ -50,6 +50,7 @@ describe("toolHandler", () => {
 
     expect(result).toEqual({
       content: [{ type: "text", text: "boom" }],
+      isError: true,
     });
     expect(formatError).toHaveBeenCalledWith(expect.any(Error));
   });
