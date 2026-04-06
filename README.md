@@ -432,7 +432,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## Links
 
 - [Arcane](https://github.com/getarcaneapp/arcane) - The Docker management platform
-- [npm package](https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server)
+- [npm package](https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server) - `npx @randomsynergy/arcane-mcp-server`
 - [Installation Guide](install_arcane_skill-mcp.md) - Interactive installer
 - [Model Context Protocol](https://modelcontextprotocol.io) - MCP specification
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - SDK used by this server
