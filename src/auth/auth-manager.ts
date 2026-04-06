@@ -3,7 +3,6 @@
  * Supports API Key and JWT (with auto-refresh) authentication
  */
 
-import https from "https";
 import { getConfig } from "../config.js";
 import { logger } from "../utils/logger.js";
 import { TOKEN_REFRESH_BUFFER_MS } from "../constants.js";
@@ -36,7 +35,6 @@ export class AuthManager {
   private username?: string;
   private password?: string;
   private baseUrl: string;
-  private skipSslVerify: boolean;
   private refreshPromise: Promise<void> | null = null;
 
   constructor() {
@@ -45,18 +43,15 @@ export class AuthManager {
     this.username = config.username;
     this.password = config.password;
     this.baseUrl = config.baseUrl;
-    this.skipSslVerify = config.skipSslVerify;
   }
 
   /**
-   * Build fetch options with SSL bypass when configured
+   * Build fetch options for auth requests.
+   * SSL bypass is handled globally via NODE_TLS_REJECT_UNAUTHORIZED
+   * (set by ArcaneClient constructor when ARCANE_SKIP_SSL_VERIFY is enabled).
    */
-  private getFetchOptions(): RequestInit & { agent?: https.Agent } {
-    const options: RequestInit & { agent?: https.Agent } = {};
-    if (this.skipSslVerify && this.baseUrl.startsWith("https://")) {
-      options.agent = new https.Agent({ rejectUnauthorized: false });
-    }
-    return options;
+  private getFetchOptions(): RequestInit {
+    return {};
   }
 
   /**
