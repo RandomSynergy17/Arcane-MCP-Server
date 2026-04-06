@@ -33,6 +33,16 @@ A comprehensive [Model Context Protocol](https://modelcontextprotocol.io) server
 
 ## Quick Start
 
+### One-Click Install (Claude Code)
+
+Paste this into Claude Code for guided installation:
+
+```
+Fetch and follow the instructions at: https://raw.githubusercontent.com/RandomSynergy17/ArcaneClaude/main/install_arcane_skill-mcp.md
+```
+
+Or see the full [Installation Guide](install_arcane_skill-mcp.md) for manual setup and all options.
+
 ### Install
 
 ```bash

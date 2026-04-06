@@ -40,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.mcp.json` for Claude Code auto-discovery
 - `marketplace.json` for future plugin marketplace support
 
+#### Installation Guide
+- `install_arcane_skill-mcp.md` — dual-purpose file: readable docs + Claude Code auto-installer prompt
+- Guided installation with interactive setup (MCP, skill, or both)
+- Supports Claude Code, Claude Desktop, and plugin installation methods
+
 #### Docker Swarm Management (11 tools)
 - `arcane_swarm_list_services` - List swarm services with pagination
 - `arcane_swarm_get_service` - Get service details including tasks
