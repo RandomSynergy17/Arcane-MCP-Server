@@ -1,6 +1,7 @@
 ---
 name: arcane-docker
 description: Docker infrastructure management via Arcane MCP tools. Use when the user asks about Docker containers, images, volumes, networks, stacks, deployments, swarm, or any infrastructure management task — and the arcane_* MCP tools are available.
+compatibility: Requires the Arcane MCP server running and a configured Arcane Docker Management instance.
 ---
 
 # Arcane Docker Management

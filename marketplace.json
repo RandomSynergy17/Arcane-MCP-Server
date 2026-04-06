@@ -1,0 +1,16 @@
+{
+  "name": "arcane-tools",
+  "owner": {
+    "name": "RandomSynergy",
+    "url": "https://github.com/RandomSynergy17"
+  },
+  "plugins": [
+    {
+      "name": "arcane-docker",
+      "source": ".",
+      "description": "Docker infrastructure management with 165+ MCP tools and workflow guidance",
+      "version": "2.0.0",
+      "keywords": ["docker", "containers", "infrastructure", "devops", "compose", "swarm"]
+    }
+  ]
+}

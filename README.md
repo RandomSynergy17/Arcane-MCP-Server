@@ -99,8 +99,33 @@ Connect at `http://localhost:3000/mcp`. Set `ARCANE_HTTP_PORT` to change the por
 
 ArcaneClaude ships with an optional Claude Code skill that teaches Claude *how* to use the tools — not just *that* they exist.
 
+### As a Plugin (Recommended)
+
+Install ArcaneClaude as a Claude Code plugin for the best experience — MCP server and skill together:
+
 ```bash
-cp -r skill/arcane-docker ~/.claude/skills/arcane-docker
+# Add the marketplace
+/plugin marketplace add RandomSynergy17/ArcaneClaude
+
+# Install the plugin
+/plugin install arcane-docker@arcane-tools
+```
+
+You'll be prompted for your Arcane URL and API key during setup.
+
+### Manual Installation
+
+If you prefer manual setup:
+
+```bash
+# MCP server
+claude mcp add --transport stdio \
+  --env ARCANE_API_KEY=your-key \
+  --env ARCANE_BASE_URL=https://arcane.example.com:3552 \
+  arcane -- npx @randomsynergy/arcane-mcp-server
+
+# Companion skill (optional)
+cp -r skills/arcane-docker ~/.claude/skills/arcane-docker
 ```
 
 The skill provides:
@@ -367,7 +392,7 @@ src/
     error-handler.ts    # Error classes and formatting
     format.ts           # Display formatting
     tool-helpers.ts     # Shared tool handler wrapper
-skill/
+skills/
   arcane-docker/
     SKILL.md            # Companion Claude Code skill
 ```
