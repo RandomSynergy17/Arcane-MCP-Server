@@ -17,6 +17,7 @@ A comprehensive [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 
 - **GitOps Integration**: Git-based deployments and syncing
 - **Multi-Environment**: Manage multiple Docker hosts from a single server
 - **Type-Safe**: Generated TypeScript types from OpenAPI specification
+- **Companion Skill**: Optional Claude Code skill for workflow guidance and safety guardrails
 
 ## Quick Start
 
@@ -99,6 +100,20 @@ ARCANE_HTTP_PORT=8080 npx @randomsynergy/arcane-mcp-server --tcp
 ```
 
 Then connect your MCP client to `http://localhost:3000/mcp`.
+
+### Companion Skill (Optional)
+
+ArcaneClaude includes a Claude Code skill that teaches Claude how to use the MCP tools effectively — workflow patterns, safety guardrails, and intent mapping. To install it:
+
+```bash
+# Copy the skill into your Claude Code skills directory
+cp -r skill/arcane-docker ~/.claude/skills/arcane-docker
+```
+
+The skill activates automatically when you ask about Docker operations and the Arcane MCP tools are available. It provides:
+- **Workflow chains**: Safe deployment, rollback, troubleshooting, cleanup sequences
+- **Safety guardrails**: Pre-flight checks before destructive operations, backup reminders
+- **Intent mapping**: Maps natural language ("what's broken?", "update everything") to the right tool sequences
 
 ## Available Tools
 
