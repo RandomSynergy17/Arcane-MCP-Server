@@ -1,5 +1,11 @@
 /**
  * MCP Server factory for Arcane
+ *
+ * Provides two factory functions:
+ * - createArcaneServer(): Full server for single-connection transports (stdio)
+ * - createSessionServer(): Lightweight server for HTTP sessions that shares
+ *   tool/resource/prompt registrations from a singleton template to avoid
+ *   re-registering 180+ tools per session (PERF-01)
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -14,7 +20,8 @@ const require = createRequire(import.meta.url);
 const { version: VERSION } = require("../package.json") as { version: string };
 
 /**
- * Create and configure the Arcane MCP Server
+ * Create and configure the Arcane MCP Server (full registration).
+ * Used by stdio transport where there is only one connection.
  */
 export function createArcaneServer(): McpServer {
   // Load configuration
@@ -41,4 +48,91 @@ export function createArcaneServer(): McpServer {
   return server;
 }
 
-export default { createArcaneServer };
+// ---------------------------------------------------------------------------
+// Shared-template optimisation for HTTP sessions (PERF-01)
+// ---------------------------------------------------------------------------
+
+/**
+ * Singleton template McpServer.  Created once on first call to
+ * createSessionServer(). All tools, resources, and prompts are registered
+ * on this instance; per-session servers share the registrations by
+ * copying internal references rather than re-registering 180+ tools.
+ */
+let _template: McpServer | null = null;
+
+/**
+ * Initialise (or return) the singleton template.
+ */
+function getTemplate(): McpServer {
+  if (_template) return _template;
+
+  loadConfig();
+  logger.info(`Creating shared McpServer template v${VERSION}`);
+
+  _template = new McpServer({ name: "arcane", version: VERSION });
+
+  registerAllTools(_template);
+  registerResources(_template);
+  registerPrompts(_template);
+
+  logger.info("Shared McpServer template ready");
+  return _template;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>;
+
+/**
+ * Create a lightweight McpServer for an HTTP session.
+ *
+ * Instead of calling registerAllTools / registerResources / registerPrompts
+ * (which would create 180+ tool registrations per session), this copies
+ * the internal registration dictionaries and request-handler map from a
+ * shared template so that every session shares the same tool definitions
+ * and handler closures.
+ *
+ * The MCP SDK stores registrations in plain objects
+ * (_registeredTools, _registeredResources, etc.) and request handlers in
+ * a Map on the underlying Protocol/Server. By assigning these from the
+ * template before connecting, the new McpServer is fully configured
+ * without the overhead of individual registerTool() calls.
+ */
+export function createSessionServer(): McpServer {
+  const template = getTemplate();
+  const tpl = template as unknown as AnyRecord;
+
+  // Create a bare McpServer (no tool registrations)
+  const session = new McpServer({ name: "arcane", version: VERSION });
+  const ses = session as unknown as AnyRecord;
+
+  // --- Share registration dictionaries (read-only references) ---
+  ses._registeredTools = tpl._registeredTools;
+  ses._registeredResources = tpl._registeredResources;
+  ses._registeredResourceTemplates = tpl._registeredResourceTemplates;
+  ses._registeredPrompts = tpl._registeredPrompts;
+
+  // --- Copy initialisation flags so McpServer skips re-setup guards ---
+  ses._toolHandlersInitialized = true;
+  ses._resourceHandlersInitialized = true;
+  ses._promptHandlersInitialized = true;
+  ses._completionHandlerInitialized = tpl._completionHandlerInitialized;
+
+  // --- Copy request handlers & capabilities from the template's Server ---
+  const tplServer = tpl.server as AnyRecord;
+  const sesServer = ses.server as AnyRecord;
+
+  // _requestHandlers is a Map<string, handler>.  We copy all entries so
+  // that tools/list, tools/call, resources/list, etc. are already wired.
+  const tplHandlers: Map<string, unknown> = tplServer._requestHandlers;
+  const sesHandlers: Map<string, unknown> = sesServer._requestHandlers;
+  for (const [method, handler] of tplHandlers) {
+    sesHandlers.set(method, handler);
+  }
+
+  // Capabilities must be set before connect() (SDK throws otherwise)
+  sesServer._capabilities = { ...tplServer._capabilities };
+
+  return session;
+}
+
+export default { createArcaneServer, createSessionServer };
