@@ -6,15 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface User {
-  id: string;
-  username: string;
-  role: string;
-  createdAt: string;
-  lastLoginAt?: string;
-  oidcSubject?: string;
-}
+import type { User } from "../types/arcane-types.js";
 
 export function registerUserTools(server: McpServer): void {
   // arcane_user_list

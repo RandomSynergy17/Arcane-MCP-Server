@@ -8,29 +8,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { validatePath } from "../utils/format.js";
 import { logger } from "../utils/logger.js";
-
-interface GitOpsSync {
-  id: string;
-  name: string;
-  repositoryId: string;
-  branch: string;
-  path: string;
-  targetProjectId?: string;
-  lastSyncAt?: string;
-  lastSyncStatus?: string;
-  autoSync: boolean;
-  syncInterval?: number;
-}
-
-interface GitRepository {
-  id: string;
-  name: string;
-  url: string;
-  branch: string;
-  authType: string;
-  lastTestAt?: string;
-  lastTestStatus?: string;
-}
+import type { GitOpsSync, GitRepository } from "../types/arcane-types.js";
 
 export function registerGitopsTools(server: McpServer): void {
   // ============= GitOps Sync =============

@@ -6,17 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface ContainerRegistry {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  username?: string;
-  createdAt?: string;
-  lastTestAt?: string;
-  lastTestStatus?: string;
-}
+import type { ContainerRegistry } from "../types/arcane-types.js";
 
 export function registerRegistryTools(server: McpServer): void {
   // arcane_registry_list

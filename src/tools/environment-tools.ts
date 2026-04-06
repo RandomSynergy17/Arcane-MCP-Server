@@ -7,15 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { formatSizeGB } from "../utils/format.js";
 import { logger } from "../utils/logger.js";
-
-interface Environment {
-  id: string;
-  name: string;
-  apiUrl?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import type { Environment } from "../types/arcane-types.js";
 
 export function registerEnvironmentTools(server: McpServer): void {
   // arcane_environment_list

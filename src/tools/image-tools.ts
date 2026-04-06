@@ -8,15 +8,7 @@ import { toolHandler } from "../utils/tool-helpers.js";
 import { formatSize, formatSizeMB, formatSizeGB } from "../utils/format.js";
 import { DOCKER_DIGEST_PREFIX_LENGTH, DOCKER_SHORT_ID_LENGTH } from "../constants.js";
 import { logger } from "../utils/logger.js";
-
-interface Image {
-  id: string;
-  repoTags: string[];
-  repoDigests?: string[];
-  created: string;
-  size: number;
-  virtualSize?: number;
-}
+import type { Image } from "../types/arcane-types.js";
 
 export function registerImageTools(server: McpServer): void {
   // arcane_image_list

@@ -6,15 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface PortMapping {
-  containerName: string;
-  containerId: string;
-  privatePort: number;
-  publicPort?: number;
-  protocol: string;
-  ip?: string;
-}
+import type { PortMapping } from "../types/arcane-types.js";
 
 export function registerPortTools(server: McpServer): void {
 

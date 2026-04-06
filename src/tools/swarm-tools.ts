@@ -6,27 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface SwarmService {
-  id: string;
-  name: string;
-  image: string;
-  replicas: number;
-  desiredReplicas: number;
-  ports?: Array<{ publishedPort: number; targetPort: number; protocol: string }>;
-  updatedAt?: string;
-  mode?: string;
-}
-
-interface SwarmClusterInfo {
-  id: string;
-  version: string;
-  createdAt: string;
-  updatedAt: string;
-  nodeCount: number;
-  managerCount: number;
-  workerCount: number;
-}
+import type { SwarmService, SwarmClusterInfo } from "../types/arcane-types.js";
 
 export function registerSwarmTools(server: McpServer): void {
 

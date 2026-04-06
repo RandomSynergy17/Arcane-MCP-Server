@@ -7,21 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { DOCKER_SHORT_ID_LENGTH } from "../constants.js";
 import { logger } from "../utils/logger.js";
-
-interface Network {
-  id: string;
-  name: string;
-  driver: string;
-  scope: string;
-  internal: boolean;
-  attachable: boolean;
-  ipam?: {
-    driver: string;
-    config?: Array<{ subnet?: string; gateway?: string }>;
-  };
-  containers?: Record<string, { name: string; ipv4Address?: string }>;
-  created?: string;
-}
+import type { Network } from "../types/arcane-types.js";
 
 export function registerNetworkTools(server: McpServer): void {
 

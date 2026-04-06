@@ -7,32 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { validatePath } from "../utils/format.js";
 import { logger } from "../utils/logger.js";
-
-interface Build {
-  id: string;
-  status: string;
-  tag?: string;
-  platform?: string;
-  provider?: string;
-  startedAt?: string;
-  completedAt?: string;
-  error?: string;
-}
-
-interface BuildDetails extends Build {
-  dockerfile?: string;
-  gitUrl?: string;
-  buildArgs?: Record<string, string>;
-  logs?: string;
-}
-
-interface WorkspaceFile {
-  name: string;
-  path: string;
-  size?: number;
-  isDirectory: boolean;
-  modifiedAt?: string;
-}
+import type { Build, BuildDetails, WorkspaceFile } from "../types/arcane-types.js";
 
 export function registerBuildTools(server: McpServer): void {
 

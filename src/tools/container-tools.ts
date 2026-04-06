@@ -7,17 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT } from "../constants.js";
 import { logger } from "../utils/logger.js";
-
-interface Container {
-  id: string;
-  name: string;
-  image: string;
-  status: string;
-  state: string;
-  created: string;
-  ports?: Array<{ privatePort: number; publicPort?: number; type: string }>;
-  labels?: Record<string, string>;
-}
+import type { Container } from "../types/arcane-types.js";
 
 export function registerContainerTools(server: McpServer): void {
 

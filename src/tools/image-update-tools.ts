@@ -6,28 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface ImageUpdateResponse {
-  imageRef: string;
-  currentDigest?: string;
-  latestDigest?: string;
-  updateAvailable: boolean;
-  currentTag?: string;
-  latestTag?: string;
-}
-
-interface BatchImageUpdateResponse {
-  results: Array<ImageUpdateResponse & { imageId: string }>;
-  total: number;
-  updatesAvailable: number;
-}
-
-interface ImageUpdateSummary {
-  totalImages: number;
-  checkedImages: number;
-  updatesAvailable: number;
-  lastCheckedAt?: string;
-}
+import type { ImageUpdateResponse, BatchImageUpdateResponse, ImageUpdateSummary } from "../types/arcane-types.js";
 
 export function registerImageUpdateTools(server: McpServer): void {
 

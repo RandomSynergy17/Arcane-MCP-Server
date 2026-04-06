@@ -6,17 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface Job {
-  id: string;
-  name: string;
-  type: string;
-  status: string;
-  lastRunAt?: string;
-  nextRunAt?: string;
-  schedule?: string;
-  enabled: boolean;
-}
+import type { Job } from "../types/arcane-types.js";
 
 export function registerJobTools(server: McpServer): void {
   // arcane_job_list

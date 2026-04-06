@@ -7,20 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { MAX_DISPLAY_SERVICES } from "../constants.js";
 import { logger } from "../utils/logger.js";
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-  path?: string;
-  services: Array<{
-    name: string;
-    status: string;
-    containerCount?: number;
-  }>;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import type { Project } from "../types/arcane-types.js";
 
 export function registerProjectTools(server: McpServer): void {
 

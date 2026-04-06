@@ -6,24 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface TopologyNode {
-  id: string;
-  type: string;
-  name: string;
-  status?: string;
-}
-
-interface TopologyEdge {
-  source: string;
-  target: string;
-  type?: string;
-}
-
-interface NetworkTopology {
-  nodes: TopologyNode[];
-  edges: TopologyEdge[];
-}
+import type { NetworkTopology } from "../types/arcane-types.js";
 
 export function registerNetworkTopologyTools(server: McpServer): void {
 

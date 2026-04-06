@@ -7,19 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { MAX_DISPLAY_EVENTS } from "../constants.js";
 import { logger } from "../utils/logger.js";
-
-interface Event {
-  id: string;
-  type: string;
-  message: string;
-  resourceType?: string;
-  resourceId?: string;
-  resourceName?: string;
-  userId?: string;
-  username?: string;
-  createdAt: string;
-  metadata?: Record<string, unknown>;
-}
+import type { Event } from "../types/arcane-types.js";
 
 export function registerEventTools(server: McpServer): void {
 

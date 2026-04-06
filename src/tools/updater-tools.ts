@@ -6,34 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface UpdaterResult {
-  updated: number;
-  failed: number;
-  skipped: number;
-  results: Array<{
-    containerId: string;
-    containerName: string;
-    status: string;
-    message?: string;
-  }>;
-}
-
-interface UpdaterStatus {
-  running: boolean;
-  lastRunAt?: string;
-  nextRunAt?: string;
-  schedule?: string;
-}
-
-interface UpdateRecord {
-  id: string;
-  containerName: string;
-  oldImage: string;
-  newImage: string;
-  status: string;
-  updatedAt: string;
-}
+import type { UpdaterResult, UpdaterStatus, UpdateRecord } from "../types/arcane-types.js";
 
 export function registerUpdaterTools(server: McpServer): void {
 

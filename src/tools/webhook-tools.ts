@@ -6,17 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface Webhook {
-  id: string;
-  name: string;
-  url?: string;
-  token?: string;
-  enabled: boolean;
-  events?: string[];
-  createdAt?: string;
-  lastTriggeredAt?: string;
-}
+import type { Webhook } from "../types/arcane-types.js";
 
 export function registerWebhookTools(server: McpServer): void {
 

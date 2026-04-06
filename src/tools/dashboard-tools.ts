@@ -6,24 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { logger } from "../utils/logger.js";
-
-interface DashboardSnapshot {
-  containers: { total: number; running: number; stopped: number };
-  projects: { total: number; running: number; stopped: number };
-  images: { total: number; updatesAvailable: number };
-  volumes: { total: number; totalSize?: string };
-  networks: { total: number };
-  systemInfo?: { dockerVersion?: string; osType?: string; cpus?: number; memoryBytes?: number };
-}
-
-interface ActionItem {
-  type: string;
-  severity: string;
-  title: string;
-  description?: string;
-  resourceId?: string;
-  resourceName?: string;
-}
+import type { DashboardSnapshot, ActionItem } from "../types/arcane-types.js";
 
 export function registerDashboardTools(server: McpServer): void {
 
