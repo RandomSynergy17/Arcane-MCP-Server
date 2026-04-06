@@ -4,6 +4,8 @@
 
 This installs Arcane MCP Server — 180+ MCP tools for Docker management via [Arcane](https://github.com/getarcaneapp/arcane), with an optional companion skill for workflow guidance.
 
+> **Disclaimer:** This is an independent, community-built project — not affiliated with or endorsed by the Arcane project or its maintainers.
+
 ---
 
 ## What Gets Installed

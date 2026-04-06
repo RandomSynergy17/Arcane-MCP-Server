@@ -26,6 +26,8 @@
 
 ---
 
+> **Note:** This is an independent, community-built project. It is **not affiliated with, endorsed by, or maintained by** the [Arcane](https://github.com/getarcaneapp/arcane) project or its maintainers. We build on top of Arcane's public API.
+
 A [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI assistants full control over [Arcane](https://github.com/getarcaneapp/arcane) Docker infrastructure. Containers, images, volumes, networks, Compose stacks, Swarm clusters, vulnerability scanning, GitOps, builds, auto-updates — all through conversational commands.
 
 ### Why Arcane MCP Server?
