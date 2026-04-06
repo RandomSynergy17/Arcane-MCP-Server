@@ -162,12 +162,24 @@ export async function startTcpServer(): Promise<void> {
   app.get("/health", (_req: Request, res: Response) => {
     res.json({
       status: "ok",
-      server: "arcane-mcp-server",
-      mcpProtocolVersion: MCP_PROTOCOL_VERSION,
-      activeSessions: sessions.size,
-      maxSessions: MAX_SESSIONS,
     });
   });
+
+  // SEC-06: Basic in-memory rate limiting for MCP endpoint
+  const requestCounts = new Map<string, { count: number; resetAt: number }>();
+  const RATE_LIMIT = 100; // requests per window
+  const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+
+  function checkRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const entry = requestCounts.get(ip);
+    if (!entry || now > entry.resetAt) {
+      requestCounts.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+      return true;
+    }
+    entry.count++;
+    return entry.count <= RATE_LIMIT;
+  }
 
   // Apply MCP security middleware to /mcp endpoint
   app.use("/mcp", validateOrigin);
@@ -175,6 +187,13 @@ export async function startTcpServer(): Promise<void> {
 
   // MCP endpoint
   app.all("/mcp", async (req: Request, res: Response) => {
+    // Rate limit check
+    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+    if (!checkRateLimit(clientIp)) {
+      res.status(429).json({ error: "Rate limit exceeded" });
+      return;
+    }
+
     try {
       // Get or create session ID
       const sessionId = req.headers["mcp-session-id"] as string | undefined;

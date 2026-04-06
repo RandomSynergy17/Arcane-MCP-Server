@@ -2,7 +2,7 @@
  * Configuration management for Arcane MCP Server
  */
 
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { logger } from "./utils/logger.js";
@@ -79,6 +79,16 @@ function loadConfigFile(): Partial<ArcaneConfig> {
     }
 
     logger.debug(`Loaded config from ${CONFIG_FILE_PATH}`);
+
+    // SEC-04: Warn if config file has broad permissions (readable by group/others)
+    try {
+      const stat = statSync(CONFIG_FILE_PATH);
+      const mode = stat.mode & 0o777;
+      if (mode & 0o077) {
+        logger.warn(`Config file ${CONFIG_FILE_PATH} has broad permissions (${mode.toString(8)}). Consider: chmod 600 ${CONFIG_FILE_PATH}`);
+      }
+    } catch { /* ignore stat errors */ }
+
     return result;
   } catch (error) {
     logger.warn(`Failed to load config file: ${error}`);

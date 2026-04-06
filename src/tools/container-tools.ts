@@ -5,7 +5,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS } from "../constants.js";
+import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT } from "../constants.js";
 import { logger } from "../utils/logger.js";
 
 interface Container {
@@ -38,8 +38,8 @@ export function registerContainerTools(server: McpServer): void {
       search: z.string().optional().describe("Search query to filter containers"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
-      start: z.number().optional().default(0).describe("Pagination start index"),
-      limit: z.number().optional().default(20).describe("Items per page"),
+      start: z.number().optional().default(DEFAULT_PAGINATION_START).describe("Pagination start index"),
+      limit: z.number().optional().default(DEFAULT_PAGINATION_LIMIT).describe("Items per page"),
       includeInternal: z.boolean().optional().default(false).describe("Include internal containers"),
     },
     },

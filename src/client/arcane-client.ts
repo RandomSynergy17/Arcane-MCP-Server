@@ -142,7 +142,8 @@ export class ArcaneClient {
         // Handle empty responses (return undefined-safe empty object)
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-          return undefined as unknown as T;
+          // No JSON body — callers should handle undefined
+          return undefined as T;
         }
 
         // Check response size before reading
@@ -159,7 +160,8 @@ export class ArcaneClient {
 
         const text = await response.text();
         if (!text) {
-          return undefined as unknown as T;
+          // No JSON body — callers should handle undefined
+          return undefined as T;
         }
 
         // Additional size check for responses without Content-Length
