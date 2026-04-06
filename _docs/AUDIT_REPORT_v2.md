@@ -1,10 +1,10 @@
 # Arcane MCP Server — Audit Report
 
-**Version:** 2.0.1
-**Audit Date:** April 6, 2026 (updated April 7, 2026)
+**Version:** 2.0.1+
+**Audit Date:** April 6, 2026 (final update April 7, 2026)
 **Prior Audit:** v1.0.0 (February 4, 2026 — 100+ issues, 19 critical)
 **Auditor:** Claude Opus 4.6 (automated 13-category review per AUDIT_PROMPT.md)
-**Tool Count:** 180 (verified) | **Resources:** 2 | **Prompts:** 4 | **Tests:** 50
+**Tool Count:** 180 (verified) | **Resources:** 2 | **Prompts:** 4 | **Tests:** 79
 
 ---
 
@@ -19,17 +19,17 @@ v2.0.1 resolves all critical and high issues from prior audits. The codebase has
 | Security | 0 | 0 | 0 | 0 |
 | Code Quality | 0 | 0 | 0 | 2 |
 | Error Handling | 0 | 0 | 0 | 1 |
-| TypeScript | 0 | 0 | 1 | 1 |
+| TypeScript | 0 | 0 | 0 | 1 |
 | MCP Protocol | 0 | 0 | 0 | 0 |
 | API Design | 0 | 0 | 0 | 1 |
-| Testing | 0 | 0 | 1 | 0 |
-| Performance | 0 | 0 | 1 | 0 |
+| Testing | 0 | 0 | 0 | 0 |
+| Performance | 0 | 0 | 0 | 0 |
 | Dependencies | 0 | 0 | 0 | 2 |
 | Skill Quality | 0 | 0 | 0 | 0 |
 | Plugin Format | 0 | 0 | 0 | 1 |
 | Publishing | 0 | 0 | 0 | 0 |
 | Cross-Platform | 0 | 0 | 0 | 0 |
-| **TOTALS** | **0** | **0** | **3** | **8** |
+| **TOTALS** | **0** | **0** | **0** | **8** |
 
 ---
 
@@ -58,26 +58,15 @@ All critical and high issues from the v2.0.0 audit have been resolved:
 | API-01 | `tag: "latest"` default | FIXED — tag now required |
 | API-02 | Pagination defaults hardcoded | FIXED �� container-tools uses constants (proof of concept) |
 | CQ-04 | Version duplicated in 5 places | FIXED — server.ts reads from package.json at runtime |
-| TEST-01 | Zero test files | FIXED — 50 tests across 4 files |
+| TEST-01 | Zero test files | FIXED — 79 tests across 8 files |
 | TEST-02 | CI missing test/audit | FIXED — `npm test` + `npm audit` in pipeline |
+| TS-01 | Duplicated interfaces in tool files | FIXED — 33 interfaces in `src/types/arcane-types.ts` |
+| PERF-01 | McpServer created per HTTP session | FIXED — template pattern shares registrations |
+| TEST-03 | Coverage below 60% | FIXED — 29 integration tests added (79 total) |
 
 ---
 
 ## Remaining Issues (Medium + Low)
-
-### [MEDIUM] TS-01: Interface definitions duplicated across tool files
-- **File:** All 25 tool files define local interfaces
-- **Description:** Each tool file has its own `Container`, `Volume`, etc. interfaces instead of importing from `src/types/generated/arcane-api.ts`. Drift risk.
-- **Recommendation:** Refactor to shared types in a future release. Low urgency since interfaces are simple and the generated types have complex nested generics.
-
-### [MEDIUM] PERF-01: New McpServer created per HTTP session
-- **File:** `src/tcp-server.ts`
-- **Description:** Each session creates a fresh McpServer + registers 180 tools. With 100 max sessions, this is non-trivial memory use.
-- **Recommendation:** Profile actual memory usage under load before optimizing. The per-session isolation is a security benefit.
-
-### [MEDIUM] TEST-03: Test coverage below 60% threshold
-- **Description:** 50 tests cover utilities and config, but no tool modules or resources/prompts are tested.
-- **Recommendation:** Add integration tests for 2-3 tool modules with mocked HTTP client.
 
 ### [LOW] CQ-03: Logger import boilerplate in 25 tool files
 - **Description:** All tool files import logger for a single `logger.debug("Registered X tools")` call.
@@ -140,11 +129,15 @@ All critical and high issues from the v2.0.0 audit have been resolved:
 - No path separator issues
 - Portable plugin paths
 
-### Testing: 50 tests, 4 files
+### Testing: 79 tests, 8 files
 - tool-helpers (success/error/isError/params)
 - format (formatSize, formatSizeCompact, formatSizeMB, formatSizeGB, validatePath)
 - error-handler (all error classes, formatError dispatch)
 - config (defaults, env overrides, caching, validation)
+- container-tools (list, get, delete, error handling)
+- dashboard-tools (snapshot, action items, errors)
+- resources (environments, version, errors)
+- prompts (all 4 prompts, tool references, message structure)
 
 ---
 
@@ -163,7 +156,7 @@ All critical and high issues from the v2.0.0 audit have been resolved:
 - **Auditor:** Claude Opus 4.6 (1M context)
 - **Method:** Full 13-category review per AUDIT_PROMPT.md
 - **Build:** Clean (zero errors, zero warnings)
-- **Tests:** 50 passing across 4 files
+- **Tests:** 79 passing across 8 files
 - **npm Audit:** 5 moderate vulnerabilities (all dev-only vitest chain)
 - **npm Pack:** ~141 KB compressed
 - **Tool Cross-Check:** 27 prompt refs + 44 skill refs verified against 180 registrations

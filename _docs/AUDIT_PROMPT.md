@@ -205,12 +205,53 @@ End with:
 
 ---
 
+## Lessons Learned (from v1.0.0 → v2.0.1 audit cycle)
+
+These patterns were discovered during three rounds of auditing this project. Include them in every audit pass.
+
+### Common MCP Server Pitfalls
+- **`server.tool()` is deprecated** — always verify tools use `server.registerTool()` with the config object pattern
+- **Missing `isError: true`** — tool failure responses MUST include `isError: true` per MCP spec, otherwise clients can't distinguish failures from success
+- **Annotations default to worst-case** — without `readOnlyHint`, every tool is treated as potentially destructive. Read-only tools (list, get, browse) need explicit `readOnlyHint: true`
+- **`openWorldHint`** — tools that reach Docker registries, Git servers, or external URLs should be `openWorldHint: true`
+- **Prompts referencing nonexistent tools** — always cross-check every tool name in prompts/skill against actual `registerTool()` calls
+- **SSL bypass with native fetch** — Node.js native `fetch()` ignores `https.Agent`. Use `NODE_TLS_REJECT_UNAUTHORIZED` or undici's `dispatcher` option
+
+### Common Code Quality Patterns
+- **Inline interfaces drift** — tool files that define their own response interfaces will drift from the actual API. Use shared types
+- **Magic numbers** — size conversions (1e6, 1e9, 1073741824) should use utility functions, not inline math. Watch for SI vs binary unit inconsistency
+- **`toolHandler()` wrapper** — eliminates try-catch boilerplate and centralizes error formatting. Any raw try-catch in a tool handler is a red flag
+- **Version string duplication** — read version from package.json at runtime instead of hardcoding in multiple files
+- **Per-session overhead** — MCP servers with 100+ tools should share tool registrations across HTTP sessions, not re-register per connection
+
+### Testing Gaps to Check
+- **Tests exist but never run** — vitest config with thresholds means nothing if no test files exist and CI doesn't run tests
+- **Tool handler tests need isError assertion** — if toolHandler was updated, the error test must verify `isError: true`
+- **Integration tests need mocked client** — mock `getArcaneClient()` to return a fake with `get`/`post`/`delete` stubs
+- **Prompt tests should verify tool names** — grep for `arcane_` in prompt content and cross-check against registered tools
+
+### Security Items Easy to Miss
+- **`.env` committed to git** — always check `git ls-files` for secrets, not just `.gitignore`
+- **Config file permissions** — `~/.arcane/config.json` with API keys should be 600, not world-readable
+- **Health endpoint metadata** — session counts, server internals should not be exposed without auth
+- **Path traversal on browse endpoints** — any tool accepting a `path` parameter for file operations needs `..` validation
+- **Rate limiting** — HTTP transport without rate limiting enables denial-of-service
+
+### Audit Process Improvements
+- **Run the audit in phases** — fix critical/high first, re-audit, then medium, then low. Don't try to fix everything in one pass
+- **Use parallel agents in worktrees** — independent fixes (different files) can run simultaneously without merge conflicts
+- **Cross-check tool counts** — `grep -c "registerTool(" src/tools/*.ts` should match documented counts
+- **Verify CI actually runs** — a green CI that only builds and doesn't test gives false confidence
+- **Check npm publish** — the published package may be stale if `npm publish` wasn't run after fixes
+
+---
+
 ## Metadata
 
-- **Target:** Arcane MCP Server v2.0.0
+- **Target:** Arcane MCP Server v2.0.1+
 - **Repo:** github.com/RandomSynergy17/Arcane-MCP-Server
 - **npm:** @randomsynergy/arcane-mcp-server
-- **Prior audit:** v1.0.0 (100+ issues, 19 critical)
+- **Prior audits:** v1.0.0 (100+ issues, 19 critical), v2.0.0 (31 issues, 2 critical), v2.0.1 (8 low remaining)
 - **Stack:** TypeScript, Node.js 18+, @modelcontextprotocol/sdk, Express, Zod
 - **References:**
   - [MCP Specification 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
