@@ -23,6 +23,13 @@ import { registerNotificationTools } from "./notification-tools.js";
 import { registerEventTools } from "./event-tools.js";
 import { registerUserTools } from "./user-tools.js";
 import { registerSettingsTools } from "./settings-tools.js";
+import { registerSwarmTools } from "./swarm-tools.js";
+import { registerWebhookTools } from "./webhook-tools.js";
+import { registerVulnerabilityTools } from "./vulnerability-tools.js";
+import { registerImageUpdateTools } from "./image-update-tools.js";
+import { registerDashboardTools } from "./dashboard-tools.js";
+import { registerPortTools } from "./port-tools.js";
+import { registerUpdaterTools } from "./updater-tools.js";
 
 /**
  * Register all tools with the MCP server
@@ -77,6 +84,27 @@ export function registerAllTools(server: McpServer): void {
 
   // Settings
   registerSettingsTools(server);
+
+  // Docker Swarm
+  registerSwarmTools(server);
+
+  // Webhooks
+  registerWebhookTools(server);
+
+  // Vulnerability Scanning
+  registerVulnerabilityTools(server);
+
+  // Image Update Checking
+  registerImageUpdateTools(server);
+
+  // Dashboard
+  registerDashboardTools(server);
+
+  // Port Mappings
+  registerPortTools(server);
+
+  // Auto-Updater
+  registerUpdaterTools(server);
 
   logger.info("Registered all Arcane tools");
 }

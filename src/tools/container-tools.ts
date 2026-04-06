@@ -214,6 +214,35 @@ export function registerContainerTools(server: McpServer): void {
     })
   );
 
+  // arcane_container_redeploy
+  server.tool(
+    "arcane_container_redeploy",
+    "Redeploy a single container (pull latest image and recreate)",
+    {
+      environmentId: z.string().describe("Environment ID"),
+      containerId: z.string().describe("Container ID or name to redeploy"),
+    },
+    toolHandler(async ({ environmentId, containerId }, client) => {
+      await client.post(`/environments/${environmentId}/containers/${containerId}/redeploy`);
+      return `Container ${containerId} redeployed successfully.`;
+    })
+  );
+
+  // arcane_container_set_auto_update
+  server.tool(
+    "arcane_container_set_auto_update",
+    "Enable or disable automatic updates for a specific container",
+    {
+      environmentId: z.string().describe("Environment ID"),
+      containerId: z.string().describe("Container ID or name"),
+      enabled: z.boolean().describe("Enable (true) or disable (false) auto-update"),
+    },
+    toolHandler(async ({ environmentId, containerId, enabled }, client) => {
+      await client.put(`/environments/${environmentId}/containers/${containerId}/auto-update`, { enabled });
+      return `Auto-update ${enabled ? "enabled" : "disabled"} for container ${containerId}.`;
+    })
+  );
+
   // arcane_container_get_counts
   server.tool(
     "arcane_container_get_counts",

@@ -5,6 +5,83 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-06
+
+### Added
+
+#### Docker Swarm Management (11 tools)
+- `arcane_swarm_list_services` - List swarm services with pagination
+- `arcane_swarm_get_service` - Get service details including tasks
+- `arcane_swarm_create_service` - Create swarm services with ports, env, networks
+- `arcane_swarm_update_service` - Update service configuration
+- `arcane_swarm_delete_service` - Delete a swarm service
+- `arcane_swarm_scale_service` - Scale service replicas
+- `arcane_swarm_get_service_logs` - Get service logs
+- `arcane_swarm_init_cluster` - Initialize a new swarm cluster
+- `arcane_swarm_join_cluster` - Join an existing swarm cluster
+- `arcane_swarm_leave_cluster` - Leave the swarm cluster
+- `arcane_swarm_get_cluster_info` - Get cluster info and node counts
+
+#### Webhook Management (4 tools)
+- `arcane_webhook_list` - List configured webhooks
+- `arcane_webhook_create` - Create inbound webhooks
+- `arcane_webhook_update` - Update webhook configuration
+- `arcane_webhook_delete` - Delete webhooks
+
+#### Vulnerability Scanning (8 tools)
+- `arcane_vulnerability_scan_image` - Trigger image vulnerability scan
+- `arcane_vulnerability_get_scan_result` - Get full scan results
+- `arcane_vulnerability_get_scan_summary` - Get scan summary for an image
+- `arcane_vulnerability_get_scan_summaries` - Batch scan summaries
+- `arcane_vulnerability_list` - List vulnerabilities with filtering
+- `arcane_vulnerability_get_environment_summary` - Environment-wide summary
+- `arcane_vulnerability_ignore` - Ignore a vulnerability
+- `arcane_vulnerability_unignore` - Unignore a vulnerability
+
+#### Image Update Checking (5 tools)
+- `arcane_image_update_check` - Check update by image reference
+- `arcane_image_update_check_by_id` - Check update by image ID
+- `arcane_image_update_check_multiple` - Batch check multiple images
+- `arcane_image_update_check_all` - Check all images for updates
+- `arcane_image_update_get_summary` - Get update summary
+
+#### Dashboard (2 tools)
+- `arcane_dashboard_get` - Get consolidated dashboard snapshot
+- `arcane_dashboard_get_action_items` - Get action items needing attention
+
+#### Port Mappings (1 tool)
+- `arcane_port_list` - List all port mappings across containers
+
+#### Auto-Updater Management (4 tools)
+- `arcane_updater_run` - Run auto-updater with optional dry run
+- `arcane_updater_update_container` - Update a single container
+- `arcane_updater_get_status` - Get updater status and schedule
+- `arcane_updater_get_history` - Get update history
+
+### Enhanced
+
+#### Container Tools
+- `arcane_container_redeploy` - Per-container redeploy support
+- `arcane_container_set_auto_update` - Per-container auto-update toggle
+
+#### Registry Tools
+- Added ECR registry support (`awsRegion`, `awsAccessKeyId`, `awsSecretAccessKey` params)
+
+#### GitOps Tools
+- Added folder-level sync support (`folders` parameter on create/update)
+
+#### Project Tools
+- Added nested/symlinked directory support (`directory` parameter on create)
+
+### Fixed
+- Updated Express from ^4.21.0 to ^4.21.2 (CVE-2024-47764 fix)
+
+### Changed
+- Version bumped to 2.0.0 (significant new features aligned with Arcane v1.17.0)
+- Total tool count: 165+ (up from 130+)
+
+---
+
 ## [1.0.0] - 2024-02-03
 
 ### Added

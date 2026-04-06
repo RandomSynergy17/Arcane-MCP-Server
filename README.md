@@ -8,7 +8,7 @@ A comprehensive [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 
 
 ## Features
 
-- **130+ Tools** covering all aspects of Docker management
+- **165+ Tools** covering all aspects of Docker management
 - **MCP 2025-11-25 Compliant**: Full conformance to latest MCP specification
 - **Dual Transport Support**: stdio (for Claude Code/Desktop) and Streamable HTTP (for network access)
 - **Security**: Origin validation, protocol version enforcement, secure session management
@@ -102,7 +102,7 @@ Then connect your MCP client to `http://localhost:3000/mcp`.
 
 ## Available Tools
 
-### Containers (9 tools)
+### Containers (11 tools)
 - `arcane_container_list` - List containers with filtering
 - `arcane_container_get` - Get container details
 - `arcane_container_create` - Create a new container
@@ -110,6 +110,8 @@ Then connect your MCP client to `http://localhost:3000/mcp`.
 - `arcane_container_stop` - Stop a container
 - `arcane_container_restart` - Restart a container
 - `arcane_container_update` - Update (pull & recreate) a container
+- `arcane_container_redeploy` - Redeploy a single container
+- `arcane_container_set_auto_update` - Toggle per-container auto-update
 - `arcane_container_delete` - Delete a container
 - `arcane_container_get_counts` - Get status counts
 
@@ -199,8 +201,57 @@ Then connect your MCP client to `http://localhost:3000/mcp`.
 - `arcane_system_containers_start_stopped` - Start stopped containers
 - `arcane_version_get` - Get server version
 
+### Docker Swarm (11 tools)
+- `arcane_swarm_list_services` - List swarm services
+- `arcane_swarm_get_service` - Get service details
+- `arcane_swarm_create_service` - Create a swarm service
+- `arcane_swarm_update_service` - Update a swarm service
+- `arcane_swarm_delete_service` - Delete a swarm service
+- `arcane_swarm_scale_service` - Scale service replicas
+- `arcane_swarm_get_service_logs` - Get service logs
+- `arcane_swarm_init_cluster` - Initialize swarm cluster
+- `arcane_swarm_join_cluster` - Join a swarm cluster
+- `arcane_swarm_leave_cluster` - Leave swarm cluster
+- `arcane_swarm_get_cluster_info` - Get cluster info
+
+### Webhooks (4 tools)
+- `arcane_webhook_list` - List webhooks
+- `arcane_webhook_create` - Create a webhook
+- `arcane_webhook_update` - Update a webhook
+- `arcane_webhook_delete` - Delete a webhook
+
+### Vulnerability Scanning (8 tools)
+- `arcane_vulnerability_scan_image` - Trigger image scan
+- `arcane_vulnerability_get_scan_result` - Get scan result
+- `arcane_vulnerability_get_scan_summary` - Get scan summary
+- `arcane_vulnerability_get_scan_summaries` - Batch scan summaries
+- `arcane_vulnerability_list` - List vulnerabilities
+- `arcane_vulnerability_get_environment_summary` - Environment summary
+- `arcane_vulnerability_ignore` - Ignore a vulnerability
+- `arcane_vulnerability_unignore` - Unignore a vulnerability
+
+### Image Updates (5 tools)
+- `arcane_image_update_check` - Check update by reference
+- `arcane_image_update_check_by_id` - Check update by ID
+- `arcane_image_update_check_multiple` - Batch check updates
+- `arcane_image_update_check_all` - Check all images
+- `arcane_image_update_get_summary` - Get update summary
+
+### Dashboard (2 tools)
+- `arcane_dashboard_get` - Get dashboard snapshot
+- `arcane_dashboard_get_action_items` - Get action items
+
+### Port Mappings (1 tool)
+- `arcane_port_list` - List all port mappings
+
+### Auto-Updater (4 tools)
+- `arcane_updater_run` - Run the auto-updater
+- `arcane_updater_update_container` - Update a single container
+- `arcane_updater_get_status` - Get updater status
+- `arcane_updater_get_history` - Get update history
+
 ### Additional Tools
-- **Container Registries** (7 tools): Manage private registries
+- **Container Registries** (7 tools): Manage private registries (incl. ECR)
 - **Templates** (8 tools): Docker Compose templates
 - **Jobs** (4 tools): Scheduled tasks
 - **Notifications** (6 tools): Alert configuration
@@ -298,6 +349,9 @@ Some tools perform destructive actions and include risk warnings:
 | `arcane_system_prune` | CRITICAL |
 | `arcane_network_delete` | HIGH |
 | `arcane_image_prune` | HIGH |
+| `arcane_swarm_delete_service` | HIGH |
+| `arcane_swarm_init_cluster` | CRITICAL |
+| `arcane_swarm_leave_cluster` | CRITICAL |
 
 Always review the tool descriptions before executing destructive operations.
 

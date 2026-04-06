@@ -110,13 +110,14 @@ export function registerGitopsTools(server: McpServer): void {
       repositoryId: z.string().describe("Git repository ID"),
       branch: z.string().describe("Branch to sync from"),
       path: z.string().describe("Path to compose files in repo"),
+      folders: z.array(z.string()).optional().describe("Specific folders to sync (for folder-level sync)"),
       autoSync: z.boolean().optional().default(false).describe("Enable automatic syncing"),
       syncInterval: z.number().optional().describe("Sync interval in seconds (for auto-sync)"),
     },
-    toolHandler(async ({ environmentId, name, repositoryId, branch, path, autoSync, syncInterval }, client) => {
+    toolHandler(async ({ environmentId, name, repositoryId, branch, path, folders, autoSync, syncInterval }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         `/environments/${environmentId}/gitops-syncs`,
-        { name, repositoryId, branch, path, autoSync, syncInterval }
+        { name, repositoryId, branch, path, folders, autoSync, syncInterval }
       );
 
       return `GitOps sync created: ${response.data.name} (ID: ${response.data.id})`;
@@ -133,14 +134,16 @@ export function registerGitopsTools(server: McpServer): void {
       name: z.string().optional().describe("New name"),
       branch: z.string().optional().describe("New branch"),
       path: z.string().optional().describe("New path"),
+      folders: z.array(z.string()).optional().describe("Updated folders to sync"),
       autoSync: z.boolean().optional().describe("Enable/disable auto-sync"),
       syncInterval: z.number().optional().describe("New sync interval"),
     },
-    toolHandler(async ({ environmentId, syncId, name, branch, path, autoSync, syncInterval }, client) => {
+    toolHandler(async ({ environmentId, syncId, name, branch, path, folders, autoSync, syncInterval }, client) => {
       const body: Record<string, unknown> = {};
       if (name) body.name = name;
       if (branch) body.branch = branch;
       if (path) body.path = path;
+      if (folders) body.folders = folders;
       if (autoSync !== undefined) body.autoSync = autoSync;
       if (syncInterval !== undefined) body.syncInterval = syncInterval;
 

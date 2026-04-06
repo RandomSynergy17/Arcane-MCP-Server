@@ -109,11 +109,12 @@ export function registerProjectTools(server: McpServer): void {
       name: z.string().describe("Project name"),
       composeContent: z.string().describe("Docker Compose YAML content"),
       envContent: z.string().optional().describe("Environment variables content (.env format)"),
+      directory: z.string().optional().describe("Project directory path (supports nested and symlinked directories)"),
     },
-    toolHandler(async ({ environmentId, name, composeContent, envContent }, client) => {
+    toolHandler(async ({ environmentId, name, composeContent, envContent, directory }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         `/environments/${environmentId}/projects`,
-        { name, composeContent, envContent }
+        { name, composeContent, envContent, directory }
       );
 
       return `Project created successfully!\n  Name: ${response.data.name}\n  ID: ${response.data.id}`;

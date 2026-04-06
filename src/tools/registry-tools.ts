@@ -90,11 +90,14 @@ export function registerRegistryTools(server: McpServer): void {
       type: z.enum(["dockerhub", "gcr", "ecr", "acr", "ghcr", "custom"]).describe("Registry type"),
       username: z.string().optional().describe("Username for authentication"),
       password: z.string().optional().describe("Password or token"),
+      awsRegion: z.string().optional().describe("AWS region (required for ECR registries)"),
+      awsAccessKeyId: z.string().optional().describe("AWS access key ID (for ECR registries)"),
+      awsSecretAccessKey: z.string().optional().describe("AWS secret access key (for ECR registries)"),
     },
-    toolHandler(async ({ name, url, type, username, password }, client) => {
+    toolHandler(async ({ name, url, type, username, password, awsRegion, awsAccessKeyId, awsSecretAccessKey }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         "/container-registries",
-        { name, url, type, username, password }
+        { name, url, type, username, password, awsRegion, awsAccessKeyId, awsSecretAccessKey }
       );
 
       return `Registry created: ${response.data.name} (ID: ${response.data.id})`;
