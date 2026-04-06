@@ -127,7 +127,7 @@ describe("resources", () => {
     });
 
     it("shows 'not set' when no default environment", async () => {
-      mockClient.getDefaultEnvironmentId.mockReturnValueOnce(undefined);
+      mockClient.getDefaultEnvironmentId.mockReturnValueOnce(undefined as unknown as string);
 
       const handler = server.resources.get("arcane-version")!;
       const result = await handler(new URL("arcane://version"));
