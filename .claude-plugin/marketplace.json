@@ -8,7 +8,7 @@
     {
       "name": "arcane-docker",
       "source": ".",
-      "description": "Docker infrastructure management with 165+ MCP tools and workflow guidance",
+      "description": "Docker infrastructure management with 180+ MCP tools, workflow guidance, and safety guardrails",
       "version": "2.0.0",
       "keywords": ["docker", "containers", "infrastructure", "devops", "compose", "swarm"]
     }
