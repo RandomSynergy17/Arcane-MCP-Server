@@ -85,10 +85,8 @@ export function registerResources(server: McpServer): void {
 
         const versionInfo = [
           "Arcane MCP Server",
-          `Version: 2.0.0`,
           `API Base URL: ${baseUrl}`,
           `Default Environment: ${defaultEnvId || "not set"}`,
-          `MCP SDK: @modelcontextprotocol/sdk ^1.12.0`,
           `Protocol: MCP 2025-11-25`,
         ];
 
