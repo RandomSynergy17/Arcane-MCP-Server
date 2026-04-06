@@ -361,7 +361,7 @@ export function registerGitopsTools(server: McpServer): void {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
-        openWorldHint: false,
+        openWorldHint: true,
       },
       inputSchema: {
       repositoryId: z.string().describe("Repository ID"),

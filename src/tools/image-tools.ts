@@ -114,7 +114,7 @@ export function registerImageTools(server: McpServer): void {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
-        openWorldHint: false,
+        openWorldHint: true,
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),

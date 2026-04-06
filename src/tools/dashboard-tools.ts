@@ -66,7 +66,7 @@ export function registerDashboardTools(server: McpServer): void {
         if (d.systemInfo.osType) lines.push(`  OS: ${d.systemInfo.osType}`);
         if (d.systemInfo.cpus) lines.push(`  CPUs: ${d.systemInfo.cpus}`);
         if (d.systemInfo.memoryBytes) {
-          const memGB = (d.systemInfo.memoryBytes / 1073741824).toFixed(1);
+          const memGB = (d.systemInfo.memoryBytes / 1e9).toFixed(1);
           lines.push(`  Memory: ${memGB} GB`);
         }
       }

@@ -195,7 +195,7 @@ export function registerRegistryTools(server: McpServer): void {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
-        openWorldHint: false,
+        openWorldHint: true,
       },
       inputSchema: {
       registryId: z.string().describe("Registry ID"),
@@ -219,7 +219,7 @@ export function registerRegistryTools(server: McpServer): void {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
-        openWorldHint: false,
+        openWorldHint: true,
       },
     },
     toolHandler(async (_params, client) => {
