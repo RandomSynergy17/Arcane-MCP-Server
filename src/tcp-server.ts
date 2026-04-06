@@ -10,7 +10,7 @@
 
 import express, { type Request, type Response, type NextFunction } from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createArcaneServer } from "./server.js";
+import { createSessionServer } from "./server.js";
 import { getConfig, loadConfig } from "./config.js";
 import { logger } from "./utils/logger.js";
 import {
@@ -280,7 +280,7 @@ export async function startTcpServer(): Promise<void> {
             },
           });
 
-          const server = createArcaneServer();
+          const server = createSessionServer();
           await server.connect(transport);
 
           // Set up cleanup handler
