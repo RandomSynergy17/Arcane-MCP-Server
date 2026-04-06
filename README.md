@@ -2,70 +2,70 @@
   <img src="assets/logo.svg" alt="Arcane" width="400" />
 </p>
 
+<h3 align="center">Arcane MCP Server</h3>
+
 <p align="center">
-  <strong>MCP Server for Arcane Docker Management</strong><br/>
-  Manage your Docker infrastructure through natural language.
+  Manage your entire Docker infrastructure through natural language.<br/>
+  180 tools. One MCP server. Zero context switching.
 </p>
 
 <p align="center">
   <a href="https://github.com/RandomSynergy17/Arcane-MCP-Server/releases"><img src="https://img.shields.io/github/v/release/RandomSynergy17/Arcane-MCP-Server?style=flat-square&color=7c3aed" alt="Release" /></a>
+  <a href="https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server"><img src="https://img.shields.io/npm/v/@randomsynergy/arcane-mcp-server?style=flat-square&color=7c3aed" alt="npm" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-7c3aed?style=flat-square" alt="License" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2025--11--25-7c3aed?style=flat-square" alt="MCP Protocol" /></a>
-  <a href="https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server"><img src="https://img.shields.io/badge/npm-@randomsynergy/arcane--mcp--server-7c3aed?style=flat-square" alt="npm" /></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#available-tools">Tools</a> &bull;
+  <a href="#companion-skill">Skill</a> &bull;
+  <a href="#resources--prompts">Prompts</a> &bull;
+  <a href="install_arcane_skill-mcp.md">Installer</a>
 </p>
 
 ---
 
-A comprehensive [Model Context Protocol](https://modelcontextprotocol.io) server that exposes the [Arcane](https://github.com/getarcaneapp/arcane) Docker Management API to AI assistants like Claude. **180+ tools** covering containers, images, volumes, networks, Docker Compose stacks, Swarm clusters, vulnerability scanning, GitOps, and more.
+A [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI assistants full control over [Arcane](https://github.com/getarcaneapp/arcane) Docker infrastructure. Containers, images, volumes, networks, Compose stacks, Swarm clusters, vulnerability scanning, GitOps, builds, auto-updates — all through conversational commands.
 
-## Highlights
+### Why Arcane MCP Server?
 
-| | |
-|---|---|
-| **180+ Tools** | Full Docker lifecycle management via MCP |
-| **Dual Transport** | stdio (Claude Code/Desktop) and Streamable HTTP |
-| **Docker Swarm** | Cluster init, service CRUD, scaling, logs |
-| **Vulnerability Scanning** | Image security scans with severity filtering |
-| **GitOps** | Git-based deployments with auto-sync |
-| **Auto-Updater** | Hands-off container image updates |
-| **Dashboard** | Consolidated environment overview in one call |
-| **Companion Skill** | Optional Claude Code skill for workflow guidance |
+- **Ask, don't click.** "What's broken?" returns a dashboard, action items, and container state in one shot.
+- **Safe by default.** Every tool carries annotations (`readOnlyHint`, `destructiveHint`) so your AI won't accidentally prune your volumes.
+- **Skill-guided workflows.** The companion skill teaches Claude deployment patterns, rollback sequences, and troubleshooting flows — not just tool names.
+- **One install, everything works.** Plugin format bundles MCP server + skill. Or install them separately.
+
+---
 
 ## Quick Start
 
-### One-Click Install (Claude Code)
-
-Paste this into Claude Code for guided installation:
-
-```
-Fetch and follow the instructions at: https://raw.githubusercontent.com/RandomSynergy17/Arcane-MCP-Server/main/install_arcane_skill-mcp.md
-```
-
-Or see the full [Installation Guide](install_arcane_skill-mcp.md) for manual setup and all options.
-
-### Install
+### One-Line Install
 
 ```bash
 npm install -g @randomsynergy/arcane-mcp-server
 ```
 
-### Configure
+### Guided Install (Claude Code)
+
+Paste this into any Claude Code session for interactive setup:
+
+```
+Fetch and follow: https://raw.githubusercontent.com/RandomSynergy17/Arcane-MCP-Server/main/install_arcane_skill-mcp.md
+```
+
+### Plugin Install
 
 ```bash
-export ARCANE_BASE_URL=https://arcane.example.com:3552
-export ARCANE_API_KEY=your-api-key
+/plugin marketplace add RandomSynergy17/Arcane-MCP-Server
+/plugin install arcane-mcp-server
 ```
 
-Or use a config file at `~/.arcane/config.json`:
+You'll be prompted for your Arcane URL and API key.
 
-```json
-{
-  "baseUrl": "https://arcane.example.com:3552",
-  "auth": { "type": "apikey", "apiKey": "your-api-key" }
-}
-```
+### Manual Setup
 
-### Add to Claude Code
+<details>
+<summary><strong>Claude Code</strong></summary>
 
 ```bash
 claude mcp add --transport stdio \
@@ -73,8 +73,10 @@ claude mcp add --transport stdio \
   --env ARCANE_BASE_URL=https://arcane.example.com:3552 \
   arcane -- npx @randomsynergy/arcane-mcp-server
 ```
+</details>
 
-### Add to Claude Desktop
+<details>
+<summary><strong>Claude Desktop</strong></summary>
 
 Add to `~/.config/Claude/claude_desktop_config.json`:
 
@@ -92,62 +94,58 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
   }
 }
 ```
+</details>
 
-### HTTP Mode
-
-For network-based MCP clients:
+<details>
+<summary><strong>HTTP / Network Mode</strong></summary>
 
 ```bash
 ARCANE_API_KEY=your-key npx @randomsynergy/arcane-mcp-server --tcp
 ```
 
 Connect at `http://localhost:3000/mcp`. Set `ARCANE_HTTP_PORT` to change the port.
+</details>
+
+<details>
+<summary><strong>Config File</strong></summary>
+
+Create `~/.arcane/config.json`:
+
+```json
+{
+  "baseUrl": "https://arcane.example.com:3552",
+  "auth": { "type": "apikey", "apiKey": "your-api-key" }
+}
+```
+</details>
 
 ---
 
 ## Companion Skill
 
-Arcane MCP Server ships with an optional Claude Code skill that teaches Claude *how* to use the tools — not just *that* they exist.
-
-### As a Plugin (Recommended)
-
-Install Arcane MCP Server as a Claude Code plugin for the best experience — MCP server and skill together:
+The optional skill teaches Claude *how* to use the tools — deployment workflows, safety checks, troubleshooting patterns, and common gotchas.
 
 ```bash
-# Add the marketplace
-/plugin marketplace add RandomSynergy17/Arcane-MCP-Server
-
-# Install the plugin
+# With the plugin (includes skill automatically)
 /plugin install arcane-mcp-server
+
+# Or manually
+git clone --depth 1 https://github.com/RandomSynergy17/Arcane-MCP-Server.git /tmp/arcane
+cp -r /tmp/arcane/skills/arcane-mcp-server ~/.claude/skills/arcane-mcp-server
+rm -rf /tmp/arcane
 ```
 
-You'll be prompted for your Arcane URL and API key during setup.
-
-### Manual Installation
-
-If you prefer manual setup:
-
-```bash
-# MCP server
-claude mcp add --transport stdio \
-  --env ARCANE_API_KEY=your-key \
-  --env ARCANE_BASE_URL=https://arcane.example.com:3552 \
-  arcane -- npx @randomsynergy/arcane-mcp-server
-
-# Companion skill (optional)
-cp -r skills/arcane-mcp-server ~/.claude/skills/arcane-mcp-server
-```
-
-The skill provides:
-- **Workflow chains** — safe deployment, rollback, troubleshooting, cleanup sequences
-- **Safety guardrails** — pre-flight checks before destructive operations
-- **Intent mapping** — translates "what's broken?" into the right tool sequence
+**What the skill provides:**
+- **Intent mapping** — "what's broken?" becomes `arcane_dashboard_get` + `arcane_dashboard_get_action_items`
+- **Safety guardrails** — backup before prune, dry-run before update, confirm before destroy
+- **Workflow chains** — deploy, rollback, troubleshoot, cleanup, security audit sequences
+- **Gotchas** — `environmentId` required everywhere, ECR creds expire, pagination defaults to 20
 
 ---
 
 ## Available Tools
 
-### Containers (11 tools)
+### Containers (11)
 
 | Tool | Description |
 |------|-------------|
@@ -161,23 +159,9 @@ The skill provides:
 | `arcane_container_redeploy` | Redeploy a single container |
 | `arcane_container_set_auto_update` | Toggle per-container auto-update |
 | `arcane_container_delete` | Delete a container |
-| `arcane_container_get_counts` | Get status counts (running/stopped) |
+| `arcane_container_get_counts` | Get running/stopped counts |
 
-### Images (9 tools)
-
-| Tool | Description |
-|------|-------------|
-| `arcane_image_list` | List images |
-| `arcane_image_get` | Get image details |
-| `arcane_image_pull` | Pull an image from registry |
-| `arcane_image_delete` | Remove an image |
-| `arcane_image_prune` | Prune unused images |
-| `arcane_image_get_counts` | Get image statistics |
-| `arcane_image_check_update` | Check single image for updates |
-| `arcane_image_check_updates_all` | Check all images for updates |
-| `arcane_image_get_update_summary` | Get update summary |
-
-### Docker Swarm (11 tools)
+### Docker Swarm (11)
 
 | Tool | Description |
 |------|-------------|
@@ -193,36 +177,73 @@ The skill provides:
 | `arcane_swarm_leave_cluster` | Leave the swarm cluster |
 | `arcane_swarm_get_cluster_info` | Get cluster info and node counts |
 
-### Vulnerability Scanning (8 tools)
+### Vulnerability Scanning (12)
 
 | Tool | Description |
 |------|-------------|
 | `arcane_vulnerability_scan_image` | Trigger a vulnerability scan |
 | `arcane_vulnerability_get_scan_result` | Get full scan result |
-| `arcane_vulnerability_get_scan_summary` | Get scan summary for an image |
+| `arcane_vulnerability_get_scan_summary` | Get summary for an image |
 | `arcane_vulnerability_get_scan_summaries` | Batch scan summaries |
 | `arcane_vulnerability_list` | List vulnerabilities with filtering |
 | `arcane_vulnerability_get_environment_summary` | Environment-wide summary |
 | `arcane_vulnerability_ignore` | Ignore a vulnerability |
 | `arcane_vulnerability_unignore` | Unignore a vulnerability |
+| `arcane_vulnerability_get_scanner_status` | Get Trivy scanner status |
+| `arcane_vulnerability_list_all` | List all vulns across environment |
+| `arcane_vulnerability_list_ignored` | List ignored vulnerabilities |
+| `arcane_vulnerability_get_image_options` | List scannable images |
 
-### Projects / Docker Compose (11 tools)
+### Projects / Docker Compose (12)
 
 | Tool | Description |
 |------|-------------|
 | `arcane_project_list` | List Docker Compose projects |
 | `arcane_project_get` | Get project details |
-| `arcane_project_create` | Create a project from compose YAML |
+| `arcane_project_create` | Create from compose YAML |
 | `arcane_project_update` | Update project configuration |
 | `arcane_project_up` | Deploy a project |
-| `arcane_project_down` | Stop and remove project containers |
-| `arcane_project_restart` | Restart all project services |
+| `arcane_project_down` | Stop and remove containers |
+| `arcane_project_restart` | Restart all services |
 | `arcane_project_redeploy` | Redeploy (down + up) |
-| `arcane_project_destroy` | Destroy project and optionally volumes |
-| `arcane_project_pull_images` | Pull latest images for project |
-| `arcane_project_get_counts` | Get project status counts |
+| `arcane_project_destroy` | Destroy project and volumes |
+| `arcane_project_pull_images` | Pull latest images |
+| `arcane_project_get_counts` | Get status counts |
+| `arcane_project_build` | Build project images |
 
-### Volumes (14 tools)
+### Images (9) &bull; Image Updates (5) &bull; Image Builds (6)
+
+<details>
+<summary>Show 20 image tools</summary>
+
+| Tool | Description |
+|------|-------------|
+| `arcane_image_list` | List images |
+| `arcane_image_get` | Get image details |
+| `arcane_image_pull` | Pull from registry |
+| `arcane_image_delete` | Remove an image |
+| `arcane_image_prune` | Prune unused images |
+| `arcane_image_get_counts` | Get image statistics |
+| `arcane_image_check_update` | Check single image for updates |
+| `arcane_image_check_updates_all` | Check all images |
+| `arcane_image_get_update_summary` | Get update summary |
+| `arcane_image_update_check` | Check update by reference |
+| `arcane_image_update_check_by_id` | Check update by ID |
+| `arcane_image_update_check_multiple` | Batch check |
+| `arcane_image_update_check_all` | Check all for updates |
+| `arcane_image_update_get_summary` | Get update summary |
+| `arcane_build_image` | Build from Dockerfile or Git URL |
+| `arcane_build_list` | List image builds |
+| `arcane_build_get` | Get build details |
+| `arcane_build_workspace_browse` | Browse workspace files |
+| `arcane_build_workspace_content` | Read workspace file |
+| `arcane_build_workspace_upload` | Upload to workspace |
+</details>
+
+### Volumes (14) &bull; Networks (7) &bull; Ports (1)
+
+<details>
+<summary>Show 22 infrastructure tools</summary>
 
 | Tool | Description |
 |------|-------------|
@@ -234,31 +255,32 @@ The skill provides:
 | `arcane_volume_get_counts` | Get volume counts |
 | `arcane_volume_browse` | Browse volume files |
 | `arcane_volume_browse_content` | Read file content |
-| `arcane_volume_browse_mkdir` | Create directory in volume |
+| `arcane_volume_browse_mkdir` | Create directory |
 | `arcane_volume_backup_list` | List backups |
 | `arcane_volume_backup_create` | Create backup |
 | `arcane_volume_backup_delete` | Delete backup |
 | `arcane_volume_backup_restore` | Restore from backup |
-| `arcane_volume_backup_list_files` | List files in backup |
-
-### Networks (6 tools)
-
-| Tool | Description |
-|------|-------------|
+| `arcane_volume_backup_list_files` | List backup files |
 | `arcane_network_list` | List networks |
 | `arcane_network_get` | Get network details |
 | `arcane_network_create` | Create a network |
 | `arcane_network_delete` | Delete a network |
 | `arcane_network_prune` | Prune unused networks |
 | `arcane_network_get_counts` | Get network counts |
+| `arcane_network_get_topology` | Get network topology graph |
+| `arcane_port_list` | List all port mappings |
+</details>
 
-### GitOps (13 tools)
+### GitOps (13) &bull; Webhooks (4) &bull; Auto-Updater (4) &bull; Dashboard (2)
+
+<details>
+<summary>Show 23 operations tools</summary>
 
 | Tool | Description |
 |------|-------------|
-| `arcane_gitops_list` | List GitOps sync configurations |
+| `arcane_gitops_list` | List GitOps syncs |
 | `arcane_gitops_get` | Get sync details |
-| `arcane_gitops_create` | Create a sync (with folder-level support) |
+| `arcane_gitops_create` | Create a sync |
 | `arcane_gitops_update` | Update a sync |
 | `arcane_gitops_delete` | Delete a sync |
 | `arcane_gitops_sync` | Trigger sync |
@@ -267,60 +289,26 @@ The skill provides:
 | `arcane_git_repo_create` | Add a repository |
 | `arcane_git_repo_test` | Test connectivity |
 | `arcane_git_repo_get_branches` | List branches |
-| `arcane_git_repo_browse_files` | Browse files in repo |
+| `arcane_git_repo_browse_files` | Browse repo files |
 | `arcane_git_repo_delete` | Delete repository |
-
-### Image Updates (5 tools)
-
-| Tool | Description |
-|------|-------------|
-| `arcane_image_update_check` | Check update by image reference |
-| `arcane_image_update_check_by_id` | Check update by image ID |
-| `arcane_image_update_check_multiple` | Batch check multiple images |
-| `arcane_image_update_check_all` | Check all images for updates |
-| `arcane_image_update_get_summary` | Get update summary |
-
-### Dashboard (2 tools)
-
-| Tool | Description |
-|------|-------------|
-| `arcane_dashboard_get` | Get consolidated dashboard snapshot |
-| `arcane_dashboard_get_action_items` | Get action items needing attention |
-
-### Auto-Updater (4 tools)
-
-| Tool | Description |
-|------|-------------|
-| `arcane_updater_run` | Run auto-updater (supports dry run) |
-| `arcane_updater_update_container` | Update a single container |
-| `arcane_updater_get_status` | Get updater status and schedule |
+| `arcane_webhook_list` | List webhooks |
+| `arcane_webhook_create` | Create a webhook |
+| `arcane_webhook_update` | Update a webhook |
+| `arcane_webhook_delete` | Delete a webhook |
+| `arcane_updater_run` | Run auto-updater (dry run supported) |
+| `arcane_updater_update_container` | Update single container |
+| `arcane_updater_get_status` | Get updater schedule |
 | `arcane_updater_get_history` | Get update history |
+| `arcane_dashboard_get` | Get dashboard snapshot |
+| `arcane_dashboard_get_action_items` | Get action items |
+</details>
 
-### Image Builds (6 tools)
-
-| Tool | Description |
-|------|-------------|
-| `arcane_build_image` | Build a Docker image from Dockerfile or Git URL |
-| `arcane_build_list` | List image builds |
-| `arcane_build_get` | Get build details and logs |
-| `arcane_build_workspace_browse` | Browse build workspace files |
-| `arcane_build_workspace_content` | Read file content from build workspace |
-| `arcane_build_workspace_upload` | Upload files to build workspace |
-
-### Network Topology (1 tool)
-
-| Tool | Description |
-|------|-------------|
-| `arcane_network_topology` | Get full network topology with container connections |
-
-### Additional Tool Categories
+### Additional Categories
 
 | Category | Tools | Description |
 |----------|-------|-------------|
 | **Environments** | 10 | Multi-host Docker environment management |
-| **Webhooks** | 4 | Inbound webhook configuration |
-| **Port Mappings** | 1 | Cross-container port listing |
-| **Container Registries** | 7 | Private registries (Docker Hub, GHCR, ECR, GCR, ACR) |
+| **Container Registries** | 7 | Docker Hub, GHCR, ECR, GCR, ACR |
 | **Templates** | 8 | Docker Compose templates with variables |
 | **Jobs** | 4 | Scheduled task management |
 | **Notifications** | 6 | Alert configuration (Apprise) |
@@ -334,17 +322,21 @@ The skill provides:
 
 ## Resources & Prompts
 
-In addition to tools, the server exposes MCP Resources and Prompts:
+**MCP Resources** (read-only context for the AI):
 
-**Resources** (read-only context):
-- `arcane://environments` — Lists all available environments
-- `arcane://version` — Server version and configuration
+| URI | Description |
+|-----|-------------|
+| `arcane://environments` | Lists all available environments with IDs |
+| `arcane://version` | Server version and configuration |
 
-**Prompts** (workflow templates):
-- `/deploy-stack` — Guided Docker Compose deployment
-- `/troubleshoot-container` — Systematic container diagnostics
-- `/security-audit` — Vulnerability scanning workflow
-- `/cleanup-environment` — Safe resource cleanup
+**MCP Prompts** (workflow templates):
+
+| Prompt | Description |
+|--------|-------------|
+| `/deploy-stack` | Guided Docker Compose deployment |
+| `/troubleshoot-container` | Systematic container diagnostics |
+| `/security-audit` | Vulnerability scanning workflow |
+| `/cleanup-environment` | Safe resource cleanup with confirmations |
 
 ---
 
@@ -363,26 +355,13 @@ In addition to tools, the server exposes MCP Resources and Prompts:
 | `ARCANE_HTTP_HOST` | HTTP server host | `localhost` |
 | `LOG_LEVEL` | Logging level | `info` |
 
-### Authentication
-
-**API Key** (recommended):
-```bash
-export ARCANE_API_KEY=your-api-key
-```
-
-**JWT** (username/password):
-```bash
-export ARCANE_USERNAME=admin
-export ARCANE_PASSWORD=your-password
-```
-
 JWT tokens are automatically refreshed before expiry.
 
 ---
 
 ## Destructive Operations
 
-These tools perform irreversible actions. The companion skill enforces pre-flight checks automatically.
+These tools carry `destructiveHint: true` in their MCP annotations. The companion skill enforces pre-flight checks automatically.
 
 | Tool | Risk |
 |------|------|
@@ -410,41 +389,39 @@ npm run dev          # stdio mode
 npm run dev:tcp      # HTTP mode
 ```
 
-### Project Structure
+<details>
+<summary>Project Structure</summary>
 
 ```
 src/
   index.ts              # stdio entry point
   tcp-server.ts         # HTTP/Streamable entry point
-  server.ts             # MCP server factory
+  server.ts             # MCP server factory (tools + resources + prompts)
   config.ts             # Configuration management
   client/
     arcane-client.ts    # HTTP client with retry logic
   auth/
     auth-manager.ts     # JWT + API key authentication
-  tools/                # Tool modules (180+ tools)
-    index.ts            # Tool registry
-    container-tools.ts
-    swarm-tools.ts
-    vulnerability-tools.ts
-    ...
+  tools/                # 25 tool modules, 180 tools
+  resources/
+    index.ts            # MCP Resources (environments, version)
+  prompts/
+    index.ts            # MCP Prompts (deploy, troubleshoot, audit, cleanup)
   types/
-    generated/          # Auto-generated from OpenAPI
+    generated/          # Auto-generated from OpenAPI v1.17.0
   utils/
-    logger.ts           # stderr-safe logging
-    error-handler.ts    # Error classes and formatting
-    format.ts           # Display formatting
-    tool-helpers.ts     # Shared tool handler wrapper
+    tool-helpers.ts     # Shared registerTool wrapper
 skills/
   arcane-mcp-server/
     SKILL.md            # Companion Claude Code skill
 ```
+</details>
 
 ---
 
 ## Contributing
 
-Contributions are welcome. Please submit a Pull Request.
+Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
@@ -452,6 +429,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Links
 
-- [Arcane](https://github.com/getarcaneapp/arcane) - The Docker management platform this server connects to
-- [Model Context Protocol](https://modelcontextprotocol.io) - The protocol specification
+- [Arcane](https://github.com/getarcaneapp/arcane) - The Docker management platform
+- [npm package](https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server)
+- [Installation Guide](install_arcane_skill-mcp.md) - Interactive installer
+- [Model Context Protocol](https://modelcontextprotocol.io) - MCP specification
 - [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - SDK used by this server
