@@ -36,16 +36,25 @@ interface WorkspaceFile {
 export function registerBuildTools(server: McpServer): void {
 
   // arcane_build_image
-  server.tool(
+  server.registerTool(
     "arcane_build_image",
-    "Build a Docker image from a Dockerfile or Git URL with support for build args and multi-platform builds",
     {
-      environmentId: z.string().describe("Environment ID"),
-      dockerfile: z.string().optional().describe("Dockerfile content to build from"),
-      gitUrl: z.string().optional().describe("Git repository URL to build from"),
-      tag: z.string().describe("Image tag (e.g., myapp:latest)"),
-      buildArgs: z.record(z.string()).optional().describe("Build arguments as key-value pairs"),
-      platform: z.string().optional().describe("Target platform (e.g., linux/amd64, linux/arm64)"),
+      title: "Build image",
+      description: "Build a Docker image from a Dockerfile or Git URL with support for build args and multi-platform builds",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        dockerfile: z.string().optional().describe("Dockerfile content to build from"),
+        gitUrl: z.string().optional().describe("Git repository URL to build from"),
+        tag: z.string().describe("Image tag (e.g., myapp:latest)"),
+        buildArgs: z.record(z.string()).optional().describe("Build arguments as key-value pairs"),
+        platform: z.string().optional().describe("Target platform (e.g., linux/amd64, linux/arm64)"),
+      },
     },
     toolHandler(async ({ environmentId, dockerfile, gitUrl, tag, buildArgs, platform }, client) => {
       const body: Record<string, unknown> = { tag };
@@ -73,15 +82,24 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_list
-  server.tool(
+  server.registerTool(
     "arcane_build_list",
-    "List image builds for an environment with optional filtering by status or search query",
     {
-      environmentId: z.string().describe("Environment ID"),
-      status: z.string().optional().describe("Filter by build status (e.g., running, completed, failed)"),
-      search: z.string().optional().describe("Search query"),
-      start: z.number().optional().default(0).describe("Pagination start index"),
-      limit: z.number().optional().default(20).describe("Items per page"),
+      title: "List builds",
+      description: "List image builds for an environment with optional filtering by status or search query",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        status: z.string().optional().describe("Filter by build status (e.g., running, completed, failed)"),
+        search: z.string().optional().describe("Search query"),
+        start: z.number().optional().default(0).describe("Pagination start index"),
+        limit: z.number().optional().default(20).describe("Items per page"),
+      },
     },
     toolHandler(async ({ environmentId, status, search, start, limit }, client) => {
       const response = await client.get<{
@@ -111,12 +129,21 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_get
-  server.tool(
+  server.registerTool(
     "arcane_build_get",
-    "Get detailed information about a specific image build including logs",
     {
-      environmentId: z.string().describe("Environment ID"),
-      buildId: z.string().describe("Build ID"),
+      title: "Get build details",
+      description: "Get detailed information about a specific image build including logs",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        buildId: z.string().describe("Build ID"),
+      },
     },
     toolHandler(async ({ environmentId, buildId }, client) => {
       const response = await client.get<{ data: BuildDetails }>(
@@ -152,12 +179,21 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_workspace_browse
-  server.tool(
+  server.registerTool(
     "arcane_build_workspace_browse",
-    "Browse files in the build workspace directory",
     {
-      environmentId: z.string().describe("Environment ID"),
-      path: z.string().optional().describe("Directory path to browse (default: root)"),
+      title: "Browse build workspace",
+      description: "Browse files in the build workspace directory",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        path: z.string().optional().describe("Directory path to browse (default: root)"),
+      },
     },
     toolHandler(async ({ environmentId, path }, client) => {
       const response = await client.get<{ data: WorkspaceFile[] }>(
@@ -181,12 +217,21 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_workspace_get_content
-  server.tool(
+  server.registerTool(
     "arcane_build_workspace_get_content",
-    "Get the content of a file from the build workspace",
     {
-      environmentId: z.string().describe("Environment ID"),
-      path: z.string().describe("File path in the workspace"),
+      title: "Get workspace file content",
+      description: "Get the content of a file from the build workspace",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        path: z.string().describe("File path in the workspace"),
+      },
     },
     toolHandler(async ({ environmentId, path }, client) => {
       const response = await client.get<{ data: { content: string; path: string } }>(
@@ -199,13 +244,22 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_workspace_upload
-  server.tool(
+  server.registerTool(
     "arcane_build_workspace_upload",
-    "Upload a file to the build workspace",
     {
-      environmentId: z.string().describe("Environment ID"),
-      path: z.string().describe("Destination path in the workspace"),
-      content: z.string().describe("File content to upload"),
+      title: "Upload workspace file",
+      description: "Upload a file to the build workspace",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        path: z.string().describe("Destination path in the workspace"),
+        content: z.string().describe("File content to upload"),
+      },
     },
     toolHandler(async ({ environmentId, path, content }, client) => {
       await client.post(

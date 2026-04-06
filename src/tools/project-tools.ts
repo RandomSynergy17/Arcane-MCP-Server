@@ -345,12 +345,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_build
-  server.tool(
+  server.registerTool(
     "arcane_project_build",
-    "Build images for a Docker Compose project",
     {
-      environmentId: z.string().describe("Environment ID"),
-      projectId: z.string().describe("Project ID"),
+      title: "Build project images",
+      description: "Build images for a Docker Compose project",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+        projectId: z.string().describe("Project ID"),
+      },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       await client.post(

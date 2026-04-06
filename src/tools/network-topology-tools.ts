@@ -28,11 +28,20 @@ interface NetworkTopology {
 export function registerNetworkTopologyTools(server: McpServer): void {
 
   // arcane_network_get_topology
-  server.tool(
+  server.registerTool(
     "arcane_network_get_topology",
-    "Get the network topology graph showing containers, networks, and their connections",
     {
-      environmentId: z.string().describe("Environment ID"),
+      title: "Get network topology",
+      description: "Get the network topology graph showing containers, networks, and their connections",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+        environmentId: z.string().describe("Environment ID"),
+      },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: NetworkTopology }>(
