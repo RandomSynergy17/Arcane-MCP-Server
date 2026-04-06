@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/RandomSynergy17/Arcane-MCP-Server/releases"><img src="https://img.shields.io/github/v/release/RandomSynergy17/Arcane-MCP-Server?style=flat-square&color=7c3aed" alt="Release" /></a>
+  <a href="https://github.com/RandomSynergy17/Arcane-MCP-Server/releases"><img src="https://img.shields.io/github/v/tag/RandomSynergy17/Arcane-MCP-Server?style=flat-square&color=7c3aed&label=release" alt="Release" /></a>
   <a href="https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server"><img src="https://img.shields.io/npm/v/@randomsynergy/arcane-mcp-server?style=flat-square&color=7c3aed" alt="npm" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-7c3aed?style=flat-square" alt="License" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2025--11--25-7c3aed?style=flat-square" alt="MCP Protocol" /></a>
