@@ -35,14 +35,23 @@ export function registerGitopsTools(server: McpServer): void {
   // ============= GitOps Sync =============
 
   // arcane_gitops_list
-  server.tool(
+  server.registerTool(
     "arcane_gitops_list",
-    "List GitOps sync configurations",
     {
+      title: "List GitOps syncs",
+      description: "List GitOps sync configurations",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, start, limit }, client) => {
       const response = await client.get<{
@@ -71,12 +80,21 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_get
-  server.tool(
+  server.registerTool(
     "arcane_gitops_get",
-    "Get details of a GitOps sync configuration",
     {
+      title: "Get GitOps sync details",
+      description: "Get details of a GitOps sync configuration",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       syncId: z.string().describe("GitOps sync ID"),
+    },
     },
     toolHandler(async ({ environmentId, syncId }, client) => {
       const response = await client.get<{ data: GitOpsSync }>(
@@ -101,10 +119,18 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_create
-  server.tool(
+  server.registerTool(
     "arcane_gitops_create",
-    "Create a new GitOps sync configuration",
     {
+      title: "Create GitOps sync",
+      description: "Create a new GitOps sync configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       name: z.string().describe("Name for the sync"),
       repositoryId: z.string().describe("Git repository ID"),
@@ -113,6 +139,7 @@ export function registerGitopsTools(server: McpServer): void {
       folders: z.array(z.string()).optional().describe("Specific folders to sync (for folder-level sync)"),
       autoSync: z.boolean().optional().default(false).describe("Enable automatic syncing"),
       syncInterval: z.number().optional().describe("Sync interval in seconds (for auto-sync)"),
+    },
     },
     toolHandler(async ({ environmentId, name, repositoryId, branch, path, folders, autoSync, syncInterval }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -125,10 +152,18 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_update
-  server.tool(
+  server.registerTool(
     "arcane_gitops_update",
-    "Update a GitOps sync configuration",
     {
+      title: "Update GitOps sync",
+      description: "Update a GitOps sync configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       syncId: z.string().describe("GitOps sync ID"),
       name: z.string().optional().describe("New name"),
@@ -137,6 +172,7 @@ export function registerGitopsTools(server: McpServer): void {
       folders: z.array(z.string()).optional().describe("Updated folders to sync"),
       autoSync: z.boolean().optional().describe("Enable/disable auto-sync"),
       syncInterval: z.number().optional().describe("New sync interval"),
+    },
     },
     toolHandler(async ({ environmentId, syncId, name, branch, path, folders, autoSync, syncInterval }, client) => {
       const body: Record<string, unknown> = {};
@@ -153,12 +189,21 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_delete
-  server.tool(
+  server.registerTool(
     "arcane_gitops_delete",
-    "Delete a GitOps sync configuration",
     {
+      title: "Delete GitOps sync",
+      description: "Delete a GitOps sync configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       syncId: z.string().describe("GitOps sync ID"),
+    },
     },
     toolHandler(async ({ environmentId, syncId }, client) => {
       await client.delete(`/environments/${environmentId}/gitops-syncs/${syncId}`);
@@ -167,12 +212,21 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_sync
-  server.tool(
+  server.registerTool(
     "arcane_gitops_sync",
-    "Trigger a GitOps sync to pull and deploy latest changes from the repository",
     {
+      title: "Trigger GitOps sync",
+      description: "Trigger a GitOps sync to pull and deploy latest changes from the repository",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       syncId: z.string().describe("GitOps sync ID"),
+    },
     },
     toolHandler(async ({ environmentId, syncId }, client) => {
       await client.post(`/environments/${environmentId}/gitops-syncs/${syncId}/sync`);
@@ -181,12 +235,21 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_get_status
-  server.tool(
+  server.registerTool(
     "arcane_gitops_get_status",
-    "Get the current sync status for a GitOps configuration",
     {
+      title: "Get GitOps sync status",
+      description: "Get the current sync status for a GitOps configuration",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       syncId: z.string().describe("GitOps sync ID"),
+    },
     },
     toolHandler(async ({ environmentId, syncId }, client) => {
       const response = await client.get<{
@@ -215,13 +278,22 @@ export function registerGitopsTools(server: McpServer): void {
   // ============= Git Repositories =============
 
   // arcane_git_repo_list
-  server.tool(
+  server.registerTool(
     "arcane_git_repo_list",
-    "List configured Git repositories",
     {
+      title: "List Git repositories",
+      description: "List configured Git repositories",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       search: z.string().optional().describe("Search query"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
@@ -248,10 +320,18 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_create
-  server.tool(
+  server.registerTool(
     "arcane_git_repo_create",
-    "Add a new Git repository configuration",
     {
+      title: "Add Git repository",
+      description: "Add a new Git repository configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       name: z.string().describe("Repository name"),
       url: z.string().describe("Repository URL"),
       branch: z.string().optional().default("main").describe("Default branch"),
@@ -259,6 +339,7 @@ export function registerGitopsTools(server: McpServer): void {
       username: z.string().optional().describe("Username (for basic auth)"),
       password: z.string().optional().describe("Password or token"),
       sshKey: z.string().optional().describe("SSH private key"),
+    },
     },
     toolHandler(async ({ name, url, branch, authType, username, password, sshKey }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -271,12 +352,21 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_test
-  server.tool(
+  server.registerTool(
     "arcane_git_repo_test",
-    "Test connectivity to a Git repository",
     {
+      title: "Test Git repository",
+      description: "Test connectivity to a Git repository",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       repositoryId: z.string().describe("Repository ID"),
       branch: z.string().optional().describe("Branch to test (defaults to main)"),
+    },
     },
     toolHandler(async ({ repositoryId, branch }, client) => {
       const response = await client.post<{ message: string }>(
@@ -289,11 +379,20 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_get_branches
-  server.tool(
+  server.registerTool(
     "arcane_git_repo_get_branches",
-    "List branches in a Git repository",
     {
+      title: "List repo branches",
+      description: "List branches in a Git repository",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       repositoryId: z.string().describe("Repository ID"),
+    },
     },
     toolHandler(async ({ repositoryId }, client) => {
       const response = await client.get<{
@@ -311,13 +410,22 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_browse_files
-  server.tool(
+  server.registerTool(
     "arcane_git_repo_browse_files",
-    "Browse files in a Git repository",
     {
+      title: "Browse repo files",
+      description: "Browse files in a Git repository",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       repositoryId: z.string().describe("Repository ID"),
       branch: z.string().optional().describe("Branch to browse"),
       path: z.string().optional().default("").describe("Path within repository"),
+    },
     },
     toolHandler(async ({ repositoryId, branch, path }, client) => {
       const response = await client.get<{
@@ -339,11 +447,20 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_delete
-  server.tool(
+  server.registerTool(
     "arcane_git_repo_delete",
-    "Delete a Git repository configuration",
     {
+      title: "Delete Git repository",
+      description: "Delete a Git repository configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       repositoryId: z.string().describe("Repository ID"),
+    },
     },
     toolHandler(async ({ repositoryId }, client) => {
       await client.delete(`/customize/git-repositories/${repositoryId}`);

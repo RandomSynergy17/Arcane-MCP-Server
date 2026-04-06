@@ -28,11 +28,20 @@ interface ActionItem {
 export function registerDashboardTools(server: McpServer): void {
 
   // arcane_dashboard_get
-  server.tool(
+  server.registerTool(
     "arcane_dashboard_get",
-    "Get a consolidated dashboard snapshot for an environment (containers, projects, images, volumes, networks, system info)",
     {
+      title: "Get dashboard snapshot",
+      description: "Get a consolidated dashboard snapshot for an environment (containers, projects, images, volumes, networks, system info)",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: DashboardSnapshot }>(
@@ -67,11 +76,20 @@ export function registerDashboardTools(server: McpServer): void {
   );
 
   // arcane_dashboard_get_action_items
-  server.tool(
+  server.registerTool(
     "arcane_dashboard_get_action_items",
-    "Get dashboard action items that need attention (unhealthy containers, available updates, etc.)",
     {
+      title: "Get action items",
+      description: "Get dashboard action items that need attention (unhealthy containers, available updates, etc.)",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: ActionItem[] }>(

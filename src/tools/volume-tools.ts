@@ -41,16 +41,25 @@ export function registerVolumeTools(server: McpServer): void {
   // ============= Volume Management =============
 
   // arcane_volume_list
-  server.tool(
+  server.registerTool(
     "arcane_volume_list",
-    "List Docker volumes in an environment",
     {
+      title: "List volumes",
+      description: "List Docker volumes in an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter volumes"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
@@ -79,12 +88,21 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_get
-  server.tool(
+  server.registerTool(
     "arcane_volume_get",
-    "Get detailed information about a Docker volume",
     {
+      title: "Get volume details",
+      description: "Get detailed information about a Docker volume",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName }, client) => {
       const response = await client.get<{ data: Volume }>(
@@ -117,15 +135,24 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_create
-  server.tool(
+  server.registerTool(
     "arcane_volume_create",
-    "Create a new Docker volume",
     {
+      title: "Create volume",
+      description: "Create a new Docker volume",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       name: z.string().describe("Volume name"),
       driver: z.string().optional().default("local").describe("Volume driver"),
       driverOpts: z.record(z.string()).optional().describe("Driver-specific options"),
       labels: z.record(z.string()).optional().describe("Labels to add to the volume"),
+    },
     },
     toolHandler(async ({ environmentId, name, driver, driverOpts, labels }, client) => {
       const response = await client.post<{ data: { name: string } }>(
@@ -138,13 +165,22 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_delete
-  server.tool(
+  server.registerTool(
     "arcane_volume_delete",
-    "[CRITICAL RISK] Permanently delete a Docker volume and ALL its data. This cannot be undone!",
     {
+      title: "Delete volume",
+      description: "[CRITICAL RISK] Permanently delete a Docker volume and ALL its data. This cannot be undone!",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name to delete"),
       force: z.boolean().optional().default(false).describe("Force removal even if in use"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, force }, client) => {
       await client.delete(`/environments/${environmentId}/volumes/${volumeName}`, { force });
@@ -153,11 +189,20 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_prune
-  server.tool(
+  server.registerTool(
     "arcane_volume_prune",
-    "[CRITICAL RISK] Remove ALL unused Docker volumes and their data. This cannot be undone!",
     {
+      title: "Prune volumes",
+      description: "[CRITICAL RISK] Remove ALL unused Docker volumes and their data. This cannot be undone!",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ volumesDeleted?: string[]; spaceReclaimed?: number }>(
@@ -174,11 +219,20 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_get_counts
-  server.tool(
+  server.registerTool(
     "arcane_volume_get_counts",
-    "Get volume counts for an environment",
     {
+      title: "Get volume counts",
+      description: "Get volume counts for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -194,13 +248,22 @@ export function registerVolumeTools(server: McpServer): void {
   // ============= Volume File Operations =============
 
   // arcane_volume_browse
-  server.tool(
+  server.registerTool(
     "arcane_volume_browse",
-    "Browse files and directories in a Docker volume",
     {
+      title: "Browse volume files",
+      description: "Browse files and directories in a Docker volume",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
       path: z.string().optional().default("/").describe("Path within the volume"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, path }, client) => {
       const response = await client.get<{ data: FileEntry[] }>(
@@ -224,13 +287,22 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_browse_content
-  server.tool(
+  server.registerTool(
     "arcane_volume_browse_content",
-    "Read the content of a file in a Docker volume",
     {
+      title: "Read volume file",
+      description: "Read the content of a file in a Docker volume",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
       path: z.string().describe("Path to the file"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, path }, client) => {
       const response = await client.get<{ data: { content: string } }>(
@@ -243,13 +315,22 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_browse_mkdir
-  server.tool(
+  server.registerTool(
     "arcane_volume_browse_mkdir",
-    "Create a directory in a Docker volume",
     {
+      title: "Create volume directory",
+      description: "Create a directory in a Docker volume",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
       path: z.string().describe("Path for the new directory"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, path }, client) => {
       await client.post(`/environments/${environmentId}/volumes/${volumeName}/browse/mkdir`, { path });
@@ -260,12 +341,21 @@ export function registerVolumeTools(server: McpServer): void {
   // ============= Volume Backups =============
 
   // arcane_volume_backup_list
-  server.tool(
+  server.registerTool(
     "arcane_volume_backup_list",
-    "List backups for a Docker volume",
     {
+      title: "List volume backups",
+      description: "List backups for a Docker volume",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName }, client) => {
       const response = await client.get<{ data: Backup[] }>(
@@ -290,12 +380,21 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_create
-  server.tool(
+  server.registerTool(
     "arcane_volume_backup_create",
-    "Create a backup of a Docker volume",
     {
+      title: "Create volume backup",
+      description: "Create a backup of a Docker volume",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name to backup"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName }, client) => {
       const response = await client.post<{ data: Backup }>(
@@ -307,13 +406,22 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_delete
-  server.tool(
+  server.registerTool(
     "arcane_volume_backup_delete",
-    "[HIGH RISK] Delete a volume backup permanently",
     {
+      title: "Delete volume backup",
+      description: "[HIGH RISK] Delete a volume backup permanently",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
       backupId: z.string().describe("Backup ID to delete"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, backupId }, client) => {
       await client.delete(`/environments/${environmentId}/volumes/${volumeName}/backups/${backupId}`);
@@ -322,13 +430,22 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_restore
-  server.tool(
+  server.registerTool(
     "arcane_volume_backup_restore",
-    "Restore a volume from a backup. This will overwrite existing data in the volume.",
     {
+      title: "Restore volume backup",
+      description: "Restore a volume from a backup. This will overwrite existing data in the volume.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
       backupId: z.string().describe("Backup ID to restore"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, backupId }, client) => {
       await client.post(`/environments/${environmentId}/volumes/${volumeName}/backups/${backupId}/restore`);
@@ -337,14 +454,23 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_list_files
-  server.tool(
+  server.registerTool(
     "arcane_volume_backup_list_files",
-    "List files contained in a volume backup",
     {
+      title: "List backup files",
+      description: "List files contained in a volume backup",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       volumeName: z.string().describe("Volume name"),
       backupId: z.string().describe("Backup ID"),
       path: z.string().optional().default("/").describe("Path within the backup"),
+    },
     },
     toolHandler(async ({ environmentId, volumeName, backupId, path }, client) => {
       const response = await client.get<{ data: FileEntry[] }>(

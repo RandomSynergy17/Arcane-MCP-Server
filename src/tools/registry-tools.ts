@@ -20,13 +20,22 @@ interface ContainerRegistry {
 
 export function registerRegistryTools(server: McpServer): void {
   // arcane_registry_list
-  server.tool(
+  server.registerTool(
     "arcane_registry_list",
-    "List configured container registries",
     {
+      title: "List registries",
+      description: "List configured container registries",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       search: z.string().optional().describe("Search query"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
@@ -54,11 +63,20 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_get
-  server.tool(
+  server.registerTool(
     "arcane_registry_get",
-    "Get details of a container registry",
     {
+      title: "Get registry details",
+      description: "Get details of a container registry",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       registryId: z.string().describe("Registry ID"),
+    },
     },
     toolHandler(async ({ registryId }, client) => {
       const response = await client.get<{ data: ContainerRegistry }>(
@@ -81,10 +99,18 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_create
-  server.tool(
+  server.registerTool(
     "arcane_registry_create",
-    "Add a new container registry configuration",
     {
+      title: "Create registry",
+      description: "Add a new container registry configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       name: z.string().describe("Registry name"),
       url: z.string().describe("Registry URL (e.g., docker.io, ghcr.io)"),
       type: z.enum(["dockerhub", "gcr", "ecr", "acr", "ghcr", "custom"]).describe("Registry type"),
@@ -93,6 +119,7 @@ export function registerRegistryTools(server: McpServer): void {
       awsRegion: z.string().optional().describe("AWS region (required for ECR registries)"),
       awsAccessKeyId: z.string().optional().describe("AWS access key ID (for ECR registries)"),
       awsSecretAccessKey: z.string().optional().describe("AWS secret access key (for ECR registries)"),
+    },
     },
     toolHandler(async ({ name, url, type, username, password, awsRegion, awsAccessKeyId, awsSecretAccessKey }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -105,15 +132,24 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_update
-  server.tool(
+  server.registerTool(
     "arcane_registry_update",
-    "Update a container registry configuration",
     {
+      title: "Update registry",
+      description: "Update a container registry configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       registryId: z.string().describe("Registry ID"),
       name: z.string().optional().describe("New name"),
       url: z.string().optional().describe("New URL"),
       username: z.string().optional().describe("New username"),
       password: z.string().optional().describe("New password"),
+    },
     },
     toolHandler(async ({ registryId, name, url, username, password }, client) => {
       const body: Record<string, unknown> = {};
@@ -128,11 +164,20 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_delete
-  server.tool(
+  server.registerTool(
     "arcane_registry_delete",
-    "Delete a container registry configuration",
     {
+      title: "Delete registry",
+      description: "Delete a container registry configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       registryId: z.string().describe("Registry ID"),
+    },
     },
     toolHandler(async ({ registryId }, client) => {
       await client.delete(`/container-registries/${registryId}`);
@@ -141,11 +186,20 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_test
-  server.tool(
+  server.registerTool(
     "arcane_registry_test",
-    "Test connectivity to a container registry",
     {
+      title: "Test registry",
+      description: "Test connectivity to a container registry",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       registryId: z.string().describe("Registry ID"),
+    },
     },
     toolHandler(async ({ registryId }, client) => {
       const response = await client.post<{ message: string }>(
@@ -156,10 +210,18 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_sync
-  server.tool(
+  server.registerTool(
     "arcane_registry_sync",
-    "Sync all container registries to refresh image information",
-    {},
+    {
+      title: "Sync registries",
+      description: "Sync all container registries to refresh image information",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
     toolHandler(async (_params, client) => {
       await client.post("/container-registries/sync");
       return "Registry sync initiated.";

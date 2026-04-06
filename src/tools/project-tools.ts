@@ -25,16 +25,25 @@ interface Project {
 export function registerProjectTools(server: McpServer): void {
 
   // arcane_project_list
-  server.tool(
+  server.registerTool(
     "arcane_project_list",
-    "List Docker Compose projects/stacks in an environment",
     {
+      title: "List projects",
+      description: "List Docker Compose projects/stacks in an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter projects"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
@@ -68,12 +77,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_get
-  server.tool(
+  server.registerTool(
     "arcane_project_get",
-    "Get detailed information about a Docker Compose project",
     {
+      title: "Get project details",
+      description: "Get detailed information about a Docker Compose project",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
+    },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       const response = await client.get<{ data: Project & { config?: string } }>(
@@ -101,15 +119,24 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_create
-  server.tool(
+  server.registerTool(
     "arcane_project_create",
-    "Create a new Docker Compose project from a compose file",
     {
+      title: "Create project",
+      description: "Create a new Docker Compose project from a compose file",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       name: z.string().describe("Project name"),
       composeContent: z.string().describe("Docker Compose YAML content"),
       envContent: z.string().optional().describe("Environment variables content (.env format)"),
       directory: z.string().optional().describe("Project directory path (supports nested and symlinked directories)"),
+    },
     },
     toolHandler(async ({ environmentId, name, composeContent, envContent, directory }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
@@ -122,14 +149,23 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_update
-  server.tool(
+  server.registerTool(
     "arcane_project_update",
-    "Update a Docker Compose project configuration",
     {
+      title: "Update project config",
+      description: "Update a Docker Compose project configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
       composeContent: z.string().optional().describe("New Docker Compose YAML content"),
       envContent: z.string().optional().describe("New environment variables content"),
+    },
     },
     toolHandler(async ({ environmentId, projectId, composeContent, envContent }, client) => {
       const body: Record<string, unknown> = {};
@@ -142,12 +178,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_up
-  server.tool(
+  server.registerTool(
     "arcane_project_up",
-    "Deploy a Docker Compose project (docker-compose up -d). Use arcane_project_pull_images first to pull latest images.",
     {
+      title: "Deploy project",
+      description: "Deploy a Docker Compose project (docker-compose up -d). Use arcane_project_pull_images first to pull latest images.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
+    },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       await client.post(`/environments/${environmentId}/projects/${projectId}/up`);
@@ -156,12 +201,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_down
-  server.tool(
+  server.registerTool(
     "arcane_project_down",
-    "Stop and remove containers for a Docker Compose project (docker-compose down). Use arcane_project_destroy to also remove volumes.",
     {
+      title: "Stop project",
+      description: "Stop and remove containers for a Docker Compose project (docker-compose down). Use arcane_project_destroy to also remove volumes.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
+    },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       await client.post(`/environments/${environmentId}/projects/${projectId}/down`);
@@ -170,12 +224,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_restart
-  server.tool(
+  server.registerTool(
     "arcane_project_restart",
-    "Restart all services in a Docker Compose project",
     {
+      title: "Restart project",
+      description: "Restart all services in a Docker Compose project",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
+    },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       await client.post(`/environments/${environmentId}/projects/${projectId}/restart`);
@@ -184,12 +247,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_redeploy
-  server.tool(
+  server.registerTool(
     "arcane_project_redeploy",
-    "Redeploy a project (down + up). Useful for applying configuration changes. Use arcane_project_pull_images first to pull latest images.",
     {
+      title: "Redeploy project",
+      description: "Redeploy a project (down + up). Useful for applying configuration changes. Use arcane_project_pull_images first to pull latest images.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
+    },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       await client.post(`/environments/${environmentId}/projects/${projectId}/redeploy`);
@@ -198,13 +270,22 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_destroy
-  server.tool(
+  server.registerTool(
     "arcane_project_destroy",
-    "[CRITICAL RISK] Destroy a project completely, including containers and optionally volumes. This cannot be undone!",
     {
+      title: "Destroy project",
+      description: "[CRITICAL RISK] Destroy a project completely, including containers and optionally volumes. This cannot be undone!",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
       removeVolumes: z.boolean().optional().default(false).describe("Also remove volumes (DATA LOSS!)"),
+    },
     },
     toolHandler(async ({ environmentId, projectId, removeVolumes }, client) => {
       await client.delete(`/environments/${environmentId}/projects/${projectId}`, { removeVolumes });
@@ -213,12 +294,21 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_pull_images
-  server.tool(
+  server.registerTool(
     "arcane_project_pull_images",
-    "Pull all images for a Docker Compose project",
     {
+      title: "Pull project images",
+      description: "Pull all images for a Docker Compose project",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
+    },
     },
     toolHandler(async ({ environmentId, projectId }, client) => {
       await client.post(`/environments/${environmentId}/projects/${projectId}/pull`);
@@ -227,11 +317,20 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_get_counts
-  server.tool(
+  server.registerTool(
     "arcane_project_get_counts",
-    "Get project status counts for an environment",
     {
+      title: "Get project counts",
+      description: "Get project status counts for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{

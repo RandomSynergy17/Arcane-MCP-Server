@@ -38,12 +38,21 @@ interface UpdateRecord {
 export function registerUpdaterTools(server: McpServer): void {
 
   // arcane_updater_run
-  server.tool(
+  server.registerTool(
     "arcane_updater_run",
-    "Run the auto-updater to check and update all containers with available image updates",
     {
+      title: "Run auto-updater",
+      description: "Run the auto-updater to check and update all containers with available image updates",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       dryRun: z.boolean().optional().default(false).describe("Simulate without actually updating"),
+    },
     },
     toolHandler(async ({ environmentId, dryRun }, client) => {
       const response = await client.post<{ data: UpdaterResult }>(
@@ -72,12 +81,21 @@ export function registerUpdaterTools(server: McpServer): void {
   );
 
   // arcane_updater_update_container
-  server.tool(
+  server.registerTool(
     "arcane_updater_update_container",
-    "Update a single container to the latest image version",
     {
+      title: "Update single container",
+      description: "Update a single container to the latest image version",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       containerId: z.string().describe("Container ID to update"),
+    },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
       const response = await client.post<{ data: UpdaterResult }>(
@@ -94,11 +112,20 @@ export function registerUpdaterTools(server: McpServer): void {
   );
 
   // arcane_updater_get_status
-  server.tool(
+  server.registerTool(
     "arcane_updater_get_status",
-    "Get the current auto-updater status and schedule",
     {
+      title: "Get updater status",
+      description: "Get the current auto-updater status and schedule",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: UpdaterStatus }>(
@@ -119,12 +146,21 @@ export function registerUpdaterTools(server: McpServer): void {
   );
 
   // arcane_updater_get_history
-  server.tool(
+  server.registerTool(
     "arcane_updater_get_history",
-    "Get the auto-updater history showing past update operations",
     {
+      title: "Get updater history",
+      description: "Get the auto-updater history showing past update operations",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       limit: z.number().optional().default(50).describe("Number of history entries to return"),
+    },
     },
     toolHandler(async ({ environmentId, limit }, client) => {
       const response = await client.get<{ data: UpdateRecord[] }>(

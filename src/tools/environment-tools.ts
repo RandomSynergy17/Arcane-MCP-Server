@@ -19,15 +19,24 @@ interface Environment {
 
 export function registerEnvironmentTools(server: McpServer): void {
   // arcane_environment_list
-  server.tool(
+  server.registerTool(
     "arcane_environment_list",
-    "List all Docker environments configured in Arcane",
     {
+      title: "List environments",
+      description: "List all Docker environments configured in Arcane",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       search: z.string().optional().describe("Search query to filter environments"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
       limit: z.number().optional().default(20).describe("Items per page"),
+    },
     },
     toolHandler(async ({ search, sort, order, start, limit }, client) => {
       const response = await client.get<{
@@ -51,11 +60,20 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get
-  server.tool(
+  server.registerTool(
     "arcane_environment_get",
-    "Get details of a specific Docker environment",
     {
+      title: "Get environment details",
+      description: "Get details of a specific Docker environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: Environment }>(`/environments/${environmentId}`);
@@ -75,13 +93,22 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_create
-  server.tool(
+  server.registerTool(
     "arcane_environment_create",
-    "Create a new Docker environment in Arcane",
     {
+      title: "Create environment",
+      description: "Create a new Docker environment in Arcane",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       name: z.string().describe("Name for the environment"),
       apiUrl: z.string().optional().describe("API URL for the Docker host"),
       tlsEnabled: z.boolean().optional().default(false).describe("Enable TLS for Docker API"),
+    },
     },
     toolHandler(async ({ name, apiUrl, tlsEnabled }, client) => {
       const response = await client.post<{ data: Environment & { apiKey?: string } }>("/environments", {
@@ -101,13 +128,22 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_update
-  server.tool(
+  server.registerTool(
     "arcane_environment_update",
-    "Update an existing Docker environment",
     {
+      title: "Update environment",
+      description: "Update an existing Docker environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID to update"),
       name: z.string().optional().describe("New name for the environment"),
       apiUrl: z.string().optional().describe("New API URL"),
+    },
     },
     toolHandler(async ({ environmentId, name, apiUrl }, client) => {
       const body: Record<string, unknown> = {};
@@ -120,11 +156,20 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_delete
-  server.tool(
+  server.registerTool(
     "arcane_environment_delete",
-    "[HIGH RISK] Delete a Docker environment from Arcane. This removes the environment configuration but does not affect the actual Docker host.",
     {
+      title: "Delete environment",
+      description: "[HIGH RISK] Delete a Docker environment from Arcane. This removes the environment configuration but does not affect the actual Docker host.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID to delete"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       await client.delete(`/environments/${environmentId}`);
@@ -133,11 +178,20 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_test
-  server.tool(
+  server.registerTool(
     "arcane_environment_test",
-    "Test connectivity to a Docker environment",
     {
+      title: "Test environment",
+      description: "Test connectivity to a Docker environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID to test"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ message: string }>(`/environments/${environmentId}/test`);
@@ -146,12 +200,21 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_pair_agent
-  server.tool(
+  server.registerTool(
     "arcane_environment_pair_agent",
-    "Generate or rotate the local agent pairing token for an environment",
     {
+      title: "Pair agent",
+      description: "Generate or rotate the local agent pairing token for an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID (use '0' for local)"),
       rotate: z.boolean().optional().default(false).describe("Rotate existing token"),
+    },
     },
     toolHandler(async ({ environmentId, rotate }, client) => {
       const response = await client.post<{ data: { apiKey: string; expiresAt: string } }>(
@@ -164,11 +227,20 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get_version
-  server.tool(
+  server.registerTool(
     "arcane_environment_get_version",
-    "Get the Arcane agent version running on an environment",
     {
+      title: "Get agent version",
+      description: "Get the Arcane agent version running on an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: { version: string; buildTime?: string } }>(
@@ -180,11 +252,20 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get_docker_info
-  server.tool(
+  server.registerTool(
     "arcane_environment_get_docker_info",
-    "Get Docker system information for an environment",
     {
+      title: "Get Docker info",
+      description: "Get Docker system information for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -218,11 +299,20 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get_deployment_snippets
-  server.tool(
+  server.registerTool(
     "arcane_environment_get_deployment_snippets",
-    "Get deployment snippets for installing Arcane agent on an environment",
     {
+      title: "Get deployment snippets",
+      description: "Get deployment snippets for installing Arcane agent on an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{ data: { docker?: string; dockerCompose?: string } }>(

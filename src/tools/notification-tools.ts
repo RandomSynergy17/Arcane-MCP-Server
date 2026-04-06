@@ -9,11 +9,20 @@ import { logger } from "../utils/logger.js";
 
 export function registerNotificationTools(server: McpServer): void {
   // arcane_notification_get_settings
-  server.tool(
+  server.registerTool(
     "arcane_notification_get_settings",
-    "Get notification settings for an environment",
     {
+      title: "Get notification settings",
+      description: "Get notification settings for an environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -43,10 +52,18 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_update_settings
-  server.tool(
+  server.registerTool(
     "arcane_notification_update_settings",
-    "Update notification settings for an environment",
     {
+      title: "Update notification settings",
+      description: "Update notification settings for an environment",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       enabled: z.boolean().optional().describe("Enable/disable notifications"),
       onContainerStart: z.boolean().optional().describe("Notify on container start"),
@@ -54,6 +71,7 @@ export function registerNotificationTools(server: McpServer): void {
       onContainerHealth: z.boolean().optional().describe("Notify on health check changes"),
       onImageUpdate: z.boolean().optional().describe("Notify when image updates available"),
       onBackupComplete: z.boolean().optional().describe("Notify on backup completion"),
+    },
     },
     toolHandler(async ({ environmentId, enabled, onContainerStart, onContainerStop, onContainerHealth, onImageUpdate, onBackupComplete }, client) => {
       const body: Record<string, unknown> = {};
@@ -70,12 +88,21 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_test
-  server.tool(
+  server.registerTool(
     "arcane_notification_test",
-    "Send a test notification to verify configuration",
     {
+      title: "Test notification",
+      description: "Send a test notification to verify configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       provider: z.string().optional().describe("Specific provider to test"),
+    },
     },
     toolHandler(async ({ environmentId, provider }, client) => {
       await client.post(`/environments/${environmentId}/notifications/test/${provider || "all"}`);
@@ -84,11 +111,20 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_apprise_get
-  server.tool(
+  server.registerTool(
     "arcane_notification_apprise_get",
-    "Get Apprise notification configuration",
     {
+      title: "Get Apprise config",
+      description: "Get Apprise notification configuration",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
@@ -118,13 +154,22 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_apprise_update
-  server.tool(
+  server.registerTool(
     "arcane_notification_apprise_update",
-    "Update Apprise notification configuration",
     {
+      title: "Update Apprise config",
+      description: "Update Apprise notification configuration",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       enabled: z.boolean().optional().describe("Enable/disable Apprise"),
       urls: z.array(z.string()).optional().describe("Apprise notification URLs"),
+    },
     },
     toolHandler(async ({ environmentId, enabled, urls }, client) => {
       const body: Record<string, unknown> = {};
@@ -137,11 +182,20 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_apprise_test
-  server.tool(
+  server.registerTool(
     "arcane_notification_apprise_test",
-    "Send a test notification through Apprise",
     {
+      title: "Test Apprise notification",
+      description: "Send a test notification through Apprise",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
+    },
     },
     toolHandler(async ({ environmentId }, client) => {
       await client.post(`/environments/${environmentId}/notifications/apprise/test`);

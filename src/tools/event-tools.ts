@@ -24,14 +24,23 @@ interface Event {
 export function registerEventTools(server: McpServer): void {
 
   // arcane_event_list
-  server.tool(
+  server.registerTool(
     "arcane_event_list",
-    "List events across all environments",
     {
+      title: "List events",
+      description: "List events across all environments",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       type: z.string().optional().describe("Filter by event type"),
       resourceType: z.string().optional().describe("Filter by resource type (container, image, etc.)"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(50).describe("Items per page"),
+    },
     },
     toolHandler(async ({ type, resourceType, start, limit }, client) => {
       const response = await client.get<{
@@ -66,14 +75,23 @@ export function registerEventTools(server: McpServer): void {
   );
 
   // arcane_event_list_by_environment
-  server.tool(
+  server.registerTool(
     "arcane_event_list_by_environment",
-    "List events for a specific environment",
     {
+      title: "List environment events",
+      description: "List events for a specific environment",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       type: z.string().optional().describe("Filter by event type"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(50).describe("Items per page"),
+    },
     },
     toolHandler(async ({ environmentId, type, start, limit }, client) => {
       const response = await client.get<{
@@ -101,16 +119,25 @@ export function registerEventTools(server: McpServer): void {
   );
 
   // arcane_event_create
-  server.tool(
+  server.registerTool(
     "arcane_event_create",
-    "Create a custom event for tracking",
     {
+      title: "Create event",
+      description: "Create a custom event for tracking",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       type: z.string().describe("Event type"),
       message: z.string().describe("Event message"),
       resourceType: z.string().optional().describe("Resource type"),
       resourceId: z.string().optional().describe("Resource ID"),
       resourceName: z.string().optional().describe("Resource name"),
       metadata: z.record(z.unknown()).optional().describe("Additional metadata"),
+    },
     },
     toolHandler(async ({ type, message, resourceType, resourceId, resourceName, metadata }, client) => {
       const response = await client.post<{ data: { id: string } }>("/events", {
@@ -127,11 +154,20 @@ export function registerEventTools(server: McpServer): void {
   );
 
   // arcane_event_delete
-  server.tool(
+  server.registerTool(
     "arcane_event_delete",
-    "Delete an event from the history",
     {
+      title: "Delete event",
+      description: "Delete an event from the history",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      inputSchema: {
       eventId: z.string().describe("Event ID to delete"),
+    },
     },
     toolHandler(async ({ eventId }, client) => {
       await client.delete(`/events/${eventId}`);
