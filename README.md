@@ -17,57 +17,74 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> &bull;
-  <a href="#available-tools">Tools</a> &bull;
-  <a href="#companion-skill">Skill</a> &bull;
-  <a href="#resources--prompts">Prompts</a> &bull;
-  <a href="install_arcane_skill-mcp.md">Installer</a>
+  <a href="#-getting-started">Getting Started</a> &bull;
+  <a href="#-what-can-it-do">What Can It Do</a> &bull;
+  <a href="#-the-companion-skill">Companion Skill</a> &bull;
+  <a href="#-all-180-tools">All Tools</a> &bull;
+  <a href="install_arcane_skill-mcp.md">Interactive Installer</a>
 </p>
 
 ---
 
 > **Note:** This is an independent, community-built project. It is **not affiliated with, endorsed by, or maintained by** the [Arcane](https://github.com/getarcaneapp/arcane) project or its maintainers. We build on top of Arcane's public API.
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI assistants full control over [Arcane](https://github.com/getarcaneapp/arcane) Docker infrastructure. Containers, images, volumes, networks, Compose stacks, Swarm clusters, vulnerability scanning, GitOps, builds, auto-updates — all through conversational commands.
+## What is this?
 
-### Why Arcane MCP Server?
+Arcane MCP Server connects your AI assistant to your [Arcane](https://github.com/getarcaneapp/arcane) Docker management platform. Instead of clicking through dashboards and running CLI commands, you just *talk* to your infrastructure:
 
-- **Ask, don't click.** "What's broken?" returns a dashboard, action items, and container state in one shot.
-- **Safe by default.** Every tool carries annotations (`readOnlyHint`, `destructiveHint`) so your AI won't accidentally prune your volumes.
-- **Skill-guided workflows.** The companion skill teaches Claude deployment patterns, rollback sequences, and troubleshooting flows — not just tool names.
-- **One install, everything works.** Plugin format bundles MCP server + skill. Or install them separately.
+> "What's running on production?"
+>
+> "Deploy this compose file to staging."
+>
+> "Are any images vulnerable? Show me the critical ones."
+>
+> "Scale the API service to 5 replicas."
+
+Behind the scenes, the server translates your requests into the right API calls — with safety checks, retry logic, and formatted responses that actually make sense.
 
 ---
 
-## Quick Start
+## Why use it?
 
-### One-Line Install
+| | Without | With Arcane MCP Server |
+|---|---|---|
+| **Check container status** | Open dashboard, navigate to environment, filter, scroll | *"What's broken?"* |
+| **Deploy a stack** | Write compose, scp to server, ssh, docker compose up | *"Deploy this compose file"* |
+| **Find vulnerabilities** | Configure Trivy, run scan, parse JSON output | *"Run a security audit"* |
+| **Update containers** | Check each image, pull, recreate, verify | *"Update everything"* (dry-run first, obviously) |
+| **Clean up disk space** | Prune images, volumes, networks one by one | *"Clean up unused resources"* |
 
-```bash
-npm install -g @randomsynergy/arcane-mcp-server
-```
+Every tool carries **safety annotations** so your AI knows which operations are read-only and which ones need confirmation before running. No accidental `docker system prune` moments.
 
-### Guided Install (Claude Code)
+---
 
-Paste this into any Claude Code session for interactive setup:
+## Getting Started
+
+The fastest way — paste this into Claude Code:
 
 ```
 Fetch and follow: https://raw.githubusercontent.com/RandomSynergy17/Arcane-MCP-Server/main/install_arcane_skill-mcp.md
 ```
 
-### Plugin Install
+It'll walk you through setup interactively. Or pick your preferred method below.
+
+### npm Install
+
+```bash
+npm install -g @randomsynergy/arcane-mcp-server
+```
+
+### Claude Code Plugin *(recommended)*
 
 ```bash
 /plugin marketplace add RandomSynergy17/Arcane-MCP-Server
 /plugin install arcane-mcp-server
 ```
 
-You'll be prompted for your Arcane URL and API key.
-
-### Manual Setup
+You'll be prompted for your Arcane URL and API key during setup. That's it — MCP server and companion skill installed together.
 
 <details>
-<summary><strong>Claude Code</strong></summary>
+<summary><strong>Claude Code (manual)</strong></summary>
 
 ```bash
 claude mcp add --transport stdio \
@@ -101,6 +118,8 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 <details>
 <summary><strong>HTTP / Network Mode</strong></summary>
 
+For remote or multi-client access:
+
 ```bash
 ARCANE_API_KEY=your-key npx @randomsynergy/arcane-mcp-server --tcp
 ```
@@ -121,31 +140,82 @@ Create `~/.arcane/config.json`:
 ```
 </details>
 
+### Prerequisites
+
+You need an **Arcane instance** running (see [getarcane.app](https://getarcane.app)) and an **API key** from Settings > API Keys.
+
 ---
 
-## Companion Skill
+## What Can It Do?
 
-The optional skill teaches Claude *how* to use the tools — deployment workflows, safety checks, troubleshooting patterns, and common gotchas.
+### Containers & Compose
+Deploy, start, stop, restart, redeploy, and monitor Docker containers and Compose stacks. Inspect details, check ports, toggle auto-updates — all through conversation.
+
+### Docker Swarm
+Full cluster management. Initialize clusters, join nodes, deploy services, scale replicas, view logs, and manage the entire swarm lifecycle.
+
+### Security & Vulnerability Scanning
+Scan images for CVEs, get severity breakdowns, track which images need attention, and ignore known false positives. Environment-wide security summaries in one call.
+
+### GitOps & Deployments
+Connect Git repositories, set up automated sync, and deploy directly from branches. Supports folder-level sync and auto-deploy on push.
+
+### Image Builds & Updates
+Build images from Dockerfiles or Git URLs, check all running containers for available updates, and roll out updates with dry-run support.
+
+### Infrastructure Management
+Manage volumes (browse files, create backups, restore), networks (create, inspect topology), and registries (Docker Hub, GHCR, ECR, GCR, ACR).
+
+### Operations Dashboard
+Get a consolidated snapshot of your entire environment in one call — container counts, project status, available updates, action items that need attention.
+
+---
+
+## The Companion Skill
+
+The MCP server gives Claude the *tools*. The companion skill gives it the *knowledge* — how to use those tools effectively, safely, and in the right order.
+
+**Install with the plugin** (automatic) or **manually:**
 
 ```bash
-# With the plugin (includes skill automatically)
-/plugin install arcane-mcp-server
-
-# Or manually
 git clone --depth 1 https://github.com/RandomSynergy17/Arcane-MCP-Server.git /tmp/arcane
 cp -r /tmp/arcane/skills/arcane-mcp-server ~/.claude/skills/arcane-mcp-server
 rm -rf /tmp/arcane
 ```
 
-**What the skill provides:**
-- **Intent mapping** — "what's broken?" becomes `arcane_dashboard_get` + `arcane_dashboard_get_action_items`
-- **Safety guardrails** — backup before prune, dry-run before update, confirm before destroy
-- **Workflow chains** — deploy, rollback, troubleshoot, cleanup, security audit sequences
-- **Gotchas** — `environmentId` required everywhere, ECR creds expire, pagination defaults to 20
+### What the skill teaches Claude:
+
+**Intent mapping** — When you say "what's broken?", Claude knows to call `arcane_dashboard_get` + `arcane_dashboard_get_action_items` instead of listing every container one by one.
+
+**Safety guardrails** — Before running `arcane_volume_prune`, Claude will suggest `arcane_volume_backup_create` first. Before `arcane_updater_run`, it'll do a dry run. Before `arcane_project_destroy`, it confirms twice.
+
+**Workflow chains** — Multi-step operations like "deploy → pull images → start → verify" are sequenced correctly, not fired off randomly.
+
+**Gotchas** — Things like "`environmentId` is required on almost every call", "ECR credentials expire", and "always use `dryRun: true` before running the auto-updater" are baked in so you don't learn them the hard way.
 
 ---
 
-## Available Tools
+## Built-in Workflow Prompts
+
+The server includes four pre-built prompts that guide Claude through common multi-step operations:
+
+| Prompt | What it does |
+|--------|-------------|
+| `/deploy-stack` | Walks through creating a project, pulling images, deploying, and verifying all services are healthy |
+| `/troubleshoot-container` | Systematic diagnosis: check state, inspect config, review action items, check ports, scan for vulnerabilities |
+| `/security-audit` | Full environment scan: check scanner status, get vulnerability summary, review all findings by severity, check for image updates |
+| `/cleanup-environment` | Safe cleanup: survey resources, present a plan, get confirmation, then prune images, networks, and volumes in the right order |
+
+Plus two **MCP Resources** that give Claude background context:
+
+| Resource | What it provides |
+|----------|-----------------|
+| `arcane://environments` | All available environments with IDs and status — so Claude can pick the right one |
+| `arcane://version` | Server configuration details — base URL, default environment, protocol version |
+
+---
+
+## All 180 Tools
 
 ### Containers (11)
 
@@ -213,10 +283,8 @@ rm -rf /tmp/arcane
 | `arcane_project_get_counts` | Get status counts |
 | `arcane_project_build` | Build project images |
 
-### Images (9) &bull; Image Updates (5) &bull; Image Builds (6)
-
 <details>
-<summary>Show 20 image tools</summary>
+<summary><strong>Images, Builds & Updates (20 tools)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
@@ -242,10 +310,8 @@ rm -rf /tmp/arcane
 | `arcane_build_workspace_upload` | Upload to workspace |
 </details>
 
-### Volumes (14) &bull; Networks (7) &bull; Ports (1)
-
 <details>
-<summary>Show 22 infrastructure tools</summary>
+<summary><strong>Volumes, Networks & Ports (22 tools)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
@@ -273,10 +339,8 @@ rm -rf /tmp/arcane
 | `arcane_port_list` | List all port mappings |
 </details>
 
-### GitOps (13) &bull; Webhooks (4) &bull; Auto-Updater (4) &bull; Dashboard (2)
-
 <details>
-<summary>Show 23 operations tools</summary>
+<summary><strong>GitOps, Webhooks, Auto-Updater & Dashboard (23 tools)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
@@ -305,40 +369,22 @@ rm -rf /tmp/arcane
 | `arcane_dashboard_get_action_items` | Get action items |
 </details>
 
-### Additional Categories
+<details>
+<summary><strong>Environments, Registries, Auth & More (69 tools)</strong></summary>
 
-| Category | Tools | Description |
-|----------|-------|-------------|
-| **Environments** | 10 | Multi-host Docker environment management |
-| **Container Registries** | 7 | Docker Hub, GHCR, ECR, GCR, ACR |
-| **Templates** | 8 | Docker Compose templates with variables |
-| **Jobs** | 4 | Scheduled task management |
-| **Notifications** | 6 | Alert configuration (Apprise) |
-| **Events** | 4 | Activity tracking and logging |
-| **Users** | 5 | User account management |
-| **Settings** | 8 | Server configuration and API keys |
-| **Authentication** | 8 | Login, logout, JWT, OIDC device flow |
-| **System** | 9 | Health checks, pruning, upgrades |
-
----
-
-## Resources & Prompts
-
-**MCP Resources** (read-only context for the AI):
-
-| URI | Description |
-|-----|-------------|
-| `arcane://environments` | Lists all available environments with IDs |
-| `arcane://version` | Server version and configuration |
-
-**MCP Prompts** (workflow templates):
-
-| Prompt | Description |
-|--------|-------------|
-| `/deploy-stack` | Guided Docker Compose deployment |
-| `/troubleshoot-container` | Systematic container diagnostics |
-| `/security-audit` | Vulnerability scanning workflow |
-| `/cleanup-environment` | Safe resource cleanup with confirmations |
+| Category | Tools | What it covers |
+|----------|-------|----------------|
+| **Environments** | 10 | List, create, update, delete environments. Test connectivity, pair agents, get Docker info, deployment snippets |
+| **Container Registries** | 7 | Docker Hub, GHCR, ECR, GCR, ACR. Create, update, delete, test, sync registries |
+| **Templates** | 8 | Docker Compose templates with variables. Browse, create, download, manage |
+| **Jobs** | 4 | Scheduled tasks. List jobs, get schedules, run on demand |
+| **Notifications** | 6 | Alert configuration via Apprise. Get/set settings, test notifications |
+| **Events** | 4 | Activity tracking. List events by environment, create, delete |
+| **Users** | 5 | User management. List, create, update, delete users |
+| **Settings** | 8 | Server configuration and API key management |
+| **Authentication** | 8 | Login, logout, JWT token management, OIDC device flow |
+| **System** | 9 | Health checks, Docker info, system prune, upgrade checks, start/stop all containers |
+</details>
 
 ---
 
@@ -346,37 +392,39 @@ rm -rf /tmp/arcane
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ARCANE_BASE_URL` | Arcane API base URL | **Required** |
-| `ARCANE_API_KEY` | API key authentication | - |
-| `ARCANE_USERNAME` | Username (JWT auth) | - |
-| `ARCANE_PASSWORD` | Password (JWT auth) | - |
-| `ARCANE_TIMEOUT_MS` | Request timeout | `30000` |
-| `ARCANE_SKIP_SSL_VERIFY` | Skip SSL verification | `false` |
-| `ARCANE_DEFAULT_ENVIRONMENT_ID` | Default environment | - |
-| `ARCANE_HTTP_PORT` | HTTP server port | `3000` |
-| `ARCANE_HTTP_HOST` | HTTP server host | `localhost` |
-| `LOG_LEVEL` | Logging level | `info` |
+| `ARCANE_BASE_URL` | Your Arcane instance URL | **Required** |
+| `ARCANE_API_KEY` | API key for authentication | - |
+| `ARCANE_USERNAME` | Username (alternative JWT auth) | - |
+| `ARCANE_PASSWORD` | Password (alternative JWT auth) | - |
+| `ARCANE_TIMEOUT_MS` | Request timeout in milliseconds | `30000` |
+| `ARCANE_SKIP_SSL_VERIFY` | Skip SSL cert verification (self-signed certs) | `false` |
+| `ARCANE_DEFAULT_ENVIRONMENT_ID` | Auto-select this environment | - |
+| `ARCANE_HTTP_PORT` | Port for HTTP/network mode | `3000` |
+| `ARCANE_HTTP_HOST` | Host for HTTP/network mode | `localhost` |
+| `LOG_LEVEL` | `debug`, `info`, `warn`, or `error` | `info` |
 
-JWT tokens are automatically refreshed before expiry.
+**Authentication:** API Key is recommended. JWT tokens are automatically refreshed before they expire.
 
 ---
 
-## Destructive Operations
+## Safety & Destructive Operations
 
-These tools carry `destructiveHint: true` in their MCP annotations. The companion skill enforces pre-flight checks automatically.
+Every tool includes MCP annotations that tell your AI assistant whether it's safe to run without asking. Read-only tools (list, get, browse) run freely. Destructive tools require confirmation.
 
-| Tool | Risk |
-|------|------|
-| `arcane_container_delete` | HIGH |
-| `arcane_volume_delete` | CRITICAL |
-| `arcane_volume_prune` | CRITICAL |
-| `arcane_project_destroy` | CRITICAL |
-| `arcane_system_prune` | CRITICAL |
-| `arcane_network_delete` | HIGH |
-| `arcane_image_prune` | HIGH |
-| `arcane_swarm_delete_service` | HIGH |
-| `arcane_swarm_init_cluster` | CRITICAL |
-| `arcane_swarm_leave_cluster` | CRITICAL |
+| Tool | Risk | What happens |
+|------|------|-------------|
+| `arcane_volume_delete` | CRITICAL | Permanently deletes a volume and its data |
+| `arcane_volume_prune` | CRITICAL | Removes all unused volumes |
+| `arcane_project_destroy` | CRITICAL | Destroys a project, optionally including volumes |
+| `arcane_system_prune` | CRITICAL | Removes all unused containers, images, networks, volumes |
+| `arcane_swarm_init_cluster` | CRITICAL | Converts a standalone node to a swarm manager |
+| `arcane_swarm_leave_cluster` | CRITICAL | Disconnects from the swarm cluster |
+| `arcane_container_delete` | HIGH | Deletes a container |
+| `arcane_network_delete` | HIGH | Deletes a network |
+| `arcane_image_prune` | HIGH | Removes unused images |
+| `arcane_swarm_delete_service` | HIGH | Removes a swarm service |
+
+The companion skill adds an additional safety layer — it teaches Claude to back up before deleting, dry-run before updating, and always confirm before destroying.
 
 ---
 
@@ -387,32 +435,34 @@ git clone https://github.com/RandomSynergy17/Arcane-MCP-Server.git
 cd Arcane-MCP-Server
 npm install
 npm run build
+npm test             # 79 tests
 npm run dev          # stdio mode
 npm run dev:tcp      # HTTP mode
 ```
 
 <details>
-<summary>Project Structure</summary>
+<summary><strong>Project Structure</strong></summary>
 
 ```
 src/
   index.ts              # stdio entry point
-  tcp-server.ts         # HTTP/Streamable entry point
+  tcp-server.ts         # HTTP/Streamable entry point (rate-limited)
   server.ts             # MCP server factory (tools + resources + prompts)
-  config.ts             # Configuration management
+  config.ts             # Configuration (env vars > config file > defaults)
   client/
-    arcane-client.ts    # HTTP client with retry logic
+    arcane-client.ts    # HTTP client (retry, SSL, size limits)
   auth/
-    auth-manager.ts     # JWT + API key authentication
-  tools/                # 25 tool modules, 180 tools
-  resources/
-    index.ts            # MCP Resources (environments, version)
-  prompts/
-    index.ts            # MCP Prompts (deploy, troubleshoot, audit, cleanup)
+    auth-manager.ts     # JWT auto-refresh + API key auth
+  tools/                # 25 modules, 180 tools
+  resources/            # 2 MCP Resources
+  prompts/              # 4 MCP Prompts
   types/
+    arcane-types.ts     # Shared interfaces (33 types)
     generated/          # Auto-generated from OpenAPI v1.17.0
   utils/
-    tool-helpers.ts     # Shared registerTool wrapper
+    tool-helpers.ts     # registerTool wrapper with isError handling
+    format.ts           # Size formatting + path validation
+    error-handler.ts    # Error classes + formatting
 skills/
   arcane-mcp-server/
     SKILL.md            # Companion Claude Code skill
@@ -423,7 +473,7 @@ skills/
 
 ## Contributing
 
-Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and guidelines.
 
 ## License
 
@@ -431,11 +481,11 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Links
 
-- [Arcane](https://github.com/getarcaneapp/arcane) - The Docker management platform
-- [npm package](https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server) - `npx @randomsynergy/arcane-mcp-server`
-- [Installation Guide](install_arcane_skill-mcp.md) - Interactive installer
-- [Model Context Protocol](https://modelcontextprotocol.io) - MCP specification
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - SDK used by this server
+- [Arcane](https://github.com/getarcaneapp/arcane) — The Docker management platform this connects to
+- [npm package](https://www.npmjs.com/package/@randomsynergy/arcane-mcp-server) — `npx @randomsynergy/arcane-mcp-server`
+- [Interactive Installer](install_arcane_skill-mcp.md) — Guided setup for Claude Code
+- [Model Context Protocol](https://modelcontextprotocol.io) — The MCP specification
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) — SDK used by this server
 
 ---
 
