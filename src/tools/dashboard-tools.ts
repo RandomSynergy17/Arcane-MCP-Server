@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 import type { DashboardSnapshot, ActionItem } from "../types/arcane-types.js";
 
 export function registerDashboardTools(server: McpServer): void {
@@ -95,5 +94,4 @@ export function registerDashboardTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered dashboard tools");
 }

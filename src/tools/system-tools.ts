@@ -7,7 +7,6 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { formatSizeGB, formatSizeMB } from "../utils/format.js";
 import { SECONDS_PER_HOUR } from "../constants.js";
-import { logger } from "../utils/logger.js";
 
 export function registerSystemTools(server: McpServer): void {
   // arcane_system_get_health
@@ -291,5 +290,4 @@ export function registerSystemTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered system tools");
 }

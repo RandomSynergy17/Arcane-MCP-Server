@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 
 export function registerSettingsTools(server: McpServer): void {
   // arcane_settings_get
@@ -266,5 +265,4 @@ export function registerSettingsTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered settings tools");
 }

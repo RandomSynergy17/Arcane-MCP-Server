@@ -6,7 +6,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT } from "../constants.js";
-import { logger } from "../utils/logger.js";
 import type { Container } from "../types/arcane-types.js";
 
 export function registerContainerTools(server: McpServer): void {
@@ -352,5 +351,4 @@ export function registerContainerTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered container tools");
 }

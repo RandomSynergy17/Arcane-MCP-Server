@@ -7,7 +7,6 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { formatSize, formatSizeMB, formatSizeGB } from "../utils/format.js";
 import { DOCKER_DIGEST_PREFIX_LENGTH, DOCKER_SHORT_ID_LENGTH } from "../constants.js";
-import { logger } from "../utils/logger.js";
 import type { Image } from "../types/arcane-types.js";
 
 export function registerImageTools(server: McpServer): void {
@@ -307,5 +306,4 @@ export function registerImageTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered image tools");
 }

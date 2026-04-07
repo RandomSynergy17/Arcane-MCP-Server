@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 import type { NetworkTopology } from "../types/arcane-types.js";
 
 export function registerNetworkTopologyTools(server: McpServer): void {
@@ -58,5 +57,4 @@ export function registerNetworkTopologyTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered network topology tools");
 }

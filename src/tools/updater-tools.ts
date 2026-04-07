@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 import type { UpdaterResult, UpdaterStatus, UpdateRecord } from "../types/arcane-types.js";
 
 export function registerUpdaterTools(server: McpServer): void {
@@ -158,5 +157,4 @@ export function registerUpdaterTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered updater tools");
 }

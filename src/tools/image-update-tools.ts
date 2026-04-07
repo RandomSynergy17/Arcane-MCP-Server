@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 import type { ImageUpdateResponse, BatchImageUpdateResponse, ImageUpdateSummary } from "../types/arcane-types.js";
 
 export function registerImageUpdateTools(server: McpServer): void {
@@ -182,5 +181,4 @@ export function registerImageUpdateTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered image update tools");
 }

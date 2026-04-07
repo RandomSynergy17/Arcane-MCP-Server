@@ -6,7 +6,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { validatePath } from "../utils/format.js";
-import { logger } from "../utils/logger.js";
 import type { Build, BuildDetails, WorkspaceFile } from "../types/arcane-types.js";
 
 export function registerBuildTools(server: McpServer): void {
@@ -253,5 +252,4 @@ export function registerBuildTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered build tools");
 }

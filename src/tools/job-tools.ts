@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 import type { Job } from "../types/arcane-types.js";
 
 export function registerJobTools(server: McpServer): void {
@@ -140,5 +139,4 @@ export function registerJobTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered job tools");
 }

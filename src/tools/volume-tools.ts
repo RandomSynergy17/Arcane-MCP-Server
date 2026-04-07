@@ -7,7 +7,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { formatSize, formatSizeCompact, formatSizeMB, validatePath } from "../utils/format.js";
-import { logger } from "../utils/logger.js";
 import type { Volume, FileEntry, Backup } from "../types/arcane-types.js";
 
 export function registerVolumeTools(server: McpServer): void {
@@ -473,5 +472,4 @@ export function registerVolumeTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered volume tools");
 }

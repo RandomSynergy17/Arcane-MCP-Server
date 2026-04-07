@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 import type { User } from "../types/arcane-types.js";
 
 export function registerUserTools(server: McpServer): void {
@@ -168,5 +167,4 @@ export function registerUserTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered user tools");
 }

@@ -5,7 +5,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
-import { logger } from "../utils/logger.js";
 
 export function registerAuthTools(server: McpServer): void {
   // arcane_auth_login
@@ -215,5 +214,4 @@ export function registerAuthTools(server: McpServer): void {
     })
   );
 
-  logger.debug("Registered auth tools");
 }
