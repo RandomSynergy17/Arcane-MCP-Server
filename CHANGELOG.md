@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2026-04-07
+
+### Changed
+- README rewritten with conversational tone, "What is this?" intro, "Why use it?" comparison table, and narrative structure
+- README now explains the MCP server + plugin + skill bundle clearly
+- Removed logger import boilerplate from all 25 tool files (central log in index.ts kept)
+- Pagination defaults use constants from `constants.ts` in all 16 list tool files
+- CI opts into Node.js 24 for GitHub Actions (`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`)
+
+---
+
 ## [2.0.2] - 2026-04-07
 
 ### Added
