@@ -9,7 +9,7 @@
       "name": "arcane-mcp-server",
       "source": ".",
       "description": "Docker infrastructure management with 180+ MCP tools, workflow guidance, and safety guardrails",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "keywords": ["docker", "containers", "infrastructure", "devops", "compose", "swarm"]
     }
   ]

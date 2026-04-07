@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-04-07
+
+### Added
+- Shared type definitions: 33 interfaces in `src/types/arcane-types.ts` (replaces 21 local definitions)
+- McpServer template pattern for HTTP sessions (register tools once, share across connections)
+- Rate limiting on HTTP transport (100 req/min per IP)
+- Config file permission warning when `~/.arcane/config.json` is world-readable
+- 29 integration tests: container-tools, dashboard-tools, resources, prompts (79 total)
+- `.gitignore` with proper exclusions (logs, coverage, worktrees, IDE)
+- Audit prompt: Lessons Learned section with patterns from 3 audit rounds
+
+### Fixed
+- Health endpoint no longer leaks session count/max (returns only `{ status: "ok" }`)
+- Empty API responses use cleaner type cast with documentation
+- Pagination constants used from `constants.ts` in container-tools (proof of concept)
+- Image pull `tag` parameter now required (removed anti-pattern `"latest"` default)
+- Server version read from package.json at runtime (single source of truth)
+- `.env` and log files removed from git tracking
+
+### Changed
+- 21 tool files refactored to import from shared types instead of local interfaces
+- Audit report updated: 0 critical, 0 high, 0 medium, 8 low remaining
+
+---
+
 ## [2.0.1] - 2026-04-06
 
 ### Fixed
