@@ -6,6 +6,13 @@
   "license": "MIT",
   "homepage": "https://github.com/RandomSynergy17/Arcane-MCP-Server",
   "keywords": ["docker", "containers", "infrastructure", "devops", "compose", "swarm", "portainer"],
+  "commands": [
+    {
+      "name": "arcane:configure",
+      "path": "commands/configure.md",
+      "description": "Configure which Arcane MCP tools are exposed to Claude (preset, modules, per-tool overrides)"
+    }
+  ],
   "userConfig": {
     "arcane_base_url": {
       "description": "Your Arcane instance URL (e.g., https://arcane.example.com:3552)",

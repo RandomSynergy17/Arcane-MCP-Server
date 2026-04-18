@@ -100,7 +100,30 @@ Verify the skill is in place:
 ls -la ~/.claude/skills/arcane-mcp-server/SKILL.md
 ```
 
-### Step 5: Verify Installation
+### Step 5: Pick a tool-filter preset
+
+The MCP server registers 180 tools by default, which can bloat Claude's context window. Use `AskUserQuestion` to let the user trim the active set:
+
+**Question:** "Which tools do you want active by default?"
+**Options:**
+- **commonly-used (Recommended)** — containers, images, stacks, networks, volumes, environment, system, dashboard (~65 tools)
+- **read-only** — status & observability only, every `*_list` / `*_get` / `*_inspect` / `*_stats` tool (~60 tools)
+- **minimal** — dashboard + container list/logs/stats/get (~5 tools)
+- **deploy** — project, gitops, template, registry, environment, build (~40 tools)
+- **full** — all 180 tools enabled
+- **Skip** — I'll configure later with `/arcane:configure`
+
+Write the chosen preset to `~/.arcane/config.json`, merging with any existing content:
+
+```bash
+mkdir -p ~/.arcane
+# If file exists: read it, add the "tools" key, write back.
+# If it doesn't: create { "tools": { "preset": "<chosen>" } }
+```
+
+The user can change this any time by running `/arcane:configure` in Claude Code or by editing `~/.arcane/config.json` directly — the server watches the file and refreshes live.
+
+### Step 6: Verify Installation
 
 Run a quick test to confirm everything works:
 
@@ -111,7 +134,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 If you see a JSON response with `"result"`, the server is working.
 
-### Step 6: Report Results
+### Step 7: Report Results
 
 Tell the user what was installed and provide a quick-start example:
 
@@ -206,6 +229,10 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 | `ARCANE_TIMEOUT_MS` | No | Request timeout (default: 30000) |
 | `ARCANE_SKIP_SSL_VERIFY` | No | Skip SSL verification (default: false) |
 | `ARCANE_DEFAULT_ENVIRONMENT_ID` | No | Default environment to use |
+| `ARCANE_TOOL_PRESET` | No | `commonly-used` / `read-only` / `minimal` / `deploy` / `full` / `custom` |
+| `ARCANE_ENABLED_MODULES` | No | Comma-separated module allowlist (overrides preset modules) |
+| `ARCANE_ENABLED_TOOLS` | No | Comma-separated tool names to force-enable |
+| `ARCANE_DISABLED_TOOLS` | No | Comma-separated tool names to force-disable |
 | `LOG_LEVEL` | No | debug, info, warn, error (default: info) |
 
 ---
@@ -225,15 +252,20 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 - Registries (Docker Hub, GHCR, ECR, GCR, ACR)
 - Users, Settings, Authentication (JWT + API key + OIDC)
 
-### 4 MCP Prompts (workflow templates):
+### 5 MCP Prompts (workflow templates):
 - `/deploy-stack` — Guided Docker Compose deployment
 - `/troubleshoot-container` — Systematic diagnostics
 - `/security-audit` — Vulnerability scanning workflow
 - `/cleanup-environment` — Safe resource cleanup
+- `arcane_configure_tools` — Walk through preset + tool-filter configuration (for clients without slash commands)
 
-### 2 MCP Resources (context data):
+### 1 Slash Command (Claude Code):
+- `/arcane:configure` — Interactive preset / module / per-tool picker
+
+### 3 MCP Resources (context data):
 - `arcane://environments` — Available environments
 - `arcane://version` — Server configuration
+- `arcane://tools-config-notice` — Flags when tool filtering hasn't been configured yet
 
 ### Companion Skill:
 - Intent mapping (natural language to tool sequences)

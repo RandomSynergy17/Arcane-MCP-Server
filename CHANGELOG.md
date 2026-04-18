@@ -8,8 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Tool filtering: six presets (`commonly-used`, `read-only`, `minimal`, `deploy`, `full`, `custom`) trim which of the 180 tools are exposed on `tools/list` to reduce context bloat
+- `ToolRegistry` (`src/tools/registry.ts`) captures every `RegisteredTool` handle and applies preset/module/per-tool resolution at startup and on live config changes
+- Hot reload: `src/utils/config-watcher.ts` debounces `fs.watch` on `~/.arcane/config.json` and calls `registry.diffAndApply()` so clients see `notifications/tools/list_changed` without reconnecting
+- `tools` field on `ArcaneConfig` plus env vars `ARCANE_TOOL_PRESET`, `ARCANE_ENABLED_MODULES`, `ARCANE_ENABLED_TOOLS`, `ARCANE_DISABLED_TOOLS`
+- MCP prompt `arcane_configure_tools` for clients without slash commands
+- Plugin slash command `/arcane:configure` (`commands/configure.md`) walks users through preset/module/per-tool selection
+- MCP resource `arcane://tools-config-notice` flags pre-filtering installs and points users at `/arcane:configure`
+- Installer gained "Step 5: Pick a tool-filter preset" before verification
+- 27 new unit tests: registry diff/apply logic, preset resolution order, upgrade notice / configure prompt (106 tests total, up from 79)
 - README pointer to `Portainer-Offload-Arcane` migration wizard for users coming from Portainer
 - Internal design doc: `_docs/plans/2026-04-14-tool-filtering-design.md` (tool filtering feature)
+
+### Changed
+- All 25 tool modules now accept an optional `ToolRegistry` parameter and register through a `moduleRegistrar` helper so handles flow into the registry
+- Backwards-compatible on upgrade: installs without a `tools` key fall back to the `full` preset (no behaviour change)
 
 ---
 

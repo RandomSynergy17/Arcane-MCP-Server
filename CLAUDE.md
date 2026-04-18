@@ -45,9 +45,18 @@ All tools use `server.registerTool()` with:
 
 ### Resources & Prompts
 
-- `src/resources/index.ts` — 2 resources (`arcane://environments`, `arcane://version`)
-- `src/prompts/index.ts` — 4 prompts (deploy-stack, troubleshoot-container, security-audit, cleanup-environment)
+- `src/resources/index.ts` — 3 resources (`arcane://environments`, `arcane://version`, `arcane://tools-config-notice`)
+- `src/prompts/index.ts` — 5 prompts (deploy-stack, troubleshoot-container, security-audit, cleanup-environment, arcane_configure_tools)
 - Prompts reference real tool names — cross-check if adding/renaming tools
+
+### Tool filtering
+
+- `src/tools/registry.ts` — `ToolRegistry` captures `RegisteredTool` handles from each module; `applyFilter()` disables tools outside the resolved enabled-set, `diffAndApply()` handles hot reload
+- `src/tools/presets.ts` — declarative presets (`commonly-used`, `read-only`, `minimal`, `deploy`, `full`, `custom`) + `resolveEnabled(config, registry)` (preset → modules → enabled → disabled)
+- `src/utils/config-watcher.ts` — debounced `fs.watch` on `~/.arcane/config.json`; calls `registry.diffAndApply()` on change
+- `src/config.ts` — `ToolsConfig` field plus env vars: `ARCANE_TOOL_PRESET`, `ARCANE_ENABLED_MODULES`, `ARCANE_ENABLED_TOOLS`, `ARCANE_DISABLED_TOOLS`
+- `commands/configure.md` — plugin slash command `/arcane:configure` walks users through preset + module + per-tool selection
+- Unconfigured installs fall back to `full` (backwards-compatible); `arcane://tools-config-notice` resource flags the setup until a `tools` key is written
 
 ## Key Conventions
 
