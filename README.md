@@ -28,6 +28,8 @@
 
 > **Note:** This is an independent, community-built project. It is **not affiliated with, endorsed by, or maintained by** the [Arcane](https://github.com/getarcaneapp/arcane) project or its maintainers. We build on top of Arcane's public API.
 
+> **Coming from Portainer?** Check out [Portainer-Offload-Arcane](https://github.com/RandomSynergy17/Portainer-Offload-Arcane) — a guided migration wizard that moves your stacks, containers, volumes, registries, and users from Portainer CE/EE into Arcane. Run it once, then come back here to manage everything via natural language.
+
 ## What is this?
 
 Arcane MCP Server is a complete AI-powered Docker management bundle — an **MCP server**, a **Claude Code plugin**, and a **companion skill**, all in one package.
