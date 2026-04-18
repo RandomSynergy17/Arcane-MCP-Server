@@ -7,6 +7,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getArcaneClient } from "../client/arcane-client.js";
 import { formatError } from "../utils/error-handler.js";
 import { MCP_PROTOCOL_VERSION } from "../constants.js";
+import { getConfig } from "../config.js";
 import { logger } from "../utils/logger.js";
 
 interface Environment {
@@ -115,5 +116,51 @@ export function registerResources(server: McpServer): void {
     }
   );
 
-  logger.info("Registered 2 MCP resources");
+  // Resource: Upgrade notice for installs that haven't configured tool filtering yet.
+  // Registered unconditionally; the body explains configuration and only flags an
+  // action when the loaded config has no `tools` key.
+  server.resource(
+    "arcane-tools-config-notice",
+    "arcane://tools-config-notice",
+    {
+      description:
+        "Explains tool filtering and points the user at /arcane:configure when the server is running with the unfiltered full tool set",
+    },
+    async (_uri) => {
+      let unconfigured = false;
+      try {
+        unconfigured = !!getConfig().toolsUnconfigured;
+      } catch {
+        unconfigured = false;
+      }
+
+      const lines: string[] = [];
+      if (unconfigured) {
+        lines.push("Arcane MCP Server is currently exposing all 180 tools.");
+        lines.push("");
+        lines.push("You can reduce context bloat by picking a preset:");
+        lines.push("  - commonly-used — containers, images, stacks, networks, volumes (~65 tools)");
+        lines.push("  - read-only — list / get / inspect only (~60 tools)");
+        lines.push("  - minimal — dashboard + container list/logs/stats (~5 tools)");
+        lines.push("  - deploy — projects, gitops, templates, registries, build (~40 tools)");
+        lines.push("");
+        lines.push("Run /arcane:configure in Claude Code, or invoke the `arcane_configure_tools` prompt.");
+      } else {
+        lines.push("Tool filtering is configured. No action needed.");
+        lines.push("Re-run /arcane:configure (or invoke the `arcane_configure_tools` prompt) to change the active preset.");
+      }
+
+      return {
+        contents: [
+          {
+            uri: "arcane://tools-config-notice",
+            mimeType: "text/plain",
+            text: lines.join("\n"),
+          },
+        ],
+      };
+    },
+  );
+
+  logger.info("Registered 3 MCP resources");
 }

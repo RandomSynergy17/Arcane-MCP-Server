@@ -172,5 +172,58 @@ export function registerPrompts(server: McpServer): void {
     }
   );
 
-  logger.info("Registered 4 MCP prompts");
+  // Prompt: Configure which Arcane tools are active
+  server.prompt(
+    "arcane_configure_tools",
+    "Walk through selecting an Arcane tool-filter preset and writing it to ~/.arcane/config.json",
+    {},
+    () => {
+      return {
+        messages: [
+          {
+            role: "user" as const,
+            content: {
+              type: "text" as const,
+              text: [
+                "Help the user configure which Arcane MCP tools are active.",
+                "",
+                "Context:",
+                "- Arcane registers 180 tools by default, which bloats the tool-list context window.",
+                "- The server supports a `tools` config in `~/.arcane/config.json` (or env vars ARCANE_TOOL_PRESET / ARCANE_ENABLED_MODULES / ARCANE_ENABLED_TOOLS / ARCANE_DISABLED_TOOLS).",
+                "- Hot reload: changes to `~/.arcane/config.json` apply live via `notifications/tools/list_changed`.",
+                "- If the watcher isn't attached (e.g., missing file or HTTP-only setup), the user must reconnect the MCP server for changes to take effect.",
+                "",
+                "Presets:",
+                "- commonly-used: containers, images, stacks, networks, volumes, environment, system, dashboard (~65 tools)",
+                "- read-only: every *_list / *_get / *_inspect / *_stats / *_status / *_summary tool (~60 tools)",
+                "- minimal: dashboard + container list/logs/stats/get (~5 tools)",
+                "- deploy: project, gitops, template, registry, environment, build (~40 tools)",
+                "- full: all 180 (default on upgrade)",
+                "- custom: fine-grained modules + per-tool overrides only",
+                "",
+                "Flow:",
+                "1. Ask the user which preset they want. Recommend 'commonly-used' as default.",
+                "2. Offer a custom / fine-tune path: first a module allowlist (25 modules), then per-module tool picks.",
+                "3. Build the resolved config shape:",
+                '   { "tools": { "preset": "...", "modules": [...], "enabled": [...], "disabled": [...] } }',
+                "4. Read the existing `~/.arcane/config.json` (if any), merge in the new `tools` object, and write it back — preserve all other keys (baseUrl, auth, http, etc.).",
+                "5. Tell the user:",
+                '   - If the server logged "Watching …/config.json for tool-filter changes" at startup: "Config written — the tool list will refresh automatically."',
+                '   - Otherwise: "Config written — please reconnect the Arcane MCP server in your client for changes to take effect."',
+                "",
+                "Module names (use these exact strings for `tools.modules`):",
+                "auth, build, container, dashboard, environment, event, gitops, image, image-update, job,",
+                "network, network-topology, notification, port, project, registry, settings, swarm, system,",
+                "template, updater, user, volume, vulnerability, webhook",
+                "",
+                "Keep the conversation short — don't re-print the full 180-tool list. Confirm the chosen preset and summarise the tools/modules set before writing.",
+              ].join("\n"),
+            },
+          },
+        ],
+      };
+    },
+  );
+
+  logger.info("Registered 5 MCP prompts");
 }

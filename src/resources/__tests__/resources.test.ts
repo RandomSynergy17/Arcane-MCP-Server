@@ -29,6 +29,11 @@ vi.mock("../../utils/logger.js", () => ({
   },
 }));
 
+const mockGetConfig = vi.fn(() => ({ toolsUnconfigured: true }));
+vi.mock("../../config.js", () => ({
+  getConfig: () => mockGetConfig(),
+}));
+
 import { registerResources } from "../index.js";
 
 type ResourceHandler = (uri: URL) => Promise<{
@@ -61,10 +66,33 @@ describe("resources", () => {
     registerResources(server as unknown as Parameters<typeof registerResources>[0]);
   });
 
-  it("registers both resources", () => {
+  it("registers all three resources", () => {
     expect(server.resources.has("arcane-environments")).toBe(true);
     expect(server.resources.has("arcane-version")).toBe(true);
-    expect(server.resources.size).toBe(2);
+    expect(server.resources.has("arcane-tools-config-notice")).toBe(true);
+    expect(server.resources.size).toBe(3);
+  });
+
+  describe("arcane-tools-config-notice", () => {
+    it("prompts user to configure when tools config is absent", async () => {
+      mockGetConfig.mockReturnValueOnce({ toolsUnconfigured: true });
+      const handler = server.resources.get("arcane-tools-config-notice")!;
+      const result = await handler(new URL("arcane://tools-config-notice"));
+
+      const text = result.contents[0].text;
+      expect(text).toContain("180 tools");
+      expect(text).toContain("/arcane:configure");
+      expect(text).toContain("commonly-used");
+    });
+
+    it("confirms config is present when tools config is set", async () => {
+      mockGetConfig.mockReturnValueOnce({ toolsUnconfigured: false });
+      const handler = server.resources.get("arcane-tools-config-notice")!;
+      const result = await handler(new URL("arcane://tools-config-notice"));
+
+      const text = result.contents[0].text;
+      expect(text).toContain("Tool filtering is configured");
+    });
   });
 
   describe("arcane-environments", () => {

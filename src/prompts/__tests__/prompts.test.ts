@@ -44,12 +44,29 @@ describe("prompts", () => {
     registerPrompts(server as unknown as Parameters<typeof registerPrompts>[0]);
   });
 
-  it("registers all 4 prompts", () => {
-    expect(server.prompts.size).toBe(4);
+  it("registers all 5 prompts", () => {
+    expect(server.prompts.size).toBe(5);
     expect(server.prompts.has("deploy-stack")).toBe(true);
     expect(server.prompts.has("troubleshoot-container")).toBe(true);
     expect(server.prompts.has("security-audit")).toBe(true);
     expect(server.prompts.has("cleanup-environment")).toBe(true);
+    expect(server.prompts.has("arcane_configure_tools")).toBe(true);
+  });
+
+  describe("arcane_configure_tools", () => {
+    it("returns flow instructions referencing presets and config file path", () => {
+      const handler = server.prompts.get("arcane_configure_tools")!;
+      const result = handler({});
+
+      const text = result.messages[0].content.text;
+      expect(text).toContain("~/.arcane/config.json");
+      expect(text).toContain("commonly-used");
+      expect(text).toContain("read-only");
+      expect(text).toContain("minimal");
+      expect(text).toContain("deploy");
+      expect(text).toContain("full");
+      expect(text).toContain("ARCANE_TOOL_PRESET");
+    });
   });
 
   describe("deploy-stack", () => {
