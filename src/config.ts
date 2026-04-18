@@ -338,3 +338,17 @@ export function resetConfig(): void {
   cachedConfig = null;
 }
 
+/**
+ * Reload configuration from disk/env (used by hot-reload watcher).
+ * Distinct from `resetConfig()` in that it also returns the fresh config.
+ */
+export function reloadConfig(): ArcaneConfig {
+  cachedConfig = null;
+  return loadConfig();
+}
+
+/**
+ * Absolute path to the config file (exported for the watcher).
+ */
+export { CONFIG_FILE_PATH };
+

@@ -10,8 +10,9 @@
 
 import express, { type Request, type Response, type NextFunction } from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createSessionServer } from "./server.js";
+import { createSessionServer, preloadHttpTemplate } from "./server.js";
 import { getConfig, loadConfig } from "./config.js";
+import { startConfigWatcher, type ConfigWatcherHandle } from "./utils/config-watcher.js";
 import { logger } from "./utils/logger.js";
 import {
   MCP_PROTOCOL_VERSION,
@@ -148,6 +149,11 @@ export async function startTcpServer(): Promise<void> {
 
   logger.info(`Starting Arcane MCP Server (HTTP transport) on ${host}:${port}`);
   logger.info(`MCP Protocol Version: ${MCP_PROTOCOL_VERSION}`);
+
+  // Eagerly initialise the shared template registry so the hot-reload watcher
+  // can attach at startup (before any client connects).
+  const registry = preloadHttpTemplate();
+  const configWatcher: ConfigWatcherHandle = startConfigWatcher(registry);
 
   // Start session cleanup interval
   cleanupInterval = setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL_MS);
@@ -335,6 +341,9 @@ export async function startTcpServer(): Promise<void> {
   // Handle graceful shutdown
   const gracefulShutdown = async () => {
     console.log("\nShutting down...");
+
+    // Stop config watcher
+    configWatcher.stop();
 
     // Stop session cleanup interval
     if (cleanupInterval) {

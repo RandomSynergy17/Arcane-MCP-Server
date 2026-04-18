@@ -10,7 +10,8 @@
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createArcaneServer } from "./server.js";
+import { createArcaneServer, getStdioRegistry } from "./server.js";
+import { startConfigWatcher, type ConfigWatcherHandle } from "./utils/config-watcher.js";
 import { logger } from "./utils/logger.js";
 
 async function main() {
@@ -32,18 +33,22 @@ async function main() {
 
     logger.info("Arcane MCP Server running on stdio");
 
-    // Handle graceful shutdown
-    process.on("SIGINT", async () => {
-      logger.info("Received SIGINT, shutting down...");
-      await server.close();
-      process.exit(0);
-    });
+    // Start hot-reload watcher on the tool-filter config.
+    let watcher: ConfigWatcherHandle | null = null;
+    const registry = getStdioRegistry();
+    if (registry) {
+      watcher = startConfigWatcher(registry);
+    }
 
-    process.on("SIGTERM", async () => {
-      logger.info("Received SIGTERM, shutting down...");
+    const shutdown = async (signal: string) => {
+      logger.info(`Received ${signal}, shutting down...`);
+      watcher?.stop();
       await server.close();
       process.exit(0);
-    });
+    };
+
+    process.on("SIGINT", () => void shutdown("SIGINT"));
+    process.on("SIGTERM", () => void shutdown("SIGTERM"));
   } catch (error) {
     logger.error("Failed to start server:", error);
     process.exit(1);

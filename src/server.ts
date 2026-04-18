@@ -77,6 +77,15 @@ export function getTemplateRegistry(): ToolRegistry | null {
 }
 
 /**
+ * Force the HTTP template (and its registry) to initialise at startup so
+ * the config watcher can attach even before the first client connects.
+ */
+export function preloadHttpTemplate(): ToolRegistry {
+  getTemplate();
+  return _templateRegistry!;
+}
+
+/**
  * Initialise (or return) the singleton template.
  */
 function getTemplate(): McpServer {
