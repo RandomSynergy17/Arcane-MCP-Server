@@ -5,11 +5,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { ContainerRegistry } from "../types/arcane-types.js";
 
-export function registerRegistryTools(server: McpServer): void {
+export function registerRegistryTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "registry");
   // arcane_registry_list
-  server.registerTool(
+  register(
     "arcane_registry_list",
     {
       title: "List registries",
@@ -52,7 +54,7 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_get
-  server.registerTool(
+  register(
     "arcane_registry_get",
     {
       title: "Get registry details",
@@ -88,7 +90,7 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_create
-  server.registerTool(
+  register(
     "arcane_registry_create",
     {
       title: "Create registry",
@@ -121,7 +123,7 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_update
-  server.registerTool(
+  register(
     "arcane_registry_update",
     {
       title: "Update registry",
@@ -153,7 +155,7 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_delete
-  server.registerTool(
+  register(
     "arcane_registry_delete",
     {
       title: "Delete registry",
@@ -175,7 +177,7 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_test
-  server.registerTool(
+  register(
     "arcane_registry_test",
     {
       title: "Test registry",
@@ -199,7 +201,7 @@ export function registerRegistryTools(server: McpServer): void {
   );
 
   // arcane_registry_sync
-  server.registerTool(
+  register(
     "arcane_registry_sync",
     {
       title: "Sync registries",

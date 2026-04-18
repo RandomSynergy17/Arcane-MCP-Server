@@ -6,14 +6,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { validatePath } from "../utils/format.js";
 import type { GitOpsSync, GitRepository } from "../types/arcane-types.js";
 
-export function registerGitopsTools(server: McpServer): void {
+export function registerGitopsTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "gitops");
   // ============= GitOps Sync =============
 
   // arcane_gitops_list
-  server.registerTool(
+  register(
     "arcane_gitops_list",
     {
       title: "List GitOps syncs",
@@ -58,7 +60,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_get
-  server.registerTool(
+  register(
     "arcane_gitops_get",
     {
       title: "Get GitOps sync details",
@@ -97,7 +99,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_create
-  server.registerTool(
+  register(
     "arcane_gitops_create",
     {
       title: "Create GitOps sync",
@@ -130,7 +132,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_update
-  server.registerTool(
+  register(
     "arcane_gitops_update",
     {
       title: "Update GitOps sync",
@@ -167,7 +169,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_delete
-  server.registerTool(
+  register(
     "arcane_gitops_delete",
     {
       title: "Delete GitOps sync",
@@ -190,7 +192,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_sync
-  server.registerTool(
+  register(
     "arcane_gitops_sync",
     {
       title: "Trigger GitOps sync",
@@ -213,7 +215,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_gitops_get_status
-  server.registerTool(
+  register(
     "arcane_gitops_get_status",
     {
       title: "Get GitOps sync status",
@@ -256,7 +258,7 @@ export function registerGitopsTools(server: McpServer): void {
   // ============= Git Repositories =============
 
   // arcane_git_repo_list
-  server.registerTool(
+  register(
     "arcane_git_repo_list",
     {
       title: "List Git repositories",
@@ -298,7 +300,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_create
-  server.registerTool(
+  register(
     "arcane_git_repo_create",
     {
       title: "Add Git repository",
@@ -330,7 +332,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_test
-  server.registerTool(
+  register(
     "arcane_git_repo_test",
     {
       title: "Test Git repository",
@@ -357,7 +359,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_get_branches
-  server.registerTool(
+  register(
     "arcane_git_repo_get_branches",
     {
       title: "List repo branches",
@@ -388,7 +390,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_browse_files
-  server.registerTool(
+  register(
     "arcane_git_repo_browse_files",
     {
       title: "Browse repo files",
@@ -427,7 +429,7 @@ export function registerGitopsTools(server: McpServer): void {
   );
 
   // arcane_git_repo_delete
-  server.registerTool(
+  register(
     "arcane_git_repo_delete",
     {
       title: "Delete Git repository",

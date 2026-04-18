@@ -5,13 +5,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { validatePath } from "../utils/format.js";
 import type { Build, BuildDetails, WorkspaceFile } from "../types/arcane-types.js";
 
-export function registerBuildTools(server: McpServer): void {
+export function registerBuildTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "build");
 
   // arcane_build_image
-  server.registerTool(
+  register(
     "arcane_build_image",
     {
       title: "Build image",
@@ -57,7 +59,7 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_list
-  server.registerTool(
+  register(
     "arcane_build_list",
     {
       title: "List builds",
@@ -104,7 +106,7 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_get
-  server.registerTool(
+  register(
     "arcane_build_get",
     {
       title: "Get build details",
@@ -154,7 +156,7 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_workspace_browse
-  server.registerTool(
+  register(
     "arcane_build_workspace_browse",
     {
       title: "Browse build workspace",
@@ -194,7 +196,7 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_workspace_get_content
-  server.registerTool(
+  register(
     "arcane_build_workspace_get_content",
     {
       title: "Get workspace file content",
@@ -223,7 +225,7 @@ export function registerBuildTools(server: McpServer): void {
   );
 
   // arcane_build_workspace_upload
-  server.registerTool(
+  register(
     "arcane_build_workspace_upload",
     {
       title: "Upload workspace file",

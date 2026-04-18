@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { UpdaterResult, UpdaterStatus, UpdateRecord } from "../types/arcane-types.js";
 
-export function registerUpdaterTools(server: McpServer): void {
+export function registerUpdaterTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "updater");
 
   // arcane_updater_run
-  server.registerTool(
+  register(
     "arcane_updater_run",
     {
       title: "Run auto-updater",
@@ -53,7 +55,7 @@ export function registerUpdaterTools(server: McpServer): void {
   );
 
   // arcane_updater_update_container
-  server.registerTool(
+  register(
     "arcane_updater_update_container",
     {
       title: "Update single container",
@@ -84,7 +86,7 @@ export function registerUpdaterTools(server: McpServer): void {
   );
 
   // arcane_updater_get_status
-  server.registerTool(
+  register(
     "arcane_updater_get_status",
     {
       title: "Get updater status",
@@ -118,7 +120,7 @@ export function registerUpdaterTools(server: McpServer): void {
   );
 
   // arcane_updater_get_history
-  server.registerTool(
+  register(
     "arcane_updater_get_history",
     {
       title: "Get updater history",

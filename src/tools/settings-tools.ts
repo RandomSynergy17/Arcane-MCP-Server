@@ -5,10 +5,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 
-export function registerSettingsTools(server: McpServer): void {
+export function registerSettingsTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "settings");
   // arcane_settings_get
-  server.registerTool(
+  register(
     "arcane_settings_get",
     {
       title: "Get settings",
@@ -39,7 +41,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_update
-  server.registerTool(
+  register(
     "arcane_settings_update",
     {
       title: "Update settings",
@@ -62,7 +64,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_get_public
-  server.registerTool(
+  register(
     "arcane_settings_get_public",
     {
       title: "Get public settings",
@@ -90,7 +92,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_get_categories
-  server.registerTool(
+  register(
     "arcane_settings_get_categories",
     {
       title: "Get settings categories",
@@ -124,7 +126,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_settings_search
-  server.registerTool(
+  register(
     "arcane_settings_search",
     {
       title: "Search settings",
@@ -168,7 +170,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_api_key_list
-  server.registerTool(
+  register(
     "arcane_apikey_list",
     {
       title: "List API keys",
@@ -217,7 +219,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_api_key_create
-  server.registerTool(
+  register(
     "arcane_apikey_create",
     {
       title: "Create API key",
@@ -244,7 +246,7 @@ export function registerSettingsTools(server: McpServer): void {
   );
 
   // arcane_api_key_delete
-  server.registerTool(
+  register(
     "arcane_apikey_delete",
     {
       title: "Delete API key",

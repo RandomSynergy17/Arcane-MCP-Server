@@ -5,10 +5,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 
-export function registerNotificationTools(server: McpServer): void {
+export function registerNotificationTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "notification");
   // arcane_notification_get_settings
-  server.registerTool(
+  register(
     "arcane_notification_get_settings",
     {
       title: "Get notification settings",
@@ -51,7 +53,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_update_settings
-  server.registerTool(
+  register(
     "arcane_notification_update_settings",
     {
       title: "Update notification settings",
@@ -87,7 +89,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_test
-  server.registerTool(
+  register(
     "arcane_notification_test",
     {
       title: "Test notification",
@@ -110,7 +112,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_apprise_get
-  server.registerTool(
+  register(
     "arcane_notification_apprise_get",
     {
       title: "Get Apprise config",
@@ -153,7 +155,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_apprise_update
-  server.registerTool(
+  register(
     "arcane_notification_apprise_update",
     {
       title: "Update Apprise config",
@@ -181,7 +183,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   // arcane_notification_apprise_test
-  server.registerTool(
+  register(
     "arcane_notification_apprise_test",
     {
       title: "Test Apprise notification",

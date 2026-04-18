@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { NetworkTopology } from "../types/arcane-types.js";
 
-export function registerNetworkTopologyTools(server: McpServer): void {
+export function registerNetworkTopologyTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "network-topology");
 
   // arcane_network_get_topology
-  server.registerTool(
+  register(
     "arcane_network_get_topology",
     {
       title: "Get network topology",

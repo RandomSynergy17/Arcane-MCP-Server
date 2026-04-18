@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { ImageUpdateResponse, BatchImageUpdateResponse, ImageUpdateSummary } from "../types/arcane-types.js";
 
-export function registerImageUpdateTools(server: McpServer): void {
+export function registerImageUpdateTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "image-update");
 
   // arcane_image_update_check
-  server.registerTool(
+  register(
     "arcane_image_update_check",
     {
       title: "Check image update",
@@ -41,7 +43,7 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_check_by_id
-  server.registerTool(
+  register(
     "arcane_image_update_check_by_id",
     {
       title: "Check image update by ID",
@@ -71,7 +73,7 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_check_multiple
-  server.registerTool(
+  register(
     "arcane_image_update_check_multiple",
     {
       title: "Check multiple image updates",
@@ -108,7 +110,7 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_check_all
-  server.registerTool(
+  register(
     "arcane_image_update_check_all",
     {
       title: "Check all image updates",
@@ -148,7 +150,7 @@ export function registerImageUpdateTools(server: McpServer): void {
   );
 
   // arcane_image_update_get_summary
-  server.registerTool(
+  register(
     "arcane_image_update_get_summary",
     {
       title: "Get update summary",

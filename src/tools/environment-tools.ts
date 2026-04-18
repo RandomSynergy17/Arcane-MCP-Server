@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { formatSizeGB } from "../utils/format.js";
 import type { Environment } from "../types/arcane-types.js";
 
-export function registerEnvironmentTools(server: McpServer): void {
+export function registerEnvironmentTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "environment");
   // arcane_environment_list
-  server.registerTool(
+  register(
     "arcane_environment_list",
     {
       title: "List environments",
@@ -51,7 +53,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get
-  server.registerTool(
+  register(
     "arcane_environment_get",
     {
       title: "Get environment details",
@@ -84,7 +86,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_create
-  server.registerTool(
+  register(
     "arcane_environment_create",
     {
       title: "Create environment",
@@ -119,7 +121,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_update
-  server.registerTool(
+  register(
     "arcane_environment_update",
     {
       title: "Update environment",
@@ -147,7 +149,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_delete
-  server.registerTool(
+  register(
     "arcane_environment_delete",
     {
       title: "Delete environment",
@@ -169,7 +171,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_test
-  server.registerTool(
+  register(
     "arcane_environment_test",
     {
       title: "Test environment",
@@ -191,7 +193,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_pair_agent
-  server.registerTool(
+  register(
     "arcane_environment_pair_agent",
     {
       title: "Pair agent",
@@ -218,7 +220,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get_version
-  server.registerTool(
+  register(
     "arcane_environment_get_version",
     {
       title: "Get agent version",
@@ -243,7 +245,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get_docker_info
-  server.registerTool(
+  register(
     "arcane_environment_get_docker_info",
     {
       title: "Get Docker info",
@@ -290,7 +292,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   // arcane_environment_get_deployment_snippets
-  server.registerTool(
+  register(
     "arcane_environment_get_deployment_snippets",
     {
       title: "Get deployment snippets",

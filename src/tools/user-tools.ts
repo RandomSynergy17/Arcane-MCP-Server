@@ -5,11 +5,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { User } from "../types/arcane-types.js";
 
-export function registerUserTools(server: McpServer): void {
+export function registerUserTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "user");
   // arcane_user_list
-  server.registerTool(
+  register(
     "arcane_user_list",
     {
       title: "List users",
@@ -56,7 +58,7 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_get
-  server.registerTool(
+  register(
     "arcane_user_get",
     {
       title: "Get user details",
@@ -89,7 +91,7 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_create
-  server.registerTool(
+  register(
     "arcane_user_create",
     {
       title: "Create user",
@@ -118,7 +120,7 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_update
-  server.registerTool(
+  register(
     "arcane_user_update",
     {
       title: "Update user",
@@ -146,7 +148,7 @@ export function registerUserTools(server: McpServer): void {
   );
 
   // arcane_user_delete
-  server.registerTool(
+  register(
     "arcane_user_delete",
     {
       title: "Delete user",

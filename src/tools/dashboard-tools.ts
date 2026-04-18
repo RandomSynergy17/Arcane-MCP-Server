@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { DashboardSnapshot, ActionItem } from "../types/arcane-types.js";
 
-export function registerDashboardTools(server: McpServer): void {
+export function registerDashboardTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "dashboard");
 
   // arcane_dashboard_get
-  server.registerTool(
+  register(
     "arcane_dashboard_get",
     {
       title: "Get dashboard snapshot",
@@ -58,7 +60,7 @@ export function registerDashboardTools(server: McpServer): void {
   );
 
   // arcane_dashboard_get_action_items
-  server.registerTool(
+  register(
     "arcane_dashboard_get_action_items",
     {
       title: "Get action items",

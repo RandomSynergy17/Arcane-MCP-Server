@@ -5,6 +5,8 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "../utils/logger.js";
+import { ToolRegistry } from "./registry.js";
+import type { ToolsConfig } from "../config.js";
 
 // Import tool registrars
 import { registerAuthTools } from "./auth-tools.js";
@@ -34,85 +36,49 @@ import { registerPortTools } from "./port-tools.js";
 import { registerUpdaterTools } from "./updater-tools.js";
 
 /**
- * Register all tools with the MCP server
+ * Register all tools with the MCP server, capturing each registration into a
+ * fresh `ToolRegistry`. When `toolsConfig` is provided, the resolved
+ * enabled-set is applied (tools outside the set are disabled).
+ *
+ * Returns the registry so callers can wire hot reload (see server.ts).
  */
-export function registerAllTools(server: McpServer): void {
+export function registerAllTools(server: McpServer, toolsConfig?: ToolsConfig): ToolRegistry {
   logger.info("Registering Arcane tools...");
 
-  // Authentication & OIDC
-  registerAuthTools(server);
+  const registry = new ToolRegistry();
 
-  // Environments
-  registerEnvironmentTools(server);
+  registerAuthTools(server, registry);
+  registerEnvironmentTools(server, registry);
+  registerContainerTools(server, registry);
+  registerImageTools(server, registry);
+  registerNetworkTools(server, registry);
+  registerVolumeTools(server, registry);
+  registerProjectTools(server, registry);
+  registerGitopsTools(server, registry);
+  registerRegistryTools(server, registry);
+  registerTemplateTools(server, registry);
+  registerSystemTools(server, registry);
+  registerJobTools(server, registry);
+  registerNotificationTools(server, registry);
+  registerEventTools(server, registry);
+  registerUserTools(server, registry);
+  registerSettingsTools(server, registry);
+  registerSwarmTools(server, registry);
+  registerWebhookTools(server, registry);
+  registerVulnerabilityTools(server, registry);
+  registerImageUpdateTools(server, registry);
+  registerBuildTools(server, registry);
+  registerNetworkTopologyTools(server, registry);
+  registerDashboardTools(server, registry);
+  registerPortTools(server, registry);
+  registerUpdaterTools(server, registry);
 
-  // Containers
-  registerContainerTools(server);
+  const { enabled, disabled } = registry.applyFilter(toolsConfig);
+  if (disabled > 0) {
+    logger.info(`Registered ${registry.allToolNames().length} Arcane tools (${enabled} enabled, ${disabled} disabled by filter)`);
+  } else {
+    logger.info(`Registered ${registry.allToolNames().length} Arcane tools (all enabled)`);
+  }
 
-  // Images
-  registerImageTools(server);
-
-  // Networks
-  registerNetworkTools(server);
-
-  // Volumes (including file operations and backups)
-  registerVolumeTools(server);
-
-  // Projects / Docker Compose Stacks
-  registerProjectTools(server);
-
-  // GitOps
-  registerGitopsTools(server);
-
-  // Container Registries
-  registerRegistryTools(server);
-
-  // Templates
-  registerTemplateTools(server);
-
-  // System operations
-  registerSystemTools(server);
-
-  // Jobs & Scheduling
-  registerJobTools(server);
-
-  // Notifications
-  registerNotificationTools(server);
-
-  // Events
-  registerEventTools(server);
-
-  // Users
-  registerUserTools(server);
-
-  // Settings
-  registerSettingsTools(server);
-
-  // Docker Swarm
-  registerSwarmTools(server);
-
-  // Webhooks
-  registerWebhookTools(server);
-
-  // Vulnerability Scanning
-  registerVulnerabilityTools(server);
-
-  // Image Update Checking
-  registerImageUpdateTools(server);
-
-  // Image Builds
-  registerBuildTools(server);
-
-  // Network Topology
-  registerNetworkTopologyTools(server);
-
-  // Dashboard
-  registerDashboardTools(server);
-
-  // Port Mappings
-  registerPortTools(server);
-
-  // Auto-Updater
-  registerUpdaterTools(server);
-
-  logger.info("Registered all Arcane tools");
+  return registry;
 }

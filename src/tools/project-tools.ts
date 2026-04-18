@@ -5,13 +5,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { MAX_DISPLAY_SERVICES } from "../constants.js";
 import type { Project } from "../types/arcane-types.js";
 
-export function registerProjectTools(server: McpServer): void {
+export function registerProjectTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "project");
 
   // arcane_project_list
-  server.registerTool(
+  register(
     "arcane_project_list",
     {
       title: "List projects",
@@ -63,7 +65,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_get
-  server.registerTool(
+  register(
     "arcane_project_get",
     {
       title: "Get project details",
@@ -105,7 +107,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_create
-  server.registerTool(
+  register(
     "arcane_project_create",
     {
       title: "Create project",
@@ -135,7 +137,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_update
-  server.registerTool(
+  register(
     "arcane_project_update",
     {
       title: "Update project config",
@@ -164,7 +166,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_up
-  server.registerTool(
+  register(
     "arcane_project_up",
     {
       title: "Deploy project",
@@ -187,7 +189,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_down
-  server.registerTool(
+  register(
     "arcane_project_down",
     {
       title: "Stop project",
@@ -210,7 +212,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_restart
-  server.registerTool(
+  register(
     "arcane_project_restart",
     {
       title: "Restart project",
@@ -233,7 +235,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_redeploy
-  server.registerTool(
+  register(
     "arcane_project_redeploy",
     {
       title: "Redeploy project",
@@ -256,7 +258,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_destroy
-  server.registerTool(
+  register(
     "arcane_project_destroy",
     {
       title: "Destroy project",
@@ -280,7 +282,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_pull_images
-  server.registerTool(
+  register(
     "arcane_project_pull_images",
     {
       title: "Pull project images",
@@ -303,7 +305,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_get_counts
-  server.registerTool(
+  register(
     "arcane_project_get_counts",
     {
       title: "Get project counts",
@@ -331,7 +333,7 @@ export function registerProjectTools(server: McpServer): void {
   );
 
   // arcane_project_build
-  server.registerTool(
+  register(
     "arcane_project_build",
     {
       title: "Build project images",

@@ -5,11 +5,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { Template } from "../types/arcane-types.js";
 
-export function registerTemplateTools(server: McpServer): void {
+export function registerTemplateTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "template");
   // arcane_template_list
-  server.registerTool(
+  register(
     "arcane_template_list",
     {
       title: "List templates",
@@ -51,7 +53,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_get
-  server.registerTool(
+  register(
     "arcane_template_get",
     {
       title: "Get template details",
@@ -83,7 +85,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_get_content
-  server.registerTool(
+  register(
     "arcane_template_get_content",
     {
       title: "Get template content",
@@ -108,7 +110,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_create
-  server.registerTool(
+  register(
     "arcane_template_create",
     {
       title: "Create template",
@@ -137,7 +139,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_update
-  server.registerTool(
+  register(
     "arcane_template_update",
     {
       title: "Update template",
@@ -169,7 +171,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_delete
-  server.registerTool(
+  register(
     "arcane_template_delete",
     {
       title: "Delete template",
@@ -191,7 +193,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_get_variables
-  server.registerTool(
+  register(
     "arcane_template_get_variables",
     {
       title: "Get template variables",
@@ -220,7 +222,7 @@ export function registerTemplateTools(server: McpServer): void {
   );
 
   // arcane_template_update_variables
-  server.registerTool(
+  register(
     "arcane_template_update_variables",
     {
       title: "Update template variables",

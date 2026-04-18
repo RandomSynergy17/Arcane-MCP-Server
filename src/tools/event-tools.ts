@@ -5,13 +5,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { MAX_DISPLAY_EVENTS } from "../constants.js";
 import type { Event } from "../types/arcane-types.js";
 
-export function registerEventTools(server: McpServer): void {
+export function registerEventTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "event");
 
   // arcane_event_list
-  server.registerTool(
+  register(
     "arcane_event_list",
     {
       title: "List events",
@@ -62,7 +64,7 @@ export function registerEventTools(server: McpServer): void {
   );
 
   // arcane_event_list_by_environment
-  server.registerTool(
+  register(
     "arcane_event_list_by_environment",
     {
       title: "List environment events",
@@ -106,7 +108,7 @@ export function registerEventTools(server: McpServer): void {
   );
 
   // arcane_event_create
-  server.registerTool(
+  register(
     "arcane_event_create",
     {
       title: "Create event",
@@ -141,7 +143,7 @@ export function registerEventTools(server: McpServer): void {
   );
 
   // arcane_event_delete
-  server.registerTool(
+  register(
     "arcane_event_delete",
     {
       title: "Delete event",

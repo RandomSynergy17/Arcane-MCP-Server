@@ -5,13 +5,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT } from "../constants.js";
 import type { Container } from "../types/arcane-types.js";
 
-export function registerContainerTools(server: McpServer): void {
+export function registerContainerTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "container");
 
   // arcane_container_list
-  server.registerTool(
+  register(
     "arcane_container_list",
     {
       title: "List containers",
@@ -64,7 +66,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_get
-  server.registerTool(
+  register(
     "arcane_container_get",
     {
       title: "Get container details",
@@ -117,7 +119,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_create
-  server.registerTool(
+  register(
     "arcane_container_create",
     {
       title: "Create container",
@@ -159,7 +161,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_start
-  server.registerTool(
+  register(
     "arcane_container_start",
     {
       title: "Start container",
@@ -182,7 +184,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_stop
-  server.registerTool(
+  register(
     "arcane_container_stop",
     {
       title: "Stop container",
@@ -205,7 +207,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_restart
-  server.registerTool(
+  register(
     "arcane_container_restart",
     {
       title: "Restart container",
@@ -228,7 +230,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_update
-  server.registerTool(
+  register(
     "arcane_container_update",
     {
       title: "Update container",
@@ -251,7 +253,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_delete
-  server.registerTool(
+  register(
     "arcane_container_delete",
     {
       title: "Delete container",
@@ -276,7 +278,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_redeploy
-  server.registerTool(
+  register(
     "arcane_container_redeploy",
     {
       title: "Redeploy container",
@@ -299,7 +301,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_set_auto_update
-  server.registerTool(
+  register(
     "arcane_container_set_auto_update",
     {
       title: "Set container auto-update",
@@ -323,7 +325,7 @@ export function registerContainerTools(server: McpServer): void {
   );
 
   // arcane_container_get_counts
-  server.registerTool(
+  register(
     "arcane_container_get_counts",
     {
       title: "Get container counts",

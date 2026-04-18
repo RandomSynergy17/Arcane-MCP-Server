@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { Webhook } from "../types/arcane-types.js";
 
-export function registerWebhookTools(server: McpServer): void {
+export function registerWebhookTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "webhook");
 
   // arcane_webhook_list
-  server.registerTool(
+  register(
     "arcane_webhook_list",
     {
       title: "List webhooks",
@@ -51,7 +53,7 @@ export function registerWebhookTools(server: McpServer): void {
   );
 
   // arcane_webhook_create
-  server.registerTool(
+  register(
     "arcane_webhook_create",
     {
       title: "Create webhook",
@@ -92,7 +94,7 @@ export function registerWebhookTools(server: McpServer): void {
   );
 
   // arcane_webhook_update
-  server.registerTool(
+  register(
     "arcane_webhook_update",
     {
       title: "Update webhook",
@@ -123,7 +125,7 @@ export function registerWebhookTools(server: McpServer): void {
   );
 
   // arcane_webhook_delete
-  server.registerTool(
+  register(
     "arcane_webhook_delete",
     {
       title: "Delete webhook",

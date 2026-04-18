@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { formatSizeGB, formatSizeMB } from "../utils/format.js";
 import { SECONDS_PER_HOUR } from "../constants.js";
 
-export function registerSystemTools(server: McpServer): void {
+export function registerSystemTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "system");
   // arcane_system_get_health
-  server.registerTool(
+  register(
     "arcane_system_get_health",
     {
       title: "Get system health",
@@ -37,7 +39,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_get_docker_info
-  server.registerTool(
+  register(
     "arcane_system_get_docker_info",
     {
       title: "Get Docker system info",
@@ -87,7 +89,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_prune
-  server.registerTool(
+  register(
     "arcane_system_prune",
     {
       title: "System prune",
@@ -131,7 +133,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_check_upgrade
-  server.registerTool(
+  register(
     "arcane_system_check_upgrade",
     {
       title: "Check for upgrade",
@@ -166,7 +168,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_upgrade
-  server.registerTool(
+  register(
     "arcane_system_upgrade",
     {
       title: "Upgrade system",
@@ -188,7 +190,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_containers_start_all
-  server.registerTool(
+  register(
     "arcane_system_containers_start_all",
     {
       title: "Start all containers",
@@ -212,7 +214,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_containers_stop_all
-  server.registerTool(
+  register(
     "arcane_system_containers_stop_all",
     {
       title: "Stop all containers",
@@ -236,7 +238,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_system_containers_start_stopped
-  server.registerTool(
+  register(
     "arcane_system_containers_start_stopped",
     {
       title: "Start stopped containers",
@@ -260,7 +262,7 @@ export function registerSystemTools(server: McpServer): void {
   );
 
   // arcane_version_get
-  server.registerTool(
+  register(
     "arcane_version_get",
     {
       title: "Get server version",

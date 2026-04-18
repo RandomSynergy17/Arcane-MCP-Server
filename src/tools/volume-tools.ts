@@ -6,14 +6,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { formatSize, formatSizeCompact, formatSizeMB, validatePath } from "../utils/format.js";
 import type { Volume, FileEntry, Backup } from "../types/arcane-types.js";
 
-export function registerVolumeTools(server: McpServer): void {
+export function registerVolumeTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "volume");
   // ============= Volume Management =============
 
   // arcane_volume_list
-  server.registerTool(
+  register(
     "arcane_volume_list",
     {
       title: "List volumes",
@@ -60,7 +62,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_get
-  server.registerTool(
+  register(
     "arcane_volume_get",
     {
       title: "Get volume details",
@@ -107,7 +109,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_create
-  server.registerTool(
+  register(
     "arcane_volume_create",
     {
       title: "Create volume",
@@ -137,7 +139,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_delete
-  server.registerTool(
+  register(
     "arcane_volume_delete",
     {
       title: "Delete volume",
@@ -161,7 +163,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_prune
-  server.registerTool(
+  register(
     "arcane_volume_prune",
     {
       title: "Prune volumes",
@@ -191,7 +193,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_get_counts
-  server.registerTool(
+  register(
     "arcane_volume_get_counts",
     {
       title: "Get volume counts",
@@ -220,7 +222,7 @@ export function registerVolumeTools(server: McpServer): void {
   // ============= Volume File Operations =============
 
   // arcane_volume_browse
-  server.registerTool(
+  register(
     "arcane_volume_browse",
     {
       title: "Browse volume files",
@@ -261,7 +263,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_browse_content
-  server.registerTool(
+  register(
     "arcane_volume_browse_content",
     {
       title: "Read volume file",
@@ -291,7 +293,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_browse_mkdir
-  server.registerTool(
+  register(
     "arcane_volume_browse_mkdir",
     {
       title: "Create volume directory",
@@ -319,7 +321,7 @@ export function registerVolumeTools(server: McpServer): void {
   // ============= Volume Backups =============
 
   // arcane_volume_backup_list
-  server.registerTool(
+  register(
     "arcane_volume_backup_list",
     {
       title: "List volume backups",
@@ -358,7 +360,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_create
-  server.registerTool(
+  register(
     "arcane_volume_backup_create",
     {
       title: "Create volume backup",
@@ -384,7 +386,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_delete
-  server.registerTool(
+  register(
     "arcane_volume_backup_delete",
     {
       title: "Delete volume backup",
@@ -408,7 +410,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_restore
-  server.registerTool(
+  register(
     "arcane_volume_backup_restore",
     {
       title: "Restore volume backup",
@@ -432,7 +434,7 @@ export function registerVolumeTools(server: McpServer): void {
   );
 
   // arcane_volume_backup_list_files
-  server.registerTool(
+  register(
     "arcane_volume_backup_list_files",
     {
       title: "List backup files",

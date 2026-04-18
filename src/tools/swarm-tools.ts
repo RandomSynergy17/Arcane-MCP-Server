@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { SwarmService, SwarmClusterInfo } from "../types/arcane-types.js";
 
-export function registerSwarmTools(server: McpServer): void {
+export function registerSwarmTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "swarm");
 
   // arcane_swarm_list_services
-  server.registerTool(
+  register(
     "arcane_swarm_list_services",
     {
       title: "List Swarm services",
@@ -59,7 +61,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_get_service
-  server.registerTool(
+  register(
     "arcane_swarm_get_service",
     {
       title: "Get Swarm service details",
@@ -109,7 +111,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_create_service
-  server.registerTool(
+  register(
     "arcane_swarm_create_service",
     {
       title: "Create Swarm service",
@@ -146,7 +148,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_update_service
-  server.registerTool(
+  register(
     "arcane_swarm_update_service",
     {
       title: "Update Swarm service",
@@ -179,7 +181,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_delete_service
-  server.registerTool(
+  register(
     "arcane_swarm_delete_service",
     {
       title: "Delete Swarm service",
@@ -202,7 +204,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_scale_service
-  server.registerTool(
+  register(
     "arcane_swarm_scale_service",
     {
       title: "Scale Swarm service",
@@ -226,7 +228,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_get_service_logs
-  server.registerTool(
+  register(
     "arcane_swarm_get_service_logs",
     {
       title: "Get Swarm service logs",
@@ -255,7 +257,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_init_cluster
-  server.registerTool(
+  register(
     "arcane_swarm_init_cluster",
     {
       title: "Initialize Swarm cluster",
@@ -292,7 +294,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_join_cluster
-  server.registerTool(
+  register(
     "arcane_swarm_join_cluster",
     {
       title: "Join Swarm cluster",
@@ -320,7 +322,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_leave_cluster
-  server.registerTool(
+  register(
     "arcane_swarm_leave_cluster",
     {
       title: "Leave Swarm cluster",
@@ -343,7 +345,7 @@ export function registerSwarmTools(server: McpServer): void {
   );
 
   // arcane_swarm_get_cluster_info
-  server.registerTool(
+  register(
     "arcane_swarm_get_cluster_info",
     {
       title: "Get Swarm cluster info",

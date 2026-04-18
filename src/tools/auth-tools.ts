@@ -5,10 +5,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 
-export function registerAuthTools(server: McpServer): void {
+export function registerAuthTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "auth");
   // arcane_auth_login
-  server.registerTool(
+  register(
     "arcane_auth_login",
     {
       title: "Login",
@@ -37,7 +39,7 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_logout
-  server.registerTool(
+  register(
     "arcane_auth_logout",
     {
       title: "Logout",
@@ -56,7 +58,7 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_me
-  server.registerTool(
+  register(
     "arcane_auth_me",
     {
       title: "Get current user",
@@ -79,7 +81,7 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_refresh
-  server.registerTool(
+  register(
     "arcane_auth_refresh",
     {
       title: "Refresh token",
@@ -106,7 +108,7 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_auth_change_password
-  server.registerTool(
+  register(
     "arcane_auth_change_password",
     {
       title: "Change password",
@@ -130,7 +132,7 @@ export function registerAuthTools(server: McpServer): void {
 
   // OIDC Tools
   // arcane_oidc_get_status
-  server.registerTool(
+  register(
     "arcane_oidc_get_status",
     {
       title: "Get OIDC status",
@@ -164,7 +166,7 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_oidc_get_config
-  server.registerTool(
+  register(
     "arcane_oidc_get_config",
     {
       title: "Get OIDC config",
@@ -189,7 +191,7 @@ export function registerAuthTools(server: McpServer): void {
   );
 
   // arcane_oidc_device_code
-  server.registerTool(
+  register(
     "arcane_oidc_device_code",
     {
       title: "Start OIDC device flow",

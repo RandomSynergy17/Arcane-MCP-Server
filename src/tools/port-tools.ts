@@ -5,12 +5,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { PortMapping } from "../types/arcane-types.js";
 
-export function registerPortTools(server: McpServer): void {
+export function registerPortTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "port");
 
   // arcane_port_list
-  server.registerTool(
+  register(
     "arcane_port_list",
     {
       title: "List port mappings",

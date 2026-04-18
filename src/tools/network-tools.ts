@@ -5,13 +5,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { DOCKER_SHORT_ID_LENGTH } from "../constants.js";
 import type { Network } from "../types/arcane-types.js";
 
-export function registerNetworkTools(server: McpServer): void {
+export function registerNetworkTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "network");
 
   // arcane_network_list
-  server.registerTool(
+  register(
     "arcane_network_list",
     {
       title: "List networks",
@@ -58,7 +60,7 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_get
-  server.registerTool(
+  register(
     "arcane_network_get",
     {
       title: "Get network details",
@@ -107,7 +109,7 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_create
-  server.registerTool(
+  register(
     "arcane_network_create",
     {
       title: "Create network",
@@ -149,7 +151,7 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_delete
-  server.registerTool(
+  register(
     "arcane_network_delete",
     {
       title: "Delete network",
@@ -172,7 +174,7 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_prune
-  server.registerTool(
+  register(
     "arcane_network_prune",
     {
       title: "Prune networks",
@@ -200,7 +202,7 @@ export function registerNetworkTools(server: McpServer): void {
   );
 
   // arcane_network_get_counts
-  server.registerTool(
+  register(
     "arcane_network_get_counts",
     {
       title: "Get network counts",

@@ -5,11 +5,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { Job } from "../types/arcane-types.js";
 
-export function registerJobTools(server: McpServer): void {
+export function registerJobTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "job");
   // arcane_job_list
-  server.registerTool(
+  register(
     "arcane_job_list",
     {
       title: "List jobs",
@@ -50,7 +52,7 @@ export function registerJobTools(server: McpServer): void {
   );
 
   // arcane_job_run
-  server.registerTool(
+  register(
     "arcane_job_run",
     {
       title: "Run job",
@@ -73,7 +75,7 @@ export function registerJobTools(server: McpServer): void {
   );
 
   // arcane_job_schedule_get
-  server.registerTool(
+  register(
     "arcane_job_schedule_get",
     {
       title: "Get job schedules",
@@ -113,7 +115,7 @@ export function registerJobTools(server: McpServer): void {
   );
 
   // arcane_job_schedule_update
-  server.registerTool(
+  register(
     "arcane_job_schedule_update",
     {
       title: "Update job schedules",

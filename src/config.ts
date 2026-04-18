@@ -8,6 +8,34 @@ import { join } from "path";
 import { logger } from "./utils/logger.js";
 import { DEFAULT_REQUEST_TIMEOUT_MS } from "./constants.js";
 
+export type PresetName =
+  | "commonly-used"
+  | "read-only"
+  | "minimal"
+  | "deploy"
+  | "full"
+  | "custom";
+
+export const VALID_PRESETS: PresetName[] = [
+  "commonly-used",
+  "read-only",
+  "minimal",
+  "deploy",
+  "full",
+  "custom",
+];
+
+export interface ToolsConfig {
+  /** Named preset. Falls back to "full" when absent. */
+  preset?: PresetName;
+  /** Module allowlist. Intersects with preset expansion. */
+  modules?: string[];
+  /** Per-tool additions applied after the preset + modules step. */
+  enabled?: string[];
+  /** Per-tool subtractions applied last. */
+  disabled?: string[];
+}
+
 export interface ArcaneConfig {
   /** Base URL for the Arcane API */
   baseUrl: string;
@@ -27,6 +55,13 @@ export interface ArcaneConfig {
   httpPort: number;
   /** HTTP server host (for TCP mode) */
   httpHost: string;
+  /** Tool filtering config (preset + module + per-tool overrides) */
+  tools?: ToolsConfig;
+  /**
+   * True when the loaded config has no `tools` key at all. Used to gate
+   * the upgrade notice resource for pre-filtering installs.
+   */
+  toolsUnconfigured?: boolean;
 }
 
 interface ConfigFile {
@@ -44,6 +79,7 @@ interface ConfigFile {
     port?: number;
     host?: string;
   };
+  tools?: ToolsConfig;
 }
 
 const CONFIG_FILE_PATH = join(homedir(), ".arcane", "config.json");
@@ -76,6 +112,10 @@ function loadConfigFile(): Partial<ArcaneConfig> {
     if (config.http) {
       if (config.http.port) result.httpPort = config.http.port;
       if (config.http.host) result.httpHost = config.http.host;
+    }
+
+    if (config.tools) {
+      result.tools = sanitizeToolsConfig(config.tools);
     }
 
     logger.debug(`Loaded config from ${CONFIG_FILE_PATH}`);
@@ -144,7 +184,88 @@ function loadEnvConfig(): Partial<ArcaneConfig> {
     config.httpHost = process.env.ARCANE_HTTP_HOST;
   }
 
+  const envTools = loadEnvToolsConfig();
+  if (envTools) {
+    config.tools = envTools;
+  }
+
   return config;
+}
+
+/**
+ * Validate and return a `ToolsConfig`, dropping unknown preset values.
+ * Unknown tool/module names are preserved (resolver logs + ignores at apply time).
+ */
+function sanitizeToolsConfig(input: ToolsConfig): ToolsConfig {
+  const out: ToolsConfig = {};
+
+  if (input.preset !== undefined) {
+    if (VALID_PRESETS.includes(input.preset)) {
+      out.preset = input.preset;
+    } else {
+      logger.warn(`Unknown tools.preset: "${input.preset}" — falling back to "full"`);
+      out.preset = "full";
+    }
+  }
+
+  if (Array.isArray(input.modules)) out.modules = input.modules.slice();
+  if (Array.isArray(input.enabled)) out.enabled = input.enabled.slice();
+  if (Array.isArray(input.disabled)) out.disabled = input.disabled.slice();
+
+  return out;
+}
+
+function splitCSV(value: string): string[] {
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+function loadEnvToolsConfig(): ToolsConfig | undefined {
+  const hasAny =
+    !!process.env.ARCANE_TOOL_PRESET ||
+    !!process.env.ARCANE_ENABLED_MODULES ||
+    !!process.env.ARCANE_ENABLED_TOOLS ||
+    !!process.env.ARCANE_DISABLED_TOOLS;
+  if (!hasAny) return undefined;
+
+  const tools: ToolsConfig = {};
+
+  if (process.env.ARCANE_TOOL_PRESET) {
+    const v = process.env.ARCANE_TOOL_PRESET.trim() as PresetName;
+    if (VALID_PRESETS.includes(v)) {
+      tools.preset = v;
+    } else {
+      logger.warn(`Unknown ARCANE_TOOL_PRESET: "${v}" — ignoring`);
+    }
+  }
+  if (process.env.ARCANE_ENABLED_MODULES) {
+    tools.modules = splitCSV(process.env.ARCANE_ENABLED_MODULES);
+  }
+  if (process.env.ARCANE_ENABLED_TOOLS) {
+    tools.enabled = splitCSV(process.env.ARCANE_ENABLED_TOOLS);
+  }
+  if (process.env.ARCANE_DISABLED_TOOLS) {
+    tools.disabled = splitCSV(process.env.ARCANE_DISABLED_TOOLS);
+  }
+
+  return tools;
+}
+
+/**
+ * Merge two ToolsConfig with second taking precedence for fields that are set.
+ * Used so env vars can override specific fields from the config file without
+ * wiping the rest (e.g., set a preset via env, keep file's `enabled` list).
+ */
+function mergeToolsConfig(base?: ToolsConfig, overlay?: ToolsConfig): ToolsConfig | undefined {
+  if (!base && !overlay) return undefined;
+  return {
+    preset: overlay?.preset ?? base?.preset,
+    modules: overlay?.modules ?? base?.modules,
+    enabled: overlay?.enabled ?? base?.enabled,
+    disabled: overlay?.disabled ?? base?.disabled,
+  };
 }
 
 /**
@@ -172,10 +293,15 @@ export function loadConfig(): ArcaneConfig {
   const fileConfig = loadConfigFile();
   const envConfig = loadEnvConfig();
 
+  const mergedTools = mergeToolsConfig(fileConfig.tools, envConfig.tools);
+  const toolsUnconfigured = !fileConfig.tools && !envConfig.tools;
+
   cachedConfig = {
     ...defaults,
     ...fileConfig,
     ...envConfig,
+    tools: mergedTools,
+    toolsUnconfigured,
   };
 
   // Validate required configuration

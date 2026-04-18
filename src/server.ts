@@ -13,6 +13,7 @@ import { createRequire } from "module";
 import { loadConfig } from "./config.js";
 import { logger } from "./utils/logger.js";
 import { registerAllTools } from "./tools/index.js";
+import type { ToolRegistry } from "./tools/registry.js";
 import { registerResources } from "./resources/index.js";
 import { registerPrompts } from "./prompts/index.js";
 
@@ -20,12 +21,22 @@ const require = createRequire(import.meta.url);
 const { version: VERSION } = require("../package.json") as { version: string };
 
 /**
+ * Registry captured during stdio startup, exposed so the hot-reload watcher
+ * in the entry point can call `diffAndApply()` on config changes.
+ */
+let _stdioRegistry: ToolRegistry | null = null;
+
+export function getStdioRegistry(): ToolRegistry | null {
+  return _stdioRegistry;
+}
+
+/**
  * Create and configure the Arcane MCP Server (full registration).
  * Used by stdio transport where there is only one connection.
  */
 export function createArcaneServer(): McpServer {
   // Load configuration
-  loadConfig();
+  const config = loadConfig();
 
   logger.info(`Creating Arcane MCP Server v${VERSION}`);
 
@@ -34,8 +45,8 @@ export function createArcaneServer(): McpServer {
     version: VERSION,
   });
 
-  // Register all tools
-  registerAllTools(server);
+  // Register all tools (filter applied inside registerAllTools)
+  _stdioRegistry = registerAllTools(server, config.tools);
 
   // Register MCP resources (read-only context data)
   registerResources(server);
@@ -59,6 +70,11 @@ export function createArcaneServer(): McpServer {
  * copying internal references rather than re-registering 180+ tools.
  */
 let _template: McpServer | null = null;
+let _templateRegistry: ToolRegistry | null = null;
+
+export function getTemplateRegistry(): ToolRegistry | null {
+  return _templateRegistry;
+}
 
 /**
  * Initialise (or return) the singleton template.
@@ -66,12 +82,12 @@ let _template: McpServer | null = null;
 function getTemplate(): McpServer {
   if (_template) return _template;
 
-  loadConfig();
+  const config = loadConfig();
   logger.info(`Creating shared McpServer template v${VERSION}`);
 
   _template = new McpServer({ name: "arcane", version: VERSION });
 
-  registerAllTools(_template);
+  _templateRegistry = registerAllTools(_template, config.tools);
   registerResources(_template);
   registerPrompts(_template);
 

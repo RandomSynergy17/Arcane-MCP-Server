@@ -5,13 +5,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
+import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { formatSize, formatSizeMB, formatSizeGB } from "../utils/format.js";
 import { DOCKER_DIGEST_PREFIX_LENGTH, DOCKER_SHORT_ID_LENGTH } from "../constants.js";
 import type { Image } from "../types/arcane-types.js";
 
-export function registerImageTools(server: McpServer): void {
+export function registerImageTools(server: McpServer, registry?: ToolRegistry): void {
+  const register = moduleRegistrar(server, registry, "image");
   // arcane_image_list
-  server.registerTool(
+  register(
     "arcane_image_list",
     {
       title: "List images",
@@ -56,7 +58,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_get
-  server.registerTool(
+  register(
     "arcane_image_get",
     {
       title: "Get image details",
@@ -96,7 +98,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_pull
-  server.registerTool(
+  register(
     "arcane_image_pull",
     {
       title: "Pull image",
@@ -125,7 +127,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_delete
-  server.registerTool(
+  register(
     "arcane_image_delete",
     {
       title: "Delete image",
@@ -150,7 +152,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_prune
-  server.registerTool(
+  register(
     "arcane_image_prune",
     {
       title: "Prune images",
@@ -182,7 +184,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_get_counts
-  server.registerTool(
+  register(
     "arcane_image_get_counts",
     {
       title: "Get image counts",
@@ -209,7 +211,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_check_update
-  server.registerTool(
+  register(
     "arcane_image_check_update",
     {
       title: "Check image update",
@@ -243,7 +245,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_check_updates_all
-  server.registerTool(
+  register(
     "arcane_image_check_updates_all",
     {
       title: "Check all image updates",
@@ -278,7 +280,7 @@ export function registerImageTools(server: McpServer): void {
   );
 
   // arcane_image_get_update_summary
-  server.registerTool(
+  register(
     "arcane_image_get_update_summary",
     {
       title: "Get image update summary",
