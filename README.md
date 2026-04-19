@@ -17,10 +17,11 @@
 </p>
 
 <p align="center">
-  <a href="#-getting-started">Getting Started</a> &bull;
-  <a href="#-what-can-it-do">What Can It Do</a> &bull;
-  <a href="#-the-companion-skill">Companion Skill</a> &bull;
-  <a href="#-all-180-tools">All Tools</a> &bull;
+  <a href="#getting-started">Getting Started</a> &bull;
+  <a href="#tool-filtering">Tool Filtering</a> &bull;
+  <a href="#what-can-it-do">What Can It Do</a> &bull;
+  <a href="#the-companion-skill">Companion Skill</a> &bull;
+  <a href="#all-180-tools">All Tools</a> &bull;
   <a href="install_arcane_skill-mcp.md">Interactive Installer</a>
 </p>
 
@@ -154,6 +155,42 @@ You need an **Arcane instance** running (see [getarcane.app](https://getarcane.a
 
 ---
 
+## Tool Filtering
+
+Exposing all 180 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
+
+| Preset | Scope | Tools |
+|---|---|---|
+| `commonly-used` *(recommended)* | containers, images, projects, volumes, networks | ~52 |
+| `read-only` | every `*_list` / `*_get` / `*_inspect` / `*_stats` across all modules | ~60 |
+| `minimal` | dashboard + container list / get / counts | 5 |
+| `deploy` | projects, gitops, templates, registries, environments, build | ~40 |
+| `full` *(default if never configured)* | everything | 180 |
+| `custom` | your own module + per-tool picks | variable |
+
+**Configure interactively** in Claude Code:
+
+```
+/arcane:configure
+```
+
+Walks you through picking a preset (and optional fine-tuning), shows a `+X / −Y` diff against what's currently live, and writes the selection to `~/.arcane/config.json`. The server watches that file — changes apply **live** via `notifications/tools/list_changed`, no reconnect.
+
+**Or set it by env var:**
+
+```bash
+ARCANE_TOOL_PRESET=commonly-used
+ARCANE_ENABLED_MODULES=container,image,dashboard
+ARCANE_ENABLED_TOOLS=arcane_system_get_health
+ARCANE_DISABLED_TOOLS=arcane_system_prune
+```
+
+Resolution order: **preset → intersect with `modules` → add `enabled` → subtract `disabled`**. Unknown names log a warning and are ignored — never silent failures, never a bricked server.
+
+Non-Claude-Code clients can use the `arcane_configure_tools` MCP prompt for the same flow.
+
+---
+
 ## What Can It Do?
 
 ### Containers & Compose
@@ -205,7 +242,7 @@ rm -rf /tmp/arcane
 
 ## Built-in Workflow Prompts
 
-The server includes four pre-built prompts that guide Claude through common multi-step operations:
+The server includes five pre-built prompts that guide Claude through common multi-step operations:
 
 | Prompt | What it does |
 |--------|-------------|
@@ -213,13 +250,22 @@ The server includes four pre-built prompts that guide Claude through common mult
 | `/troubleshoot-container` | Systematic diagnosis: check state, inspect config, review action items, check ports, scan for vulnerabilities |
 | `/security-audit` | Full environment scan: check scanner status, get vulnerability summary, review all findings by severity, check for image updates |
 | `/cleanup-environment` | Safe cleanup: survey resources, present a plan, get confirmation, then prune images, networks, and volumes in the right order |
+| `arcane_configure_tools` | Walks through selecting a tool-filter preset + module / per-tool overrides and writing them to `~/.arcane/config.json` (for clients without slash commands) |
 
-Plus two **MCP Resources** that give Claude background context:
+Plus four **MCP Resources** that give Claude background context:
 
 | Resource | What it provides |
 |----------|-----------------|
 | `arcane://environments` | All available environments with IDs and status — so Claude can pick the right one |
 | `arcane://version` | Server configuration details — base URL, default environment, protocol version |
+| `arcane://tools` | JSON inventory of every tool (name, module, enabled state) — consumed by `/arcane:configure` to compute the before/after diff |
+| `arcane://tools-config-notice` | Flags installs that haven't configured tool filtering yet and points them at `/arcane:configure` |
+
+And a Claude Code slash command:
+
+| Command | What it does |
+|---------|-------------|
+| `/arcane:configure` | Interactive tool-filter picker — preset, module allowlist, per-tool overrides, with a live diff before writing |
 
 ---
 
@@ -409,9 +455,15 @@ Plus two **MCP Resources** that give Claude background context:
 | `ARCANE_DEFAULT_ENVIRONMENT_ID` | Auto-select this environment | - |
 | `ARCANE_HTTP_PORT` | Port for HTTP/network mode | `3000` |
 | `ARCANE_HTTP_HOST` | Host for HTTP/network mode | `localhost` |
+| `ARCANE_TOOL_PRESET` | `commonly-used` / `read-only` / `minimal` / `deploy` / `full` / `custom` — see [Tool Filtering](#tool-filtering) | - |
+| `ARCANE_ENABLED_MODULES` | Comma-separated module allowlist | - |
+| `ARCANE_ENABLED_TOOLS` | Comma-separated tool names to force-enable | - |
+| `ARCANE_DISABLED_TOOLS` | Comma-separated tool names to force-disable | - |
 | `LOG_LEVEL` | `debug`, `info`, `warn`, or `error` | `info` |
 
 **Authentication:** API Key is recommended. JWT tokens are automatically refreshed before they expire.
+
+**Tool filter:** anything set via env var overrides the corresponding field in `~/.arcane/config.json`. Unset fields fall through to the file. Change at runtime by editing `~/.arcane/config.json` — the server hot-reloads.
 
 ---
 
@@ -443,7 +495,7 @@ git clone https://github.com/RandomSynergy17/Arcane-MCP-Server.git
 cd Arcane-MCP-Server
 npm install
 npm run build
-npm test             # 79 tests
+npm test             # 119 tests (unit + integration)
 npm run dev          # stdio mode
 npm run dev:tcp      # HTTP mode
 ```
@@ -462,15 +514,22 @@ src/
   auth/
     auth-manager.ts     # JWT auto-refresh + API key auth
   tools/                # 25 modules, 180 tools
-  resources/            # 2 MCP Resources
-  prompts/              # 4 MCP Prompts
+    registry.ts         # ToolRegistry — captures RegisteredTool handles, applies filter
+    presets.ts          # commonly-used / read-only / minimal / deploy / full / custom
+  resources/            # 4 MCP Resources
+  prompts/              # 5 MCP Prompts
   types/
     arcane-types.ts     # Shared interfaces (33 types)
     generated/          # Auto-generated from OpenAPI v1.17.0
   utils/
     tool-helpers.ts     # registerTool wrapper with isError handling
+    config-watcher.ts   # debounced fs.watch on ~/.arcane/config.json → hot reload
     format.ts           # Size formatting + path validation
     error-handler.ts    # Error classes + formatting
+  __tests__/
+    integration/        # End-to-end boot-per-preset + hot-reload cycle tests
+commands/
+  configure.md          # /arcane:configure slash command (plugin)
 skills/
   arcane-mcp-server/
     SKILL.md            # Companion Claude Code skill
