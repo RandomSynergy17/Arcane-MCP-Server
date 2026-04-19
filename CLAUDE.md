@@ -41,7 +41,7 @@ All tools use `server.registerTool()` with:
 3. Classify annotations: list/get = readOnly, delete/prune = destructive, external calls = openWorld
 4. Use `toolHandler()` wrapper — return a plain string, it handles the MCP response envelope
 5. Register in `src/tools/index.ts`
-6. Verify: `npm run build && grep -c "registerTool(" src/tools/*.ts | awk -F: '{sum+=$2} END {print sum}'`
+6. Verify: `npm run build && grep -rc 'register("arcane_' dist/tools/*.js | awk -F: '{sum+=$2} END {print sum}'` (expect 180)
 
 ### Resources & Prompts
 
