@@ -89,28 +89,30 @@ describe("presets", () => {
     expect(set.has("arcane_project_up")).toBe(false);
   });
 
-  it("commonly-used preset covers dashboard/container/image/project/volume/network/environment/system", () => {
+  it("commonly-used preset is scoped to container/image/project/volume/network only", () => {
     const set = expandPreset("commonly-used", registry);
     expect(set.has("arcane_container_list")).toBe(true);
-    expect(set.has("arcane_dashboard_get")).toBe(true);
     expect(set.has("arcane_image_prune")).toBe(true);
     expect(set.has("arcane_project_up")).toBe(true);
     expect(set.has("arcane_volume_prune")).toBe(true);
     expect(set.has("arcane_network_list")).toBe(true);
-    expect(set.has("arcane_environment_list")).toBe(true);
-    expect(set.has("arcane_system_get_health")).toBe(true);
-    // Not in the commonly-used module list
+    // Explicitly dropped from the commonly-used scope
+    expect(set.has("arcane_dashboard_get")).toBe(false);
+    expect(set.has("arcane_environment_list")).toBe(false);
+    expect(set.has("arcane_system_get_health")).toBe(false);
+    // Never in scope
     expect(set.has("arcane_webhook_list")).toBe(false);
     expect(set.has("arcane_gitops_sync")).toBe(false);
   });
 
-  it("minimal preset is just dashboard + the 4 allowed container tools", () => {
+  it("minimal preset is just dashboard + the allowed container read tools", () => {
+    // Synthesise the real minimal container tools into the registry for this test
+    registry.register("container", "arcane_container_get_counts", fakeHandle());
     const set = expandPreset("minimal", registry);
     expect(set.has("arcane_dashboard_get")).toBe(true);
     expect(set.has("arcane_container_list")).toBe(true);
-    expect(set.has("arcane_container_logs")).toBe(true);
-    expect(set.has("arcane_container_stats")).toBe(true);
     expect(set.has("arcane_container_get")).toBe(true);
+    expect(set.has("arcane_container_get_counts")).toBe(true);
     expect(set.has("arcane_container_delete")).toBe(false);
     expect(set.has("arcane_container_create")).toBe(false);
     expect(set.has("arcane_image_list")).toBe(false);
@@ -179,11 +181,11 @@ describe("resolveEnabled", () => {
 
   it("unknown module is ignored with warning (does not crash)", () => {
     const set = resolveEnabled(
-      { preset: "commonly-used", modules: ["dashboard", "not-a-real-module"] },
+      { preset: "commonly-used", modules: ["container", "not-a-real-module"] },
       registry,
     );
-    expect(set.has("arcane_dashboard_get")).toBe(true);
-    expect(set.has("arcane_container_list")).toBe(false);
+    expect(set.has("arcane_container_list")).toBe(true);
+    expect(set.has("arcane_image_list")).toBe(false);
   });
 
   it("unknown tool in enabled/disabled is ignored (does not crash)", () => {

@@ -17,6 +17,25 @@ export interface RegistryEntry {
   handle: RegisteredTool;
 }
 
+/**
+ * Process-level active registry. Set by `registerAllTools` and read by
+ * introspection resources (arcane://tools). Kept here to avoid a
+ * server.ts ↔ resources/index.ts import cycle.
+ */
+let _active: ToolRegistry | null = null;
+
+export function setActiveRegistry(r: ToolRegistry): void {
+  _active = r;
+}
+
+export function getActiveRegistry(): ToolRegistry | null {
+  return _active;
+}
+
+export function clearActiveRegistry(): void {
+  _active = null;
+}
+
 export class ToolRegistry {
   private entries = new Map<string, RegistryEntry>();
   public hotReloadAvailable = false;

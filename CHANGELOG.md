@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `arcane://tools` MCP resource — JSON inventory of every tool (name, module, enabled state) so `/arcane:configure` can compute a "+X/−Y" diff before writing the config
+- Integration test suite (`src/__tests__/integration/tool-filtering.test.ts`): boot-per-preset across all six presets, hot-reload cycle with a real temp file + `fs.watch`, parse-error safety, and upgrade-notice lifecycle (11 end-to-end tests on top of the 24 unit tests)
 - Tool filtering: six presets (`commonly-used`, `read-only`, `minimal`, `deploy`, `full`, `custom`) trim which of the 180 tools are exposed on `tools/list` to reduce context bloat
 - `ToolRegistry` (`src/tools/registry.ts`) captures every `RegisteredTool` handle and applies preset/module/per-tool resolution at startup and on live config changes
 - Hot reload: `src/utils/config-watcher.ts` debounces `fs.watch` on `~/.arcane/config.json` and calls `registry.diffAndApply()` so clients see `notifications/tools/list_changed` without reconnecting
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Internal design doc: `_docs/plans/2026-04-14-tool-filtering-design.md` (tool filtering feature)
 
 ### Changed
+- `commonly-used` preset scope narrowed to `container`, `image`, `project`, `volume`, `network` only (~52 tools; previously included dashboard/environment/system too)
+- `minimal` preset corrected to reference real tool names (`arcane_container_get_counts` replaces the non-existent `arcane_container_logs`/`arcane_container_stats` entries)
+- `/arcane:configure` slash command now computes a diff against the live tool set via `arcane://tools` and requires explicit `Apply`/`Cancel` confirmation before writing
+- `startConfigWatcher` accepts optional `path`, `reload`, and `debounceMs` overrides so integration tests can exercise the watcher against a temp file without touching `~/.arcane/config.json`
 - All 25 tool modules now accept an optional `ToolRegistry` parameter and register through a `moduleRegistrar` helper so handles flow into the registry
 - Backwards-compatible on upgrade: installs without a `tools` key fall back to the `full` preset (no behaviour change)
 

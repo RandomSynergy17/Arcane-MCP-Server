@@ -1,6 +1,6 @@
 ---
 description: Configure which Arcane MCP tools are exposed to Claude
-allowed-tools: [Read, Write, AskUserQuestion, Bash]
+allowed-tools: [Read, Write, AskUserQuestion, Bash, ReadMcpResourceTool]
 ---
 
 # /arcane:configure — Tool filter setup
@@ -10,9 +10,9 @@ Use this slash command to trim which Arcane MCP tools are exposed to Claude Code
 ## Workflow
 
 1. **Ask the user to pick a preset** with `AskUserQuestion`, single-select:
-   - `commonly-used` — containers, images, stacks, networks, volumes, environment, system, dashboard (~65 tools) *(recommended default)*
+   - `commonly-used` — containers, images, projects (stacks), volumes, networks (~52 tools) *(recommended default)*
    - `read-only` — every `*_list` / `*_get` / `*_inspect` / `*_stats` / `*_status` / `*_summary` tool (~60 tools)
-   - `minimal` — dashboard + container list/logs/stats/get (~5 tools)
+   - `minimal` — dashboard + container list/get/counts (5 tools)
    - `deploy` — project, gitops, template, registry, environment, build (~40 tools)
    - `full` — all 180 tools (current default if the user has never configured this)
    - `custom` — fine-tune modules and individual tools
@@ -34,13 +34,27 @@ Use this slash command to trim which Arcane MCP tools are exposed to Claude Code
    }
    ```
 
-4. **Merge into `~/.arcane/config.json`**:
+4. **Show the diff and confirm** (critical — don't skip):
+   - Call `ReadMcpResourceTool` on `arcane://tools` (server: `arcane`). The response is JSON: `{ summary: { total, enabled, disabled, modules }, tools: [{ name, module, enabled }] }`.
+   - Let `current` = the set of tool names where `enabled === true` in that response.
+   - Compute `proposed`: start from the preset's rule, then intersect with `tools.modules` (if set), then union with `tools.enabled`, then subtract `tools.disabled`.
+     - Preset rules (apply against the `tools` array from the resource):
+       - `full` — every tool
+       - `commonly-used` — every tool whose `module ∈ {container, image, project, volume, network}`
+       - `deploy` — every tool whose `module ∈ {project, gitops, template, registry, environment, build}`
+       - `minimal` — `arcane_dashboard_get`, `arcane_dashboard_get_action_items`, `arcane_container_list`, `arcane_container_get`, `arcane_container_get_counts`
+       - `read-only` — every tool whose `name` ends with `_list`, `_get`, `_inspect`, `_stats`, `_counts`, `_check`, `_search`, `_status`, `_summary` (or contains `_list_`, `_get_`)
+       - `custom` — start from every tool (modules/enabled/disabled do the narrowing)
+   - `added` = `proposed − current`; `removed` = `current − proposed`.
+   - Tell the user: **"This will enable N tools (+X new, −Y removed). Apply?"** Use `AskUserQuestion` single-select `Apply` / `Cancel`. If the user picks Cancel, stop without writing.
+
+5. **Merge into `~/.arcane/config.json`**:
    - `Read` the existing file (tolerate missing — start from `{}`).
    - Preserve all existing keys (`baseUrl`, `auth`, `http`, `defaultEnvironmentId`, `timeout`, `skipSslVerify`).
    - Replace or add the `tools` field with the new block.
    - `Write` back with 2-space indent.
 
-5. **Report to the user**:
+6. **Report to the user**:
    - If the server logged `Watching …/config.json for tool-filter changes` at startup (`tail ~/.arcane/logs/*.log` or check the server stderr if available), say: **"Config written — tool list will refresh automatically."**
    - Otherwise: **"Config written — reconnect the Arcane MCP server in your client (`/mcp` in Claude Code) for the filter to take effect."**
 

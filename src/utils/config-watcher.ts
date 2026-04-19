@@ -13,7 +13,7 @@
  */
 
 import { existsSync, watch, type FSWatcher } from "fs";
-import { CONFIG_FILE_PATH, reloadConfig } from "../config.js";
+import { CONFIG_FILE_PATH, reloadConfig, type ArcaneConfig, type ToolsConfig } from "../config.js";
 import type { ToolRegistry } from "../tools/registry.js";
 import { logger } from "./logger.js";
 
@@ -23,10 +23,26 @@ export interface ConfigWatcherHandle {
   stop(): void;
 }
 
-export function startConfigWatcher(registry: ToolRegistry): ConfigWatcherHandle {
-  if (!existsSync(CONFIG_FILE_PATH)) {
+export interface ConfigWatcherOptions {
+  /** Override the watched file path (used by integration tests). */
+  path?: string;
+  /** Override the reload function (returns enough of ArcaneConfig to read `.tools`). */
+  reload?: () => Pick<ArcaneConfig, "tools"> | { tools?: ToolsConfig };
+  /** Override the debounce window (tests may set this shorter). */
+  debounceMs?: number;
+}
+
+export function startConfigWatcher(
+  registry: ToolRegistry,
+  options: ConfigWatcherOptions = {},
+): ConfigWatcherHandle {
+  const watchPath = options.path ?? CONFIG_FILE_PATH;
+  const doReload = options.reload ?? reloadConfig;
+  const debounceMs = options.debounceMs ?? DEBOUNCE_MS;
+
+  if (!existsSync(watchPath)) {
     logger.info(
-      `Config file not found at ${CONFIG_FILE_PATH} — hot reload of tool filter disabled. ` +
+      `Config file not found at ${watchPath} — hot reload of tool filter disabled. ` +
       `Create the file and restart to enable hot reload.`,
     );
     registry.hotReloadAvailable = false;
@@ -41,7 +57,7 @@ export function startConfigWatcher(registry: ToolRegistry): ConfigWatcherHandle 
     timer = setTimeout(() => {
       timer = null;
       try {
-        const newConfig = reloadConfig();
+        const newConfig = doReload();
         const { turnedOn, turnedOff } = registry.diffAndApply(newConfig.tools);
         if (turnedOn.length === 0 && turnedOff.length === 0) {
           logger.debug("Config changed but resolved tool set is unchanged");
@@ -53,26 +69,26 @@ export function startConfigWatcher(registry: ToolRegistry): ConfigWatcherHandle 
       } catch (err) {
         // Parse errors, missing file, etc. — keep current set live.
         logger.error(
-          `Failed to reload config from ${CONFIG_FILE_PATH}; keeping current tool filter live`,
+          `Failed to reload config from ${watchPath}; keeping current tool filter live`,
           err,
         );
       }
-    }, DEBOUNCE_MS);
+    }, debounceMs);
   };
 
   try {
-    watcher = watch(CONFIG_FILE_PATH, { persistent: false }, (eventType) => {
+    watcher = watch(watchPath, { persistent: false }, (eventType) => {
       // Both "change" and "rename" (some editors save via rename) trigger reload.
       if (eventType === "change" || eventType === "rename") {
         handleChange();
       }
     });
     registry.hotReloadAvailable = true;
-    logger.info(`Watching ${CONFIG_FILE_PATH} for tool-filter changes (debounced ${DEBOUNCE_MS}ms)`);
+    logger.info(`Watching ${watchPath} for tool-filter changes (debounced ${debounceMs}ms)`);
   } catch (err) {
     registry.hotReloadAvailable = false;
     logger.warn(
-      `Could not attach fs.watch to ${CONFIG_FILE_PATH}; hot reload disabled. ` +
+      `Could not attach fs.watch to ${watchPath}; hot reload disabled. ` +
       `Changes to tool filter will require a reconnect.`,
       err,
     );

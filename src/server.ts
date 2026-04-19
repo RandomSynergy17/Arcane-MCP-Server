@@ -13,7 +13,7 @@ import { createRequire } from "module";
 import { loadConfig } from "./config.js";
 import { logger } from "./utils/logger.js";
 import { registerAllTools } from "./tools/index.js";
-import type { ToolRegistry } from "./tools/registry.js";
+import { setActiveRegistry, type ToolRegistry } from "./tools/registry.js";
 import { registerResources } from "./resources/index.js";
 import { registerPrompts } from "./prompts/index.js";
 
@@ -47,6 +47,7 @@ export function createArcaneServer(): McpServer {
 
   // Register all tools (filter applied inside registerAllTools)
   _stdioRegistry = registerAllTools(server, config.tools);
+  setActiveRegistry(_stdioRegistry);
 
   // Register MCP resources (read-only context data)
   registerResources(server);
@@ -97,6 +98,7 @@ function getTemplate(): McpServer {
   _template = new McpServer({ name: "arcane", version: VERSION });
 
   _templateRegistry = registerAllTools(_template, config.tools);
+  setActiveRegistry(_templateRegistry);
   registerResources(_template);
   registerPrompts(_template);
 

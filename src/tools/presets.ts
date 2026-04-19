@@ -54,14 +54,11 @@ export function isKnownModule(name: string): name is ModuleName {
  */
 const MODULE_PRESETS: Record<Exclude<PresetName, "read-only" | "full" | "custom">, ModuleName[]> = {
   "commonly-used": [
-    "dashboard",
     "container",
     "image",
     "project",
     "volume",
     "network",
-    "environment",
-    "system",
   ],
   minimal: ["dashboard", "container"],
   deploy: [
@@ -77,12 +74,12 @@ const MODULE_PRESETS: Record<Exclude<PresetName, "read-only" | "full" | "custom"
 /**
  * Tools kept for the `minimal` preset after filtering the module allowlist.
  * Anything in the "container" module not listed here is dropped.
+ * Names must match real registrations — silently mismatched names never toggle.
  */
 const MINIMAL_CONTAINER_ALLOWLIST = new Set<string>([
   "arcane_container_list",
   "arcane_container_get",
-  "arcane_container_logs",
-  "arcane_container_stats",
+  "arcane_container_get_counts",
 ]);
 
 const READ_ONLY_SUFFIXES = [
@@ -209,9 +206,9 @@ export function resolveEnabled(
  * Map of preset → short description. For UIs (slash command, installer).
  */
 export const PRESET_DESCRIPTIONS: Record<PresetName, string> = {
-  "commonly-used": "Common Docker management — containers, images, stacks, networks, volumes (~65 tools).",
+  "commonly-used": "Common Docker management — containers, images, projects, volumes, networks (~52 tools).",
   "read-only": "Status & observability only — list/get/inspect across all modules (~60 tools).",
-  "minimal": "Smallest viable footprint — dashboard + container list/logs/stats (~5 tools).",
+  "minimal": "Smallest viable footprint — dashboard + container list/get/counts (5 tools).",
   "deploy": "CI / deploy assistants — projects, gitops, templates, registries, build (~40 tools).",
   "full": "All 180 tools enabled (default for upgrades).",
   "custom": "Manual module + tool overrides only.",

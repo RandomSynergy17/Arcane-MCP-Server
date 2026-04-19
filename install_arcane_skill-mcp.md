@@ -106,9 +106,9 @@ The MCP server registers 180 tools by default, which can bloat Claude's context 
 
 **Question:** "Which tools do you want active by default?"
 **Options:**
-- **commonly-used (Recommended)** — containers, images, stacks, networks, volumes, environment, system, dashboard (~65 tools)
+- **commonly-used (Recommended)** — containers, images, projects (stacks), volumes, networks (~52 tools)
 - **read-only** — status & observability only, every `*_list` / `*_get` / `*_inspect` / `*_stats` tool (~60 tools)
-- **minimal** — dashboard + container list/logs/stats/get (~5 tools)
+- **minimal** — dashboard + container list/get/counts (5 tools)
 - **deploy** — project, gitops, template, registry, environment, build (~40 tools)
 - **full** — all 180 tools enabled
 - **Skip** — I'll configure later with `/arcane:configure`

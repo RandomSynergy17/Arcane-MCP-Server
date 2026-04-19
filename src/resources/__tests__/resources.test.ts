@@ -34,6 +34,11 @@ vi.mock("../../config.js", () => ({
   getConfig: () => mockGetConfig(),
 }));
 
+const mockGetActiveRegistry = vi.fn(() => null as unknown);
+vi.mock("../../tools/registry.js", () => ({
+  getActiveRegistry: () => mockGetActiveRegistry(),
+}));
+
 import { registerResources } from "../index.js";
 
 type ResourceHandler = (uri: URL) => Promise<{
@@ -66,11 +71,57 @@ describe("resources", () => {
     registerResources(server as unknown as Parameters<typeof registerResources>[0]);
   });
 
-  it("registers all three resources", () => {
+  it("registers all four resources", () => {
     expect(server.resources.has("arcane-environments")).toBe(true);
     expect(server.resources.has("arcane-version")).toBe(true);
+    expect(server.resources.has("arcane-tools")).toBe(true);
     expect(server.resources.has("arcane-tools-config-notice")).toBe(true);
-    expect(server.resources.size).toBe(3);
+    expect(server.resources.size).toBe(4);
+  });
+
+  describe("arcane-tools", () => {
+    it("returns placeholder when registry is not initialised", async () => {
+      mockGetActiveRegistry.mockReturnValueOnce(null);
+      const handler = server.resources.get("arcane-tools")!;
+      const result = await handler(new URL("arcane://tools"));
+      const payload = JSON.parse(result.contents[0].text);
+      expect(payload.tools).toEqual([]);
+      expect(payload.note).toContain("registry not initialised");
+    });
+
+    it("dumps every tool with module + enabled state", async () => {
+      const fakeHandle = (enabled: boolean) => ({ enabled });
+      const fakeRegistry = {
+        all: () => [
+          { name: "arcane_container_list", module: "container", handle: fakeHandle(true) },
+          { name: "arcane_container_delete", module: "container", handle: fakeHandle(false) },
+          { name: "arcane_image_list", module: "image", handle: fakeHandle(true) },
+        ],
+        allModules: () => ["container", "image"],
+      };
+      mockGetActiveRegistry.mockReturnValueOnce(fakeRegistry);
+
+      const handler = server.resources.get("arcane-tools")!;
+      const result = await handler(new URL("arcane://tools"));
+      const payload = JSON.parse(result.contents[0].text);
+
+      expect(payload.summary).toEqual({
+        total: 3,
+        enabled: 2,
+        disabled: 1,
+        modules: ["container", "image"],
+      });
+      expect(payload.tools).toContainEqual({
+        name: "arcane_container_list",
+        module: "container",
+        enabled: true,
+      });
+      expect(payload.tools).toContainEqual({
+        name: "arcane_container_delete",
+        module: "container",
+        enabled: false,
+      });
+    });
   });
 
   describe("arcane-tools-config-notice", () => {
