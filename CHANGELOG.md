@@ -5,30 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] - 2026-04-19
 
 ### Added
-- `arcane://tools` MCP resource — JSON inventory of every tool (name, module, enabled state) so `/arcane:configure` can compute a "+X/−Y" diff before writing the config
-- Integration test suite (`src/__tests__/integration/tool-filtering.test.ts`): boot-per-preset across all six presets, hot-reload cycle with a real temp file + `fs.watch`, parse-error safety, and upgrade-notice lifecycle (11 end-to-end tests on top of the 24 unit tests)
-- Tool filtering: six presets (`commonly-used`, `read-only`, `minimal`, `deploy`, `full`, `custom`) trim which of the 180 tools are exposed on `tools/list` to reduce context bloat
-- `ToolRegistry` (`src/tools/registry.ts`) captures every `RegisteredTool` handle and applies preset/module/per-tool resolution at startup and on live config changes
-- Hot reload: `src/utils/config-watcher.ts` debounces `fs.watch` on `~/.arcane/config.json` and calls `registry.diffAndApply()` so clients see `notifications/tools/list_changed` without reconnecting
-- `tools` field on `ArcaneConfig` plus env vars `ARCANE_TOOL_PRESET`, `ARCANE_ENABLED_MODULES`, `ARCANE_ENABLED_TOOLS`, `ARCANE_DISABLED_TOOLS`
-- MCP prompt `arcane_configure_tools` for clients without slash commands
-- Plugin slash command `/arcane:configure` (`commands/configure.md`) walks users through preset/module/per-tool selection
-- MCP resource `arcane://tools-config-notice` flags pre-filtering installs and points users at `/arcane:configure`
-- Installer gained "Step 5: Pick a tool-filter preset" before verification
-- 27 new unit tests: registry diff/apply logic, preset resolution order, upgrade notice / configure prompt (106 tests total, up from 79)
-- README pointer to `Portainer-Offload-Arcane` migration wizard for users coming from Portainer
-- Internal design doc: `_docs/plans/2026-04-14-tool-filtering-design.md` (tool filtering feature)
+- **Tool filtering** — six presets (`commonly-used`, `read-only`, `minimal`, `deploy`, `full`, `custom`) trim which of the 180 tools are exposed on `tools/list` to reduce context bloat. `commonly-used` covers container/image/project/volume/network (~52 tools). Default on upgrade is `full` (backwards-compatible).
+- `ToolRegistry` (`src/tools/registry.ts`) captures every `RegisteredTool` handle; `applyFilter()` disables out-of-scope tools at startup, `diffAndApply()` handles live config changes.
+- **Hot reload** — `src/utils/config-watcher.ts` debounces `fs.watch` on `~/.arcane/config.json` so clients get `notifications/tools/list_changed` without reconnecting. Parse errors keep the current filter live.
+- `tools` field on `ArcaneConfig` plus four env vars: `ARCANE_TOOL_PRESET`, `ARCANE_ENABLED_MODULES`, `ARCANE_ENABLED_TOOLS`, `ARCANE_DISABLED_TOOLS`.
+- Plugin slash command **`/arcane:configure`** (`commands/configure.md`) walks users through preset → module → per-tool picks, reads `arcane://tools` to compute a `+X / −Y` diff against the live set, and requires explicit Apply/Cancel before writing.
+- MCP prompt `arcane_configure_tools` — same flow for Claude Desktop and other clients without slash commands.
+- MCP resource `arcane://tools` — JSON inventory of every tool (name, module, enabled).
+- MCP resource `arcane://tools-config-notice` — flags pre-filtering installs and points users at `/arcane:configure`.
+- Installer gained "Step 5: Pick a tool-filter preset" before verification.
+- Integration test suite (`src/__tests__/integration/tool-filtering.test.ts`): boot-per-preset across all six presets, real-fs hot-reload cycle, parse-error safety, upgrade-notice lifecycle.
+- 40 new tests total — registry diff/apply logic, preset resolution order, upgrade notice / configure prompt, plus integration coverage (**119 tests** total, up from 79).
+- README tool-filtering section with preset table, `/arcane:configure` walkthrough, env-var overrides.
+- README pointer to `Portainer-Offload-Arcane` migration wizard for users coming from Portainer.
+- Internal design doc: `_docs/plans/2026-04-14-tool-filtering-design.md`.
 
 ### Changed
-- `commonly-used` preset scope narrowed to `container`, `image`, `project`, `volume`, `network` only (~52 tools; previously included dashboard/environment/system too)
-- `minimal` preset corrected to reference real tool names (`arcane_container_get_counts` replaces the non-existent `arcane_container_logs`/`arcane_container_stats` entries)
-- `/arcane:configure` slash command now computes a diff against the live tool set via `arcane://tools` and requires explicit `Apply`/`Cancel` confirmation before writing
-- `startConfigWatcher` accepts optional `path`, `reload`, and `debounceMs` overrides so integration tests can exercise the watcher against a temp file without touching `~/.arcane/config.json`
-- All 25 tool modules now accept an optional `ToolRegistry` parameter and register through a `moduleRegistrar` helper so handles flow into the registry
-- Backwards-compatible on upgrade: installs without a `tools` key fall back to the `full` preset (no behaviour change)
+- All 25 tool modules now accept an optional `ToolRegistry` parameter and register through a `moduleRegistrar` helper so handles flow into the registry.
+- `startConfigWatcher` accepts optional `path`, `reload`, and `debounceMs` overrides so integration tests can exercise the watcher against a temp file without touching `~/.arcane/config.json`.
+- CI's tool-count smoke check updated to grep `register("arcane_` (matches the new `moduleRegistrar` call site) instead of the legacy `server.registerTool(` pattern.
 
 ---
 

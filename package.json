@@ -1,6 +1,6 @@
 {
   "name": "@randomsynergy/arcane-mcp-server",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "description": "MCP Server for Arcane Docker Management API - Modern Docker Management for AI Assistants",
   "type": "module",
   "main": "dist/index.js",
