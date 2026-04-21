@@ -67,6 +67,44 @@ Every tool carries **safety annotations** so your AI knows which operations are 
 
 ---
 
+> **🆕 Recent update — v2.1:** Tool filtering is here. All 180 tools in one turn eats your context window, so you can now pick a preset and ship only what you need. [Details below](#tool-filtering).
+
+## Tool Filtering
+
+Exposing all 180 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
+
+| Preset | Scope | Tools |
+|---|---|---|
+| `commonly-used` *(recommended)* | containers, images, projects, volumes, networks | ~52 |
+| `read-only` | every `*_list` / `*_get` / `*_inspect` / `*_stats` across all modules | ~60 |
+| `minimal` | dashboard + container list / get / counts | 5 |
+| `deploy` | projects, gitops, templates, registries, environments, build | ~40 |
+| `full` *(default if never configured)* | everything | 180 |
+| `custom` | your own module + per-tool picks | variable |
+
+**Configure interactively** in Claude Code:
+
+```
+/arcane:configure
+```
+
+Walks you through picking a preset (and optional fine-tuning), shows a `+X / −Y` diff against what's currently live, and writes the selection to `~/.arcane/config.json`. The server watches that file — changes apply **live** via `notifications/tools/list_changed`, no reconnect.
+
+**Or set it by env var:**
+
+```bash
+ARCANE_TOOL_PRESET=commonly-used
+ARCANE_ENABLED_MODULES=container,image,dashboard
+ARCANE_ENABLED_TOOLS=arcane_system_get_health
+ARCANE_DISABLED_TOOLS=arcane_system_prune
+```
+
+Resolution order: **preset → intersect with `modules` → add `enabled` → subtract `disabled`**. Unknown names log a warning and are ignored — never silent failures, never a bricked server.
+
+Non-Claude-Code clients can use the `arcane_configure_tools` MCP prompt for the same flow.
+
+---
+
 ## Getting Started
 
 The fastest way — paste this into Claude Code:
@@ -152,42 +190,6 @@ Create `~/.arcane/config.json`:
 ### Prerequisites
 
 You need an **Arcane instance** running (see [getarcane.app](https://getarcane.app)) and an **API key** from Settings > API Keys.
-
----
-
-## Tool Filtering
-
-Exposing all 180 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
-
-| Preset | Scope | Tools |
-|---|---|---|
-| `commonly-used` *(recommended)* | containers, images, projects, volumes, networks | ~52 |
-| `read-only` | every `*_list` / `*_get` / `*_inspect` / `*_stats` across all modules | ~60 |
-| `minimal` | dashboard + container list / get / counts | 5 |
-| `deploy` | projects, gitops, templates, registries, environments, build | ~40 |
-| `full` *(default if never configured)* | everything | 180 |
-| `custom` | your own module + per-tool picks | variable |
-
-**Configure interactively** in Claude Code:
-
-```
-/arcane:configure
-```
-
-Walks you through picking a preset (and optional fine-tuning), shows a `+X / −Y` diff against what's currently live, and writes the selection to `~/.arcane/config.json`. The server watches that file — changes apply **live** via `notifications/tools/list_changed`, no reconnect.
-
-**Or set it by env var:**
-
-```bash
-ARCANE_TOOL_PRESET=commonly-used
-ARCANE_ENABLED_MODULES=container,image,dashboard
-ARCANE_ENABLED_TOOLS=arcane_system_get_health
-ARCANE_DISABLED_TOOLS=arcane_system_prune
-```
-
-Resolution order: **preset → intersect with `modules` → add `enabled` → subtract `disabled`**. Unknown names log a warning and are ignored — never silent failures, never a bricked server.
-
-Non-Claude-Code clients can use the `arcane_configure_tools` MCP prompt for the same flow.
 
 ---
 
