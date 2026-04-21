@@ -35,7 +35,7 @@
 
 Arcane MCP Server is a complete AI-powered Docker management bundle — an **MCP server**, a **Claude Code plugin**, and a **companion skill**, all in one package.
 
-- The **MCP server** gives your AI assistant 180 tools to control your [Arcane](https://github.com/getarcaneapp/arcane) Docker platform — containers, images, stacks, Swarm clusters, security scans, and more.
+- The **MCP server** gives your AI assistant 180 tools to control your [Arcane](https://github.com/getarcaneapp/arcane) Docker platform — containers, images, stacks, Swarm clusters, security scans, and more. Filter that set down to a preset ([see Tool Filtering](#tool-filtering)) if all 180 is more than your context window can spare.
 - The **plugin** wraps everything into a single install with guided configuration — no manual env vars or config files.
 - The **companion skill** teaches your AI *how* to use those tools — safe deployment workflows, troubleshooting patterns, and guardrails so it doesn't accidentally nuke your volumes.
 
