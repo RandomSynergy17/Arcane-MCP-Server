@@ -296,7 +296,7 @@ describe("integration: upgrade notice lifecycle", () => {
     // Unconfigured state → explicit call to /arcane:configure
     const handler = handlers.get("arcane-tools-config-notice")!;
     const result = await handler(new URL("arcane://tools-config-notice"));
-    expect(result.contents[0].text).toContain("177 tools");
+    expect(result.contents[0].text).toContain("180 tools");
     expect(result.contents[0].text).toContain("/arcane:configure");
 
     // Flip to configured — body should swap

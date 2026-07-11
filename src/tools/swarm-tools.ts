@@ -6,6 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { moduleRegistrar, type ToolRegistry } from "./registry.js";
+import { DEFAULT_LOG_TAIL, MAX_LOG_LINES } from "../constants.js";
+import { formatLogResult } from "../utils/log-format.js";
 import type { SwarmService, SwarmClusterInfo } from "../types/arcane-types.js";
 
 export function registerSwarmTools(server: McpServer, registry?: ToolRegistry): void {
@@ -296,6 +298,38 @@ export function registerSwarmTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, serviceId, replicas }, client) => {
       await client.post(`/environments/${environmentId}/swarm/services/${serviceId}/scale`, { replicas });
       return `Swarm service ${serviceId} scaled to ${replicas} replicas.`;
+    })
+  );
+
+  // arcane_swarm_get_service_logs
+  register(
+    "arcane_swarm_get_service_logs",
+    {
+      title: "Get Swarm service logs",
+      description: "Fetch recent log lines of a Swarm service. For live following, call repeatedly with 'since' set to the newest timestamp seen — each call then returns only new lines.",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
+      serviceId: z.string().describe("Swarm service ID"),
+      tail: z.number().optional().default(DEFAULT_LOG_TAIL).describe("Number of most recent lines to return initially"),
+      since: z.string().optional().describe("Only return lines after this time — RFC3339 timestamp (from a previous call) or relative duration like '5m'"),
+      timestamps: z.boolean().optional().default(true).describe("Prefix each line with its timestamp (needed for incremental follow-up via 'since')"),
+      maxLines: z.number().optional().default(200).describe(`Hard cap on returned lines to protect the context window (max ${MAX_LOG_LINES})`),
+    },
+    },
+    toolHandler(async ({ environmentId, serviceId, tail, since, timestamps, maxLines }, client) => {
+      const result = await client.fetchLogs(
+        `/environments/${environmentId}/ws/swarm/services/${serviceId}/logs`,
+        { follow: false, tail, since, timestamps },
+        Math.min(maxLines, MAX_LOG_LINES)
+      );
+
+      return formatLogResult(`service ${serviceId}`, result, timestamps);
     })
   );
 

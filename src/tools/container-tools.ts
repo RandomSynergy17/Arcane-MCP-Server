@@ -6,7 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { moduleRegistrar, type ToolRegistry } from "./registry.js";
-import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT } from "../constants.js";
+import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT, DEFAULT_LOG_TAIL, MAX_LOG_LINES } from "../constants.js";
+import { formatLogResult } from "../utils/log-format.js";
 import type { Container } from "../types/arcane-types.js";
 
 export function registerContainerTools(server: McpServer, registry?: ToolRegistry): void {
@@ -131,6 +132,38 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
       }
 
       return lines.join("\n");
+    })
+  );
+
+  // arcane_container_get_logs
+  register(
+    "arcane_container_get_logs",
+    {
+      title: "Get container logs",
+      description: "Fetch recent log lines of a container. For live following, call repeatedly with 'since' set to the newest timestamp seen — each call then returns only new lines.",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
+      containerId: z.string().describe("Container ID or name"),
+      tail: z.number().optional().default(DEFAULT_LOG_TAIL).describe("Number of most recent lines to return initially"),
+      since: z.string().optional().describe("Only return lines after this time — RFC3339 timestamp (from a previous call) or relative duration like '5m'"),
+      timestamps: z.boolean().optional().default(true).describe("Prefix each line with its timestamp (needed for incremental follow-up via 'since')"),
+      maxLines: z.number().optional().default(200).describe(`Hard cap on returned lines to protect the context window (max ${MAX_LOG_LINES})`),
+    },
+    },
+    toolHandler(async ({ environmentId, containerId, tail, since, timestamps, maxLines }, client) => {
+      const result = await client.fetchLogs(
+        `/environments/${environmentId}/ws/containers/${containerId}/logs`,
+        { follow: false, tail, since, timestamps },
+        Math.min(maxLines, MAX_LOG_LINES)
+      );
+
+      return formatLogResult(`container ${containerId}`, result, timestamps);
     })
   );
 

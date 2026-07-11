@@ -6,7 +6,7 @@
 
 <p align="center">
   Manage your entire Docker infrastructure through natural language.<br/>
-  177 tools. One MCP server. Zero context switching.
+  180 tools. One MCP server. Zero context switching.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
   <a href="#tool-filtering">Tool Filtering</a> &bull;
   <a href="#what-can-it-do">What Can It Do</a> &bull;
   <a href="#the-companion-skill">Companion Skill</a> &bull;
-  <a href="#all-177-tools">All Tools</a> &bull;
+  <a href="#all-180-tools">All Tools</a> &bull;
   <a href="install_arcane_skill-mcp.md">Interactive Installer</a>
 </p>
 
@@ -35,7 +35,7 @@
 
 Arcane MCP Server is a complete AI-powered Docker management bundle — an **MCP server**, a **Claude Code plugin**, and a **companion skill**, all in one package.
 
-- The **MCP server** gives your AI assistant 177 tools to control your [Arcane](https://github.com/getarcaneapp/arcane) Docker platform — containers, images, stacks, Swarm clusters, security scans, and more. Filter that set down to a preset ([see Tool Filtering](#tool-filtering)) if all 177 is more than your context window can spare.
+- The **MCP server** gives your AI assistant 180 tools to control your [Arcane](https://github.com/getarcaneapp/arcane) Docker platform — containers, images, stacks, Swarm clusters, security scans, and more. Filter that set down to a preset ([see Tool Filtering](#tool-filtering)) if all 180 is more than your context window can spare.
 - The **plugin** wraps everything into a single install with guided configuration — no manual env vars or config files.
 - The **companion skill** teaches your AI *how* to use those tools — safe deployment workflows, troubleshooting patterns, and guardrails so it doesn't accidentally nuke your volumes.
 
@@ -71,7 +71,7 @@ Every tool carries **safety annotations** so your AI knows which operations are 
 
 ## Tool Filtering
 
-Exposing all 177 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
+Exposing all 180 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
 
 | Preset | Scope | Tools |
 |---|---|---|
@@ -79,7 +79,7 @@ Exposing all 177 tools to Claude every turn chews through your context window. P
 | `read-only` | every `*_list` / `*_get` / `*_inspect` / `*_stats` across all modules | ~60 |
 | `minimal` | dashboard + container list / get / counts | 5 |
 | `deploy` | projects, gitops, templates, registries, environments, build | ~40 |
-| `full` *(default if never configured)* | everything | 177 |
+| `full` *(default if never configured)* | everything | 180 |
 | `custom` | your own module + per-tool picks | variable |
 
 **Configure interactively** in Claude Code:
@@ -271,14 +271,15 @@ And a Claude Code slash command:
 
 ---
 
-## All 177 Tools
+## All 180 Tools
 
-### Containers (11)
+### Containers (12)
 
 | Tool | Description |
 |------|-------------|
 | `arcane_container_list` | List containers with filtering and pagination |
 | `arcane_container_get` | Get detailed container information |
+| `arcane_container_get_logs` | Fetch container logs (incremental follow via `since`) |
 | `arcane_container_create` | Create a new container |
 | `arcane_container_start` | Start a stopped container |
 | `arcane_container_stop` | Stop a running container |
@@ -289,7 +290,7 @@ And a Claude Code slash command:
 | `arcane_container_delete` | Delete a container |
 | `arcane_container_get_counts` | Get running/stopped counts |
 
-### Docker Swarm (10)
+### Docker Swarm (11)
 
 | Tool | Description |
 |------|-------------|
@@ -299,6 +300,7 @@ And a Claude Code slash command:
 | `arcane_swarm_update_service` | Update service configuration |
 | `arcane_swarm_delete_service` | Delete a swarm service |
 | `arcane_swarm_scale_service` | Scale service replicas |
+| `arcane_swarm_get_service_logs` | Fetch service logs (incremental follow via `since`) |
 | `arcane_swarm_init_cluster` | Initialize a new swarm cluster |
 | `arcane_swarm_join_cluster` | Join an existing cluster |
 | `arcane_swarm_leave_cluster` | Leave the swarm cluster |
@@ -321,12 +323,13 @@ And a Claude Code slash command:
 | `arcane_vulnerability_list_ignored` | List ignored vulnerabilities |
 | `arcane_vulnerability_get_image_options` | List scannable images |
 
-### Projects / Docker Compose (13)
+### Projects / Docker Compose (14)
 
 | Tool | Description |
 |------|-------------|
 | `arcane_project_list` | List Docker Compose projects |
 | `arcane_project_get` | Get project details |
+| `arcane_project_get_logs` | Fetch stack logs (incremental follow via `since`) |
 | `arcane_project_create` | Create from compose YAML |
 | `arcane_project_update` | Update project configuration |
 | `arcane_project_up` | Deploy a project |
@@ -515,7 +518,7 @@ src/
     arcane-client.ts    # HTTP client (retry, SSL, size limits)
   auth/
     auth-manager.ts     # JWT auto-refresh + API key auth
-  tools/                # 26 modules, 177 tools
+  tools/                # 26 modules, 180 tools
     registry.ts         # ToolRegistry — captures RegisteredTool handles, applies filter
     presets.ts          # commonly-used / read-only / minimal / deploy / full / custom
   resources/            # 4 MCP Resources

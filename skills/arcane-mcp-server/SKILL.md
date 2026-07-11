@@ -77,8 +77,9 @@ When something is broken, investigate systematically:
 1. **Dashboard first** — `arcane_dashboard_get`
 2. **Container state** — `arcane_container_list` to find stopped/unhealthy containers
 3. **Container detail** — `arcane_container_get` on the suspect container
-4. **Port conflicts** — `arcane_port_list` if networking issues suspected
-5. **Vulnerability check** — `arcane_vulnerability_get_environment_summary` if security related
+4. **Logs** — `arcane_container_get_logs` (or `arcane_project_get_logs` for a whole stack); to follow live, call again with `since` set to the newest timestamp
+5. **Port conflicts** — `arcane_port_list` if networking issues suspected
+6. **Vulnerability check** — `arcane_vulnerability_get_environment_summary` if security related
 
 ### Cleanup
 
@@ -107,7 +108,7 @@ For Docker Swarm clusters:
 2. **Deploy services** — `arcane_swarm_create_service` with replicas, ports, networks
 3. **Scale** — `arcane_swarm_scale_service` to adjust replica count
 4. **Monitor** — `arcane_swarm_list_services` + `arcane_swarm_get_service` for task status
-5. **Tasks** — `arcane_swarm_get_service` for task status when debugging
+5. **Logs** — `arcane_swarm_get_service_logs` for debugging (incremental via `since`)
 
 ### Update Overview & Auto-Update Management
 

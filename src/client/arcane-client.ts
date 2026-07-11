@@ -12,6 +12,8 @@ import {
   MAX_RESPONSE_SIZE,
   RETRYABLE_STATUS_CODES,
   BACKGROUND_REQUEST_TIMEOUT_MS,
+  LOG_STREAM_IDLE_TIMEOUT_MS,
+  LOG_STREAM_MAX_DURATION_MS,
 } from "../constants.js";
 
 export interface RequestOptions {
@@ -289,6 +291,85 @@ export class ArcaneClient {
 
     const text = await response.text();
     return (text ? JSON.parse(text) : undefined) as T;
+  }
+
+  /**
+   * Fetch log lines from one of Arcane's WebSocket log endpoints.
+   *
+   * Connects with follow=false so the server sends the requested backlog;
+   * collection ends when the server closes, no line arrives for
+   * LOG_STREAM_IDLE_TIMEOUT_MS, the hard duration cap hits, or maxLines
+   * is reached (whichever comes first).
+   */
+  async fetchLogs(
+    path: string,
+    params: Record<string, string | number | boolean | undefined>,
+    maxLines: number
+  ): Promise<{ lines: string[]; truncated: boolean }> {
+    const { default: WebSocket } = await import("ws");
+
+    const url = this.buildUrl(`/api${path}`, params).replace(/^http/, "ws");
+    const authHeaders = await this.authManager.getAuthHeaders();
+
+    return new Promise((resolve, reject) => {
+      const lines: string[] = [];
+      let truncated = false;
+      let settled = false;
+      let idleTimer: NodeJS.Timeout | undefined;
+
+      const ws = new WebSocket(url, {
+        headers: authHeaders,
+        rejectUnauthorized: !this.config.skipSslVerify,
+      });
+
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(idleTimer);
+        clearTimeout(maxTimer);
+        try {
+          ws.terminate();
+        } catch {
+          // already closed
+        }
+        resolve({ lines, truncated });
+      };
+
+      const resetIdle = () => {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(finish, LOG_STREAM_IDLE_TIMEOUT_MS);
+      };
+
+      const maxTimer = setTimeout(finish, LOG_STREAM_MAX_DURATION_MS);
+
+      ws.on("open", resetIdle);
+      ws.on("message", (data: Buffer | string) => {
+        for (const raw of data.toString().split("\n")) {
+          // Strip trailing CR and ANSI color codes (compose/agent logs are colored)
+          const line = raw.replace(/\r$/, "").replace(/\x1b\[[0-9;]*m/g, "");
+          if (!line) continue;
+          if (lines.length >= maxLines) {
+            truncated = true;
+            finish();
+            return;
+          }
+          lines.push(line);
+        }
+        resetIdle();
+      });
+      ws.on("close", finish);
+      ws.on("error", (error: Error) => {
+        if (settled) return;
+        if (lines.length > 0) {
+          finish();
+          return;
+        }
+        settled = true;
+        clearTimeout(idleTimer);
+        clearTimeout(maxTimer);
+        reject(new NetworkError(`Log stream failed: ${error.message}`));
+      });
+    });
   }
 
   /**
