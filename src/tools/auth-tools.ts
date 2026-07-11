@@ -28,13 +28,16 @@ export function registerAuthTools(server: McpServer, registry?: ToolRegistry): v
     },
     toolHandler(async ({ username, password }, client) => {
       const response = await client.post<{
-        token: string;
-        refreshToken: string;
-        expiresAt: string;
-        user: { id: string; username: string; role: string };
+        data: {
+          token: string;
+          refreshToken: string;
+          expiresAt: string;
+          user: { id: string; username: string; isGlobalAdmin?: boolean };
+        };
       }>("/auth/login", { username, password });
 
-      return `Login successful!\nUser: ${response.user.username}\nRole: ${response.user.role}\nToken expires: ${response.expiresAt}`;
+      const login = response.data;
+      return `Login successful!\nUser: ${login.user.username}\nGlobal Admin: ${login.user.isGlobalAdmin ? "Yes" : "No"}\nToken expires: ${login.expiresAt}`;
     })
   );
 
@@ -72,11 +75,11 @@ export function registerAuthTools(server: McpServer, registry?: ToolRegistry): v
     },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
-        data: { id: string; username: string; role: string; createdAt: string };
+        data: { id: string; username: string; displayName?: string; email?: string; isGlobalAdmin?: boolean; createdAt: string };
       }>("/auth/me");
 
       const user = response.data;
-      return `Current User:\n  ID: ${user.id}\n  Username: ${user.username}\n  Role: ${user.role}\n  Created: ${user.createdAt}`;
+      return `Current User:\n  ID: ${user.id}\n  Username: ${user.username}\n  Display Name: ${user.displayName || "N/A"}\n  Global Admin: ${user.isGlobalAdmin ? "Yes" : "No"}\n  Created: ${user.createdAt}`;
     })
   );
 
@@ -98,12 +101,10 @@ export function registerAuthTools(server: McpServer, registry?: ToolRegistry): v
     },
     toolHandler(async ({ refreshToken }, client) => {
       const response = await client.post<{
-        token: string;
-        refreshToken: string;
-        expiresAt: string;
+        data: { token: string; refreshToken: string; expiresAt: string };
       }>("/auth/refresh", { refreshToken });
 
-      return `Token refreshed successfully!\nNew token expires: ${response.expiresAt}`;
+      return `Token refreshed successfully!\nNew token expires: ${response.data.expiresAt}`;
     })
   );
 
@@ -179,14 +180,25 @@ export function registerAuthTools(server: McpServer, registry?: ToolRegistry): v
       },
     },
     toolHandler(async (_params, client) => {
-      const response = await client.get<{
-        clientId: string;
-        redirectUri: string;
-        issuerUrl: string;
-        scopes: string;
-      }>("/oidc/config");
+      try {
+        const response = await client.get<{
+          clientId: string;
+          redirectUri: string;
+          issuerUrl: string;
+          scopes: string;
+        }>("/oidc/config");
 
-      return `OIDC Configuration:\n  Client ID: ${response.clientId}\n  Issuer: ${response.issuerUrl}\n  Redirect URI: ${response.redirectUri}\n  Scopes: ${response.scopes}`;
+        return `OIDC Configuration:\n  Client ID: ${response.clientId}\n  Issuer: ${response.issuerUrl}\n  Redirect URI: ${response.redirectUri}\n  Scopes: ${response.scopes}`;
+      } catch (error) {
+        // Arcane returns a 500 when OIDC is not set up — report that clearly
+        const status = await client
+          .get<{ envConfigured: boolean }>("/oidc/status")
+          .catch(() => undefined);
+        if (status && !status.envConfigured) {
+          return "OIDC is not configured on this instance.";
+        }
+        throw error;
+      }
     })
   );
 

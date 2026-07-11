@@ -262,6 +262,36 @@ export class ArcaneClient {
   }
 
   /**
+   * POST a single file as multipart/form-data (e.g. build workspace uploads).
+   */
+  async postMultipart<T>(
+    path: string,
+    params: Record<string, string | number | boolean | undefined> | undefined,
+    fileName: string,
+    content: string
+  ): Promise<T> {
+    const url = this.buildUrl(`/api${path}`, params);
+    const authHeaders = await this.authManager.getAuthHeaders();
+
+    const form = new FormData();
+    form.append("file", new Blob([content]), fileName);
+
+    // Content-Type (with boundary) is set by fetch from the FormData body
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { Accept: "application/json", ...authHeaders },
+      body: form,
+    });
+
+    if (!response.ok) {
+      throw await parseApiError(response, path);
+    }
+
+    const text = await response.text();
+    return (text ? JSON.parse(text) : undefined) as T;
+  }
+
+  /**
    * Fire a long-running POST without awaiting its completion.
    * Uses a generous timeout so the built-in timeout retry never re-triggers
    * the operation on the server (e.g. duplicate image-update checks).

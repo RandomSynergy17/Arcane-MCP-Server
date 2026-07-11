@@ -44,9 +44,9 @@ export function registerPortTools(server: McpServer, registry?: ToolRegistry): v
 
       const lines = [`Found ${response.pagination.totalItems} port mappings:\n`];
       for (const port of response.data) {
-        const binding = port.publicPort
-          ? `${port.ip || "0.0.0.0"}:${port.publicPort} -> ${port.privatePort}/${port.protocol}`
-          : `${port.privatePort}/${port.protocol} (not published)`;
+        const binding = port.isPublished && port.hostPort
+          ? `${port.hostIp || "0.0.0.0"}:${port.hostPort} -> ${port.containerPort}/${port.protocol}`
+          : `${port.containerPort}/${port.protocol} (not published)`;
         lines.push(`${port.containerName}: ${binding}`);
       }
 

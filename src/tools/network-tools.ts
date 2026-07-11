@@ -49,8 +49,9 @@ export function registerNetworkTools(server: McpServer, registry?: ToolRegistry)
         lines.push(`    ID: ${net.id.substring(0, DOCKER_SHORT_ID_LENGTH)}`);
         lines.push(`    Driver: ${net.driver}`);
         lines.push(`    Scope: ${net.scope}`);
-        if (net.ipam?.config?.[0]?.subnet) {
-          lines.push(`    Subnet: ${net.ipam.config[0].subnet}`);
+        lines.push(`    In Use: ${net.inUse ? "Yes" : "No"}`);
+        if (net.isDefault) {
+          lines.push(`    Default: Yes`);
         }
         lines.push("");
       }
@@ -97,9 +98,9 @@ export function registerNetworkTools(server: McpServer, registry?: ToolRegistry)
         if (config.gateway) lines.push(`  Gateway: ${config.gateway}`);
       }
 
-      if (net.containers && Object.keys(net.containers).length > 0) {
+      if (net.containersList && net.containersList.length > 0) {
         lines.push("  Connected Containers:");
-        for (const [_id, container] of Object.entries(net.containers)) {
+        for (const container of net.containersList) {
           lines.push(`    - ${container.name} (${container.ipv4Address || "no IP"})`);
         }
       }
@@ -132,21 +133,25 @@ export function registerNetworkTools(server: McpServer, registry?: ToolRegistry)
     },
     },
     toolHandler(async ({ environmentId, name, driver, internal, attachable, subnet, gateway, ipRange }, client) => {
-      const body: Record<string, unknown> = { name, driver, internal, attachable };
+      const options: Record<string, unknown> = { driver, internal, attachable };
 
       if (subnet || gateway || ipRange) {
-        body.ipam = {
+        options.ipam = {
           driver: "default",
           config: [{ subnet, gateway, ipRange }],
         };
       }
 
-      const response = await client.post<{ data: { id: string; name: string } }>(
+      const response = await client.post<{ data: { id: string; warning?: string } }>(
         `/environments/${environmentId}/networks`,
-        body
+        { name, options }
       );
 
-      return `Network created successfully!\n  Name: ${response.data.name}\n  ID: ${response.data.id}`;
+      const lines = [`Network created successfully!`, `  Name: ${name}`, `  ID: ${response.data.id}`];
+      if (response.data.warning) {
+        lines.push(`  Warning: ${response.data.warning}`);
+      }
+      return lines.join("\n");
     })
   );
 
@@ -190,13 +195,13 @@ export function registerNetworkTools(server: McpServer, registry?: ToolRegistry)
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.post<{ networksDeleted?: string[] }>(
-        `/environments/${environmentId}/networks/prune`
-      );
+      const response = await client.post<{
+        data: { networksDeleted?: string[] | null; spaceReclaimed?: number };
+      }>(`/environments/${environmentId}/networks/prune`);
 
-      const deleted = response.networksDeleted?.length || 0;
+      const deleted = response.data.networksDeleted?.length || 0;
       return deleted > 0
-        ? `Pruned ${deleted} unused networks: ${response.networksDeleted?.join(", ")}`
+        ? `Pruned ${deleted} unused networks: ${response.data.networksDeleted?.join(", ")}`
         : "No unused networks to prune.";
     })
   );
@@ -219,13 +224,10 @@ export function registerNetworkTools(server: McpServer, registry?: ToolRegistry)
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
-        total: number;
-        bridge: number;
-        overlay: number;
-        other: number;
+        data: { total: number; inuse: number; unused: number };
       }>(`/environments/${environmentId}/networks/counts`);
 
-      return `Network Counts:\n  Total: ${response.total}\n  Bridge: ${response.bridge || 0}\n  Overlay: ${response.overlay || 0}\n  Other: ${response.other || 0}`;
+      return `Network Counts:\n  Total: ${response.data.total}\n  In Use: ${response.data.inuse || 0}\n  Unused: ${response.data.unused || 0}`;
     })
   );
 

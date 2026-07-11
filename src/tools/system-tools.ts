@@ -284,16 +284,18 @@ export function registerSystemTools(server: McpServer, registry?: ToolRegistry):
     },
     toolHandler(async (_params, client) => {
       const response = await client.get<{
-        version: string;
-        buildTime?: string;
-        gitCommit?: string;
+        currentVersion: string;
+        newestVersion?: string;
+        updateAvailable?: boolean;
+        releaseUrl?: string;
       }>("/version");
 
-      const lines = [
-        `Arcane Version: ${response.version}`,
-        `  Build Time: ${response.buildTime || "unknown"}`,
-        `  Git Commit: ${response.gitCommit || "unknown"}`,
-      ];
+      const lines = [`Arcane Version: ${response.currentVersion}`];
+      if (response.updateAvailable && response.newestVersion) {
+        lines.push(`  Update available: ${response.newestVersion}${response.releaseUrl ? ` (${response.releaseUrl})` : ""}`);
+      } else {
+        lines.push("  Up to date.");
+      }
 
       return lines.join("\n");
     })

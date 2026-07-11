@@ -41,9 +41,9 @@ export function registerWebhookTools(server: McpServer, registry?: ToolRegistry)
         const status = wh.enabled ? "[ENABLED]" : "[DISABLED]";
         lines.push(`${status} ${wh.name}`);
         lines.push(`    ID: ${wh.id}`);
-        if (wh.events && wh.events.length > 0) {
-          lines.push(`    Events: ${wh.events.join(", ")}`);
-        }
+        lines.push(`    Action: ${wh.actionType || "unknown"}`);
+        const target = wh.targetName || wh.targetId;
+        lines.push(`    Target: ${wh.targetType || "unknown"}${target ? ` (${target})` : ""}`);
         lines.push(`    Last Triggered: ${wh.lastTriggeredAt || "Never"}`);
         lines.push("");
       }
@@ -67,27 +67,42 @@ export function registerWebhookTools(server: McpServer, registry?: ToolRegistry)
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       name: z.string().describe("Webhook name"),
-      events: z.array(z.string()).optional().describe("Event types to trigger on"),
-      enabled: z.boolean().optional().default(true).describe("Enable the webhook"),
+      actionType: z
+        .enum(["update", "start", "stop", "restart", "redeploy", "up", "down", "run", "sync"])
+        .describe(
+          "Action to run when triggered. Supported values depend on targetType (e.g. start/stop/restart for containers, up/down/redeploy for projects, run for updater, sync for gitops)"
+        ),
+      targetType: z
+        .enum(["container", "project", "updater", "gitops"])
+        .describe("Resource type this webhook targets: 'container', 'project', 'updater', or 'gitops'"),
+      targetId: z
+        .string()
+        .describe("Container ID, project ID, or GitOps sync ID to target. Use an empty string for 'updater' webhooks"),
     },
     },
-    toolHandler(async ({ environmentId, name, events, enabled }, client) => {
-      const response = await client.post<{ data: Webhook }>(
-        `/environments/${environmentId}/webhooks`,
-        { name, events, enabled }
-      );
+    toolHandler(async ({ environmentId, name, actionType, targetType, targetId }, client) => {
+      const response = await client.post<{
+        data: {
+          id: string;
+          name: string;
+          actionType: string;
+          targetType: string;
+          targetId: string;
+          token: string;
+          createdAt: string;
+        };
+      }>(`/environments/${environmentId}/webhooks`, { name, actionType, targetType, targetId });
 
       const wh = response.data;
       const lines = [
         `Webhook created: ${wh.name}`,
         `  ID: ${wh.id}`,
+        `  Action: ${wh.actionType}`,
+        `  Target: ${wh.targetType}${wh.targetId ? ` (${wh.targetId})` : ""}`,
+        `  Token: ${wh.token}`,
+        "",
+        "⚠️ Save this token now - it won't be shown again!",
       ];
-      if (wh.token) {
-        lines.push(`  Token: ${wh.token}`);
-      }
-      if (wh.url) {
-        lines.push(`  URL: ${wh.url}`);
-      }
 
       return lines.join("\n");
     })
@@ -98,7 +113,7 @@ export function registerWebhookTools(server: McpServer, registry?: ToolRegistry)
     "arcane_webhook_update",
     {
       title: "Update webhook",
-      description: "Update a webhook configuration",
+      description: "Enable or disable a webhook",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -108,19 +123,12 @@ export function registerWebhookTools(server: McpServer, registry?: ToolRegistry)
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       webhookId: z.string().describe("Webhook ID"),
-      name: z.string().optional().describe("New name"),
-      events: z.array(z.string()).optional().describe("Updated event types"),
-      enabled: z.boolean().optional().describe("Enable/disable the webhook"),
+      enabled: z.boolean().describe("Enable (true) or disable (false) the webhook"),
     },
     },
-    toolHandler(async ({ environmentId, webhookId, name, events, enabled }, client) => {
-      const body: Record<string, unknown> = {};
-      if (name) body.name = name;
-      if (events) body.events = events;
-      if (enabled !== undefined) body.enabled = enabled;
-
-      await client.patch(`/environments/${environmentId}/webhooks/${webhookId}`, body);
-      return `Webhook ${webhookId} updated.`;
+    toolHandler(async ({ environmentId, webhookId, enabled }, client) => {
+      await client.patch(`/environments/${environmentId}/webhooks/${webhookId}`, { enabled });
+      return `Webhook ${webhookId} ${enabled ? "enabled" : "disabled"}.`;
     })
   );
 

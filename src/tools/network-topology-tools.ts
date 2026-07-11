@@ -42,7 +42,7 @@ export function registerNetworkTopologyTools(server: McpServer, registry?: ToolR
       ];
 
       for (const node of topology.nodes) {
-        const status = node.status ? ` [${node.status.toUpperCase()}]` : "";
+        const status = node.metadata?.status ? ` [${node.metadata.status.toUpperCase()}]` : "";
         lines.push(`  [${node.type.toUpperCase()}] ${node.name}${status} (${node.id})`);
       }
 
@@ -50,8 +50,8 @@ export function registerNetworkTopologyTools(server: McpServer, registry?: ToolR
         lines.push("");
         lines.push("Connections:");
         for (const edge of topology.edges) {
-          const type = edge.type ? ` (${edge.type})` : "";
-          lines.push(`  ${edge.source} -> ${edge.target}${type}`);
+          const ip = edge.ipv4Address ? ` (${edge.ipv4Address})` : "";
+          lines.push(`  ${edge.source} -> ${edge.target}${ip}`);
         }
       }
 

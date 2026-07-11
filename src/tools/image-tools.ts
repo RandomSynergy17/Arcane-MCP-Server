@@ -127,15 +127,12 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       environmentId: z.string().describe("Environment ID"),
       imageName: z.string().describe("Image name (e.g., nginx, library/ubuntu, ghcr.io/owner/repo)"),
       tag: z.string().describe("Image tag (e.g., latest, v1.0, alpine) — required"),
-      registryId: z.string().optional().describe("Container registry ID for private images (credentials will be fetched automatically)"),
     },
     },
-    toolHandler(async ({ environmentId, imageName, tag, registryId }, client) => {
-      const body: Record<string, unknown> = { imageName, tag };
-      if (registryId) body.registryId = registryId;
-
+    toolHandler(async ({ environmentId, imageName, tag }, client) => {
+      // Credentials of registries configured in Arcane are applied automatically by the server
       const displayName = tag ? `${imageName}:${tag}` : imageName;
-      await client.post(`/environments/${environmentId}/images/pull`, body);
+      await client.post(`/environments/${environmentId}/images/pull`, { imageName, tag });
       return `Image ${displayName} pulled successfully.`;
     })
   );
@@ -156,12 +153,11 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       environmentId: z.string().describe("Environment ID"),
       imageId: z.string().describe("Image ID or name:tag to delete (names are resolved via the image list)"),
       force: z.boolean().optional().default(false).describe("Force removal even if in use"),
-      pruneChildren: z.boolean().optional().default(false).describe("Also remove child images"),
     },
     },
-    toolHandler(async ({ environmentId, imageId, force, pruneChildren }, client) => {
+    toolHandler(async ({ environmentId, imageId, force }, client) => {
       const resolvedId = await resolveImageId(client, environmentId, imageId);
-      await client.delete(`/environments/${environmentId}/images/${resolvedId}`, { force, pruneChildren });
+      await client.delete(`/environments/${environmentId}/images/${resolvedId}`, { force });
       return `Image ${imageId} removed successfully.`;
     })
   );

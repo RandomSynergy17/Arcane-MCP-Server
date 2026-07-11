@@ -47,7 +47,10 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
       const lines = [`Found ${response.pagination.totalItems} containers:\n`];
       for (const container of response.data) {
         const status = container.state === "running" ? "[RUNNING]" : "[STOPPED]";
-        lines.push(`${status} ${container.name}`);
+        // The list returns Docker-style `names` (leading slash), not `name`
+        const name = container.names?.[0]?.replace(/^\//, "") || container.id.substring(0, DOCKER_SHORT_ID_LENGTH);
+        const updateFlag = container.updateInfo?.hasUpdate ? " [UPDATE AVAILABLE]" : "";
+        lines.push(`${status}${updateFlag} ${name}`);
         lines.push(`    ID: ${container.id.substring(0, DOCKER_SHORT_ID_LENGTH)}`);
         lines.push(`    Image: ${container.image}`);
         lines.push(`    Status: ${container.status}`);
@@ -83,19 +86,32 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
     },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
-      const response = await client.get<{ data: Container & { config?: Record<string, unknown> } }>(
-        `/environments/${environmentId}/containers/${containerId}`
-      );
+      // Unlike the list, the detail endpoint has `name` (no `names`) and `state` is an object
+      const response = await client.get<{
+        data: {
+          id: string;
+          name: string;
+          image: string;
+          created: string;
+          state?: { status?: string; running?: boolean; exitCode?: number; startedAt?: string; health?: { status?: string } };
+          ports?: Array<{ privatePort: number; publicPort?: number; type: string }>;
+          labels?: Record<string, string>;
+        };
+      }>(`/environments/${environmentId}/containers/${containerId}`);
 
       const c = response.data;
+      const stateStatus = c.state?.status || (c.state?.running ? "running" : "unknown");
+      const health = c.state?.health?.status ? ` (${c.state.health.status})` : "";
       const lines = [
-        `Container: ${c.name}`,
+        `Container: ${c.name?.replace(/^\//, "")}`,
         `  ID: ${c.id}`,
         `  Image: ${c.image}`,
-        `  State: ${c.state}`,
-        `  Status: ${c.status}`,
+        `  State: ${stateStatus}${health}`,
         `  Created: ${c.created}`,
       ];
+      if (c.state?.running === false && c.state?.exitCode !== undefined) {
+        lines.push(`  Exit Code: ${c.state.exitCode}`);
+      }
 
       if (c.ports && c.ports.length > 0) {
         lines.push("  Ports:");
@@ -343,13 +359,15 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
     },
     toolHandler(async ({ environmentId, includeInternal }, client) => {
       const response = await client.get<{
-        running: number;
-        stopped: number;
-        paused: number;
-        total: number;
+        data: {
+          totalContainers: number;
+          runningContainers: number;
+          stoppedContainers: number;
+        };
       }>(`/environments/${environmentId}/containers/counts`, { includeInternal });
 
-      return `Container Counts:\n  Total: ${response.total}\n  Running: ${response.running}\n  Stopped: ${response.stopped}\n  Paused: ${response.paused || 0}`;
+      const c = response.data;
+      return `Container Counts:\n  Total: ${c.totalContainers}\n  Running: ${c.runningContainers}\n  Stopped: ${c.stoppedContainers}`;
     })
   );
 

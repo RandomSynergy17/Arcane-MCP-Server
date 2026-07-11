@@ -83,12 +83,12 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
 
       const lines = [`Found ${response.pagination.totalItems} builds:\n`];
       for (const build of response.data) {
-        lines.push(`[${build.status.toUpperCase()}] ${build.tag || build.id}`);
+        lines.push(`[${build.status.toUpperCase()}] ${build.tags?.join(", ") || build.id}`);
         lines.push(`    Build ID: ${build.id}`);
         if (build.provider) lines.push(`    Provider: ${build.provider}`);
-        if (build.startedAt) lines.push(`    Started: ${build.startedAt}`);
+        if (build.createdAt) lines.push(`    Created: ${build.createdAt}`);
         if (build.completedAt) lines.push(`    Completed: ${build.completedAt}`);
-        if (build.error) lines.push(`    Error: ${build.error}`);
+        if (build.errorMessage) lines.push(`    Error: ${build.errorMessage}`);
         lines.push("");
       }
 
@@ -123,23 +123,22 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
         `Build Details:`,
         `  Build ID: ${build.id}`,
         `  Status: ${build.status}`,
-        `  Tag: ${build.tag || "N/A"}`,
-        `  Platform: ${build.platform || "default"}`,
+        `  Tags: ${build.tags?.join(", ") || "N/A"}`,
+        `  Platforms: ${build.platforms?.join(", ") || "default"}`,
       ];
-      if (build.gitUrl) lines.push(`  Git URL: ${build.gitUrl}`);
-      if (build.startedAt) lines.push(`  Started: ${build.startedAt}`);
+      if (build.createdAt) lines.push(`  Created: ${build.createdAt}`);
       if (build.completedAt) lines.push(`  Completed: ${build.completedAt}`);
-      if (build.error) lines.push(`  Error: ${build.error}`);
+      if (build.errorMessage) lines.push(`  Error: ${build.errorMessage}`);
       if (build.buildArgs && Object.keys(build.buildArgs).length > 0) {
         lines.push(`  Build Args:`);
         for (const [key, value] of Object.entries(build.buildArgs)) {
           lines.push(`    ${key}=${value}`);
         }
       }
-      if (build.logs) {
+      if (build.output) {
         lines.push("");
-        lines.push("Build Logs:");
-        lines.push(build.logs);
+        lines.push(`Build Output${build.outputTruncated ? " (truncated)" : ""}:`);
+        lines.push(build.output);
       }
 
       return lines.join("\n");
@@ -206,12 +205,12 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, path }, client) => {
       validatePath(path);
 
-      const response = await client.get<{ data: { content: string; path: string } }>(
+      const response = await client.get<{ data: { content: string; mimeType?: string } }>(
         `/environments/${environmentId}/builds/browse/content`,
         { path }
       );
 
-      return `File: ${response.data.path}\n\n${response.data.content}`;
+      return `File: ${path}\n\n${response.data.content}`;
     })
   );
 
@@ -236,9 +235,13 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, path, content }, client) => {
       validatePath(path);
 
-      await client.post(
+      // The API expects multipart/form-data with the destination path as a query param
+      const fileName = path.split("/").pop() || "file";
+      await client.postMultipart(
         `/environments/${environmentId}/builds/browse/upload`,
-        { path, content }
+        { path },
+        fileName,
+        content
       );
 
       return `File uploaded to workspace: ${path}`;

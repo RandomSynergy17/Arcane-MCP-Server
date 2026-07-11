@@ -13,6 +13,7 @@ npm test               # vitest (50 tests)
 npm run dev            # stdio mode
 npm run dev:tcp        # HTTP mode
 npm run update-api-spec  # Refresh OpenAPI spec from live instance
+ARCANE_BASE_URL=… ARCANE_API_KEY=… node scripts/live-smoke.mjs [envId]  # Run every read-only tool against a live instance; flags undefined/[object Object]/NaN in output
 ```
 
 ## Architecture

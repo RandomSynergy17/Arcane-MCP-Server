@@ -77,9 +77,12 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
         `  ID: ${env.id}`,
         `  Status: ${env.status || "unknown"}`,
         `  API URL: ${env.apiUrl || "N/A"}`,
-        `  Created: ${env.createdAt || "N/A"}`,
-        `  Updated: ${env.updatedAt || "N/A"}`,
+        `  Enabled: ${env.enabled ? "yes" : "no"}`,
+        `  Connected: ${env.connected ? "yes" : "no"}`,
+        `  Edge Agent: ${env.isEdge ? "yes" : "no"}`,
       ];
+      if (env.connectedAt) lines.push(`  Connected At: ${env.connectedAt}`);
+      if (env.lastSeen) lines.push(`  Last Seen: ${env.lastSeen}`);
 
       return lines.join("\n");
     })
@@ -100,14 +103,16 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
       inputSchema: {
       name: z.string().describe("Name for the environment"),
       apiUrl: z.string().optional().describe("API URL for the Docker host"),
-      tlsEnabled: z.boolean().optional().default(false).describe("Enable TLS for Docker API"),
+      isEdge: z.boolean().optional().describe("Register as an edge agent environment"),
+      accessToken: z.string().optional().describe("Access token for connecting to the environment's agent"),
     },
     },
-    toolHandler(async ({ name, apiUrl, tlsEnabled }, client) => {
+    toolHandler(async ({ name, apiUrl, isEdge, accessToken }, client) => {
       const response = await client.post<{ data: Environment & { apiKey?: string } }>("/environments", {
         name,
         apiUrl,
-        tlsEnabled,
+        isEdge,
+        accessToken,
       });
 
       const env = response.data;
@@ -187,8 +192,11 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.post<{ message: string }>(`/environments/${environmentId}/test`);
-      return `Connection test: ${response.message || "Success"}`;
+      const response = await client.post<{ data: { status: string; message?: string } }>(
+        `/environments/${environmentId}/test`
+      );
+      const { status, message } = response.data;
+      return `Connection test: ${status}${message ? ` - ${message}` : ""}`;
     })
   );
 
@@ -210,12 +218,12 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId, rotate }, client) => {
-      const response = await client.post<{ data: { apiKey: string; expiresAt: string } }>(
+      const response = await client.post<{ data: { token: string } }>(
         `/environments/${environmentId}/agent/pair`,
         { rotate }
       );
 
-      return `Agent pairing token generated:\n  Token: ${response.data.apiKey}\n  Expires: ${response.data.expiresAt}`;
+      return `Agent pairing token generated:\n  Token: ${response.data.token}`;
     })
   );
 
@@ -236,11 +244,11 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{ data: { version: string; buildTime?: string } }>(
+      const response = await client.get<{ data: { currentVersion: string; buildTime?: string } }>(
         `/environments/${environmentId}/version`
       );
 
-      return `Agent Version: ${response.data.version}${response.data.buildTime ? `\nBuild Time: ${response.data.buildTime}` : ""}`;
+      return `Agent Version: ${response.data.currentVersion}${response.data.buildTime ? `\nBuild Time: ${response.data.buildTime}` : ""}`;
     })
   );
 

@@ -51,13 +51,13 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
         const updateFlag = project.updateInfo?.hasUpdate ? " [UPDATES AVAILABLE]" : "";
         lines.push(`${projectStatus}${updateFlag} ${project.name}`);
         lines.push(`    ID: ${project.id}`);
-        lines.push(`    Services: ${project.services?.length || 0}`);
-        if (project.services && project.services.length > 0) {
-          for (const svc of project.services.slice(0, MAX_DISPLAY_SERVICES)) {
-            lines.push(`      - ${svc.name}: ${svc.status}`);
+        lines.push(`    Services: ${project.serviceCount ?? project.runtimeServices?.length ?? 0}`);
+        if (project.runtimeServices && project.runtimeServices.length > 0) {
+          for (const svc of project.runtimeServices.slice(0, MAX_DISPLAY_SERVICES)) {
+            lines.push(`      - ${svc.name}: ${svc.status}${svc.health ? ` (${svc.health})` : ""}`);
           }
-          if (project.services.length > MAX_DISPLAY_SERVICES) {
-            lines.push(`      ... and ${project.services.length - MAX_DISPLAY_SERVICES} more`);
+          if (project.runtimeServices.length > MAX_DISPLAY_SERVICES) {
+            lines.push(`      ... and ${project.runtimeServices.length - MAX_DISPLAY_SERVICES} more`);
           }
         }
         const u = project.updateInfo;
@@ -116,8 +116,8 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
       }
 
       lines.push("", "Services:");
-      for (const svc of proj.services || []) {
-        lines.push(`  - ${svc.name}: ${svc.status} (${svc.containerCount || 0} containers)`);
+      for (const svc of proj.runtimeServices || []) {
+        lines.push(`  - ${svc.name}: ${svc.status}${svc.health ? ` (${svc.health})` : ""}${svc.containerName ? ` [${svc.containerName}]` : ""}`);
       }
 
       return lines.join("\n");
@@ -141,13 +141,12 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
       name: z.string().describe("Project name"),
       composeContent: z.string().describe("Docker Compose YAML content"),
       envContent: z.string().optional().describe("Environment variables content (.env format)"),
-      directory: z.string().optional().describe("Project directory path (supports nested and symlinked directories)"),
     },
     },
-    toolHandler(async ({ environmentId, name, composeContent, envContent, directory }, client) => {
+    toolHandler(async ({ environmentId, name, composeContent, envContent }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         `/environments/${environmentId}/projects`,
-        { name, composeContent, envContent, directory }
+        { name, composeContent, envContent }
       );
 
       return `Project created successfully!\n  Name: ${response.data.name}\n  ID: ${response.data.id}`;
@@ -377,13 +376,16 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
-        total: number;
-        running: number;
-        stopped: number;
-        partial: number;
+        data: {
+          totalProjects: number;
+          runningProjects: number;
+          stoppedProjects: number;
+          archivedProjects?: number;
+        };
       }>(`/environments/${environmentId}/projects/counts`);
 
-      return `Project Counts:\n  Total: ${response.total}\n  Running: ${response.running || 0}\n  Stopped: ${response.stopped || 0}\n  Partial: ${response.partial || 0}`;
+      const c = response.data;
+      return `Project Counts:\n  Total: ${c.totalProjects}\n  Running: ${c.runningProjects || 0}\n  Stopped: ${c.stoppedProjects || 0}\n  Archived: ${c.archivedProjects || 0}`;
     })
   );
 

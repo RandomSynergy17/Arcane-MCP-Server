@@ -57,7 +57,7 @@ export function registerSettingsTools(server: McpServer, registry?: ToolRegistry
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      settings: z.record(z.unknown()).describe("Settings to update (key-value pairs)"),
+      settings: z.record(z.string()).describe("Settings to update (key-value pairs; all values must be strings, e.g. \"true\", \"30\")"),
     },
     },
     toolHandler(async ({ environmentId, settings }, client) => {
@@ -114,17 +114,17 @@ export function registerSettingsTools(server: McpServer, registry?: ToolRegistry
       },
     },
     toolHandler(async (_params, client) => {
-      const response = await client.get<{
-        data: Array<{ id: string; name: string; description?: string }>;
-      }>("/customize/categories");
+      const categories = await client.get<
+        Array<{ id: string; title: string; description?: string }>
+      >("/customize/categories");
 
-      if (!response.data || response.data.length === 0) {
+      if (!categories || categories.length === 0) {
         return "No settings categories found.";
       }
 
       const lines = ["Settings Categories:\n"];
-      for (const cat of response.data) {
-        lines.push(`${cat.name} (${cat.id})`);
+      for (const cat of categories) {
+        lines.push(`${cat.title} (${cat.id})`);
         if (cat.description) {
           lines.push(`    ${cat.description}`);
         }
@@ -152,24 +152,35 @@ export function registerSettingsTools(server: McpServer, registry?: ToolRegistry
     },
     toolHandler(async ({ query }, client) => {
       const response = await client.post<{
-        data: Array<{
-          category: string;
-          key: string;
-          value: unknown;
+        query: string;
+        count: number;
+        results: Array<{
+          id: string;
+          title: string;
           description?: string;
-        }>;
+          matchingSettings?: Array<{
+            key: string;
+            label: string;
+            type: string;
+            description?: string;
+          }> | null;
+        }> | null;
       }>("/customize/search", { query });
 
-      if (!response.data || response.data.length === 0) {
+      if (!response.results || response.results.length === 0) {
         return `No settings matching "${query}" found.`;
       }
 
-      const lines = [`Search results for "${query}":\n`];
-      for (const result of response.data) {
-        lines.push(`${result.category}/${result.key}`);
-        lines.push(`    Value: ${JSON.stringify(result.value)}`);
-        if (result.description) {
-          lines.push(`    Description: ${result.description}`);
+      const lines = [`Search results for "${query}" (${response.count} matches):\n`];
+      for (const result of response.results) {
+        lines.push(`${result.title}`);
+        if (result.matchingSettings && result.matchingSettings.length > 0) {
+          for (const setting of result.matchingSettings) {
+            lines.push(`    ${setting.key}: ${setting.label}`);
+            if (setting.description) {
+              lines.push(`        ${setting.description}`);
+            }
+          }
         }
         lines.push("");
       }
