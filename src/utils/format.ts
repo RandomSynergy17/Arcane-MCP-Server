@@ -56,7 +56,7 @@ export function formatSizeGB(bytes: number): string {
  * Example: "2026-07-11T19:03:39.000Z"
  */
 export function formatUnixTimestamp(seconds: number | undefined | null): string {
-  if (!seconds) return "unknown";
+  if (!seconds || !Number.isFinite(seconds)) return "unknown";
   return new Date(seconds * 1000).toISOString();
 }
 

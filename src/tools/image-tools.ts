@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import { formatSize, formatSizeMB, formatSizeGB, formatUnixTimestamp } from "../utils/format.js";
+import { resolveImageId } from "../utils/image-resolver.js";
 import { DOCKER_DIGEST_PREFIX_LENGTH, DOCKER_SHORT_ID_LENGTH } from "../constants.js";
 import type { Image } from "../types/arcane-types.js";
 
@@ -71,13 +72,23 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      imageId: z.string().describe("Image ID or tag"),
+      imageId: z.string().describe("Image ID or name:tag (names are resolved via the image list)"),
     },
     },
     toolHandler(async ({ environmentId, imageId }, client) => {
-      const response = await client.get<{ data: Image & { config?: Record<string, unknown> } }>(
-        `/environments/${environmentId}/images/${imageId}`
-      );
+      const resolvedId = await resolveImageId(client, environmentId, imageId);
+      // Unlike the list endpoint, the detail endpoint returns `created` as an ISO string
+      const response = await client.get<{
+        data: {
+          id: string;
+          repoTags?: string[] | null;
+          repoDigests?: string[] | null;
+          created: string;
+          size: number;
+          architecture?: string;
+          os?: string;
+        };
+      }>(`/environments/${environmentId}/images/${resolvedId}`);
 
       const img = response.data;
 
@@ -86,9 +97,12 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
         `  ID: ${img.id}`,
         `  Tags: ${img.repoTags?.join(", ") || "none"}`,
         `  Size: ${formatSizeMB(img.size)}`,
-        `  Created: ${formatUnixTimestamp(img.created)}`,
+        `  Created: ${img.created || "unknown"}`,
       ];
 
+      if (img.architecture || img.os) {
+        lines.push(`  Platform: ${[img.os, img.architecture].filter(Boolean).join("/")}`);
+      }
       if (img.repoDigests && img.repoDigests.length > 0) {
         lines.push(`  Digests: ${img.repoDigests[0]}`);
       }
@@ -140,13 +154,14 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      imageId: z.string().describe("Image ID or tag to delete"),
+      imageId: z.string().describe("Image ID or name:tag to delete (names are resolved via the image list)"),
       force: z.boolean().optional().default(false).describe("Force removal even if in use"),
       pruneChildren: z.boolean().optional().default(false).describe("Also remove child images"),
     },
     },
     toolHandler(async ({ environmentId, imageId, force, pruneChildren }, client) => {
-      await client.delete(`/environments/${environmentId}/images/${imageId}`, { force, pruneChildren });
+      const resolvedId = await resolveImageId(client, environmentId, imageId);
+      await client.delete(`/environments/${environmentId}/images/${resolvedId}`, { force, pruneChildren });
       return `Image ${imageId} removed successfully.`;
     })
   );

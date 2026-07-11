@@ -24,6 +24,8 @@ Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec ref
 - Paginated list tools printed `Found undefined …`: v2 renamed `pagination.total` to `pagination.totalItems` — updated all 16 list modules.
 - Image `created` is a Unix timestamp in v2 and was printed raw — now formatted as an ISO date.
 - `arcane_image_update_check_all` / `arcane_image_check_updates_all` blocked until every image was checked, which hit the MCP request timeout — and the client's timeout retry then started duplicate server-side checks. Both tools now fire the check in the background (via a new no-retry `postInBackground` client helper) and return immediately, pointing at `arcane_activity_list` / the update summary for results.
+- Image tools 404'd when given a name like `amir20/dozzle:latest` — the v2 API only accepts image IDs in paths (a `/` in the name breaks the route). Tools taking an `imageId` (`arcane_image_get`, `arcane_image_delete`, vulnerability scan/result/summary/list) now resolve names to IDs via the image list.
+- `arcane_image_get` crashed with `Invalid time value`: the detail endpoint returns `created` as an ISO string (the list returns a Unix timestamp) — each is now formatted correctly.
 
 ### Changed (breaking, follows Arcane v2 API)
 - **Notifications** rebuilt on the provider model (`discord`, `email`, `telegram`, `signal`, `slack`, `ntfy`, `pushover`, `matrix`, `generic`): `get_settings` lists providers (or one via `provider`), `update_settings` takes `provider` + `enabled` + `config`, `test` now requires a `provider`.
