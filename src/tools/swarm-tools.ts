@@ -35,14 +35,14 @@ export function registerSwarmTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: SwarmService[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/swarm/services`, { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No swarm services found.";
       }
 
-      const lines = [`Found ${response.pagination.total} swarm services:\n`];
+      const lines = [`Found ${response.pagination.totalItems} swarm services:\n`];
       for (const svc of response.data) {
         lines.push(`${svc.name}`);
         lines.push(`    ID: ${svc.id}`);

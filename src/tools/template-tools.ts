@@ -32,14 +32,14 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
     toolHandler(async ({ search, category, start, limit }, client) => {
       const response = await client.get<{
         data: Template[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/templates", { search, category, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No templates found.";
       }
 
-      const lines = [`Found ${response.pagination.total} templates:\n`];
+      const lines = [`Found ${response.pagination.totalItems} templates:\n`];
       for (const tmpl of response.data) {
         lines.push(`${tmpl.name}`);
         lines.push(`    ID: ${tmpl.id}`);

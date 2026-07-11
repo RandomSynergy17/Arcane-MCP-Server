@@ -31,14 +31,14 @@ export function registerUserTools(server: McpServer, registry?: ToolRegistry): v
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
         data: User[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/users", { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No users found.";
       }
 
-      const lines = [`Found ${response.pagination.total} users:\n`];
+      const lines = [`Found ${response.pagination.totalItems} users:\n`];
       for (const user of response.data) {
         lines.push(`${user.username}${user.displayName ? ` (${user.displayName})` : ""}`);
         lines.push(`    ID: ${user.id}`);

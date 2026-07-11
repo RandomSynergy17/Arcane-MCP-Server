@@ -36,14 +36,14 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     toolHandler(async ({ environmentId, search, start, limit }, client) => {
       const response = await client.get<{
         data: GitOpsSync[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/gitops-syncs`, { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No GitOps syncs configured.";
       }
 
-      const lines = [`Found ${response.pagination.total} GitOps syncs:\n`];
+      const lines = [`Found ${response.pagination.totalItems} GitOps syncs:\n`];
       for (const sync of response.data) {
         const status = sync.lastSyncStatus || "never synced";
         lines.push(`${sync.name}`);
@@ -278,14 +278,14 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
         data: GitRepository[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/customize/git-repositories", { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No Git repositories configured.";
       }
 
-      const lines = [`Found ${response.pagination.total} repositories:\n`];
+      const lines = [`Found ${response.pagination.totalItems} repositories:\n`];
       for (const repo of response.data) {
         lines.push(`${repo.name}`);
         lines.push(`    ID: ${repo.id}`);

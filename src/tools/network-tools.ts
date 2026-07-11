@@ -36,14 +36,14 @@ export function registerNetworkTools(server: McpServer, registry?: ToolRegistry)
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Network[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/networks`, { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No networks found.";
       }
 
-      const lines = [`Found ${response.pagination.total} networks:\n`];
+      const lines = [`Found ${response.pagination.totalItems} networks:\n`];
       for (const net of response.data) {
         lines.push(`${net.name}`);
         lines.push(`    ID: ${net.id.substring(0, DOCKER_SHORT_ID_LENGTH)}`);

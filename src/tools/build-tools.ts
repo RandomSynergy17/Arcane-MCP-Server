@@ -72,7 +72,7 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, status, search, start, limit }, client) => {
       const response = await client.get<{
         data: Build[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/images/builds`, {
         status, search, start, limit,
       });
@@ -81,7 +81,7 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
         return "No builds found.";
       }
 
-      const lines = [`Found ${response.pagination.total} builds:\n`];
+      const lines = [`Found ${response.pagination.totalItems} builds:\n`];
       for (const build of response.data) {
         lines.push(`[${build.status.toUpperCase()}] ${build.tag || build.id}`);
         lines.push(`    Build ID: ${build.id}`);

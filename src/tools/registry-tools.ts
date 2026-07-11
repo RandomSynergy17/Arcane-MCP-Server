@@ -31,14 +31,14 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
         data: ContainerRegistry[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/container-registries", { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No container registries configured.";
       }
 
-      const lines = [`Found ${response.pagination.total} registries:\n`];
+      const lines = [`Found ${response.pagination.totalItems} registries:\n`];
       for (const reg of response.data) {
         const status = reg.lastTestStatus || "untested";
         lines.push(`${reg.name}`);

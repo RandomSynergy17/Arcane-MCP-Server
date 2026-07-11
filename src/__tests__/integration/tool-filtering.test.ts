@@ -59,7 +59,7 @@ describe("integration: boot-per-preset", () => {
     expect(enabled).toBe(registry.allToolNames().length);
     expect(disabled).toBe(0);
     // And the registry captured the full module inventory
-    expect(registry.allModules().length).toBe(25);
+    expect(registry.allModules().length).toBe(26);
   });
 
   it("undefined config falls back to full (backwards-compatible)", () => {
@@ -296,7 +296,7 @@ describe("integration: upgrade notice lifecycle", () => {
     // Unconfigured state → explicit call to /arcane:configure
     const handler = handlers.get("arcane-tools-config-notice")!;
     const result = await handler(new URL("arcane://tools-config-notice"));
-    expect(result.contents[0].text).toContain("174 tools");
+    expect(result.contents[0].text).toContain("176 tools");
     expect(result.contents[0].text).toContain("/arcane:configure");
 
     // Flip to configured — body should swap

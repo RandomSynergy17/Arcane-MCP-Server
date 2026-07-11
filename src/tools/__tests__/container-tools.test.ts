@@ -90,7 +90,7 @@ describe("container-tools", () => {
             ports: [],
           },
         ],
-        pagination: { total: 2, start: 0, limit: 20 },
+        pagination: { totalItems: 2, totalPages: 1, currentPage: 1, itemsPerPage: 20 },
       });
 
       const handler = server.tools.get("arcane_container_list")!;
@@ -114,7 +114,7 @@ describe("container-tools", () => {
     it("returns 'No containers found' when empty", async () => {
       mockClient.get.mockResolvedValueOnce({
         data: [],
-        pagination: { total: 0, start: 0, limit: 20 },
+        pagination: { totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: 20 },
       });
 
       const handler = server.tools.get("arcane_container_list")!;

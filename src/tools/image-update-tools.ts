@@ -129,7 +129,7 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
     "arcane_image_update_check_all",
     {
       title: "Check all image updates",
-      description: "Check all images in an environment for available updates",
+      description: "Start an update check for all images in an environment. The check runs in the background (can take several minutes) — track progress with arcane_activity_list and read the results with arcane_image_update_get_summary.",
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -141,12 +141,13 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.post<{ data: BatchImageUpdateResponse }>(
-        `/environments/${environmentId}/image-updates/check-all`,
-        {}
-      );
+      client.postInBackground(`/environments/${environmentId}/image-updates/check-all`, {});
 
-      return formatBatchResults(response.data || {});
+      return [
+        "Update check for all images started in the background (this can take several minutes).",
+        "Track progress with arcane_activity_list (it also appears in Arcane's Activity Center).",
+        "Once finished, read the results with arcane_image_update_get_summary or arcane_image_update_check_multiple for specific images.",
+      ].join("\n");
     })
   );
 

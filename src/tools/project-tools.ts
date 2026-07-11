@@ -36,14 +36,14 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Project[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/projects`, { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No projects found.";
       }
 
-      const lines = [`Found ${response.pagination.total} projects:\n`];
+      const lines = [`Found ${response.pagination.totalItems} projects:\n`];
       for (const project of response.data) {
         const status = project.status === "running" ? "[RUNNING]" : "[STOPPED]";
         lines.push(`${status} ${project.name}`);

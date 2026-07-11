@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0] - 2026-07-11
 
-Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec refreshed from v1.17.0). Tool count changes from 180 to **174**. No v1 compatibility shims — installs running Arcane v1.x should stay on `2.x` of this server.
+Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec refreshed from v1.17.0). Tool count changes from 180 to **176** (removed tools whose endpoints no longer exist, added notification-delete and activity-tracking tools). No v1 compatibility shims — installs running Arcane v1.x should stay on `2.x` of this server.
 
 ### Removed (endpoints gone in Arcane v2)
 - `arcane_dashboard_get_action_items` — `/dashboard/action-items` no longer exists.
@@ -18,6 +18,12 @@ Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec ref
 
 ### Added
 - `arcane_notification_delete_settings` — delete a provider's notification settings (`DELETE /notifications/settings/{provider}`).
+- `arcane_activity_list` / `arcane_activity_get` — track Arcane v2's background activities (image update checks, updater runs, prunes, scans), including progress and messages.
+
+### Fixed (after testing against a live v2.3.2 instance)
+- Paginated list tools printed `Found undefined …`: v2 renamed `pagination.total` to `pagination.totalItems` — updated all 16 list modules.
+- Image `created` is a Unix timestamp in v2 and was printed raw — now formatted as an ISO date.
+- `arcane_image_update_check_all` / `arcane_image_check_updates_all` blocked until every image was checked, which hit the MCP request timeout — and the client's timeout retry then started duplicate server-side checks. Both tools now fire the check in the background (via a new no-retry `postInBackground` client helper) and return immediately, pointing at `arcane_activity_list` / the update summary for results.
 
 ### Changed (breaking, follows Arcane v2 API)
 - **Notifications** rebuilt on the provider model (`discord`, `email`, `telegram`, `signal`, `slack`, `ntfy`, `pushover`, `matrix`, `generic`): `get_settings` lists providers (or one via `provider`), `update_settings` takes `provider` + `enabled` + `config`, `test` now requires a `provider`.

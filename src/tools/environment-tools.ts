@@ -34,14 +34,14 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     toolHandler(async ({ search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Environment[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>("/environments", { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No environments found.";
       }
 
-      const lines = [`Found ${response.pagination.total} environments:\n`];
+      const lines = [`Found ${response.pagination.totalItems} environments:\n`];
       for (const env of response.data) {
         const status = env.status || "unknown";
         lines.push(`[${status.toUpperCase()}] ${env.name} (ID: ${env.id})`);

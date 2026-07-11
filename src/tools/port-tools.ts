@@ -35,14 +35,14 @@ export function registerPortTools(server: McpServer, registry?: ToolRegistry): v
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: PortMapping[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/ports`, { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No port mappings found.";
       }
 
-      const lines = [`Found ${response.pagination.total} port mappings:\n`];
+      const lines = [`Found ${response.pagination.totalItems} port mappings:\n`];
       for (const port of response.data) {
         const binding = port.publicPort
           ? `${port.ip || "0.0.0.0"}:${port.publicPort} -> ${port.privatePort}/${port.protocol}`

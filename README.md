@@ -6,7 +6,7 @@
 
 <p align="center">
   Manage your entire Docker infrastructure through natural language.<br/>
-  174 tools. One MCP server. Zero context switching.
+  176 tools. One MCP server. Zero context switching.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
   <a href="#tool-filtering">Tool Filtering</a> &bull;
   <a href="#what-can-it-do">What Can It Do</a> &bull;
   <a href="#the-companion-skill">Companion Skill</a> &bull;
-  <a href="#all-174-tools">All Tools</a> &bull;
+  <a href="#all-176-tools">All Tools</a> &bull;
   <a href="install_arcane_skill-mcp.md">Interactive Installer</a>
 </p>
 
@@ -35,7 +35,7 @@
 
 Arcane MCP Server is a complete AI-powered Docker management bundle — an **MCP server**, a **Claude Code plugin**, and a **companion skill**, all in one package.
 
-- The **MCP server** gives your AI assistant 174 tools to control your [Arcane](https://github.com/getarcaneapp/arcane) Docker platform — containers, images, stacks, Swarm clusters, security scans, and more. Filter that set down to a preset ([see Tool Filtering](#tool-filtering)) if all 174 is more than your context window can spare.
+- The **MCP server** gives your AI assistant 176 tools to control your [Arcane](https://github.com/getarcaneapp/arcane) Docker platform — containers, images, stacks, Swarm clusters, security scans, and more. Filter that set down to a preset ([see Tool Filtering](#tool-filtering)) if all 176 is more than your context window can spare.
 - The **plugin** wraps everything into a single install with guided configuration — no manual env vars or config files.
 - The **companion skill** teaches your AI *how* to use those tools — safe deployment workflows, troubleshooting patterns, and guardrails so it doesn't accidentally nuke your volumes.
 
@@ -71,7 +71,7 @@ Every tool carries **safety annotations** so your AI knows which operations are 
 
 ## Tool Filtering
 
-Exposing all 174 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
+Exposing all 176 tools to Claude every turn chews through your context window. Pick a **preset** to trim the active tool set — only the tools in that preset appear in `tools/list`:
 
 | Preset | Scope | Tools |
 |---|---|---|
@@ -79,7 +79,7 @@ Exposing all 174 tools to Claude every turn chews through your context window. P
 | `read-only` | every `*_list` / `*_get` / `*_inspect` / `*_stats` across all modules | ~60 |
 | `minimal` | dashboard + container list / get / counts | 5 |
 | `deploy` | projects, gitops, templates, registries, environments, build | ~40 |
-| `full` *(default if never configured)* | everything | 174 |
+| `full` *(default if never configured)* | everything | 176 |
 | `custom` | your own module + per-tool picks | variable |
 
 **Configure interactively** in Claude Code:
@@ -271,7 +271,7 @@ And a Claude Code slash command:
 
 ---
 
-## All 174 Tools
+## All 176 Tools
 
 ### Containers (11)
 
@@ -395,7 +395,7 @@ And a Claude Code slash command:
 </details>
 
 <details>
-<summary><strong>GitOps, Webhooks, Auto-Updater & Dashboard (21 tools)</strong></summary>
+<summary><strong>GitOps, Webhooks, Auto-Updater, Dashboard & Activities (23 tools)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
@@ -420,6 +420,8 @@ And a Claude Code slash command:
 | `arcane_updater_get_status` | Get updater schedule |
 | `arcane_updater_get_history` | Get update history |
 | `arcane_dashboard_get` | Get dashboard snapshot |
+| `arcane_activity_list` | List background activities (update checks, prunes, scans) |
+| `arcane_activity_get` | Get activity progress and messages |
 </details>
 
 <details>
@@ -512,7 +514,7 @@ src/
     arcane-client.ts    # HTTP client (retry, SSL, size limits)
   auth/
     auth-manager.ts     # JWT auto-refresh + API key auth
-  tools/                # 25 modules, 174 tools
+  tools/                # 26 modules, 176 tools
     registry.ts         # ToolRegistry — captures RegisteredTool handles, applies filter
     presets.ts          # commonly-used / read-only / minimal / deploy / full / custom
   resources/            # 4 MCP Resources

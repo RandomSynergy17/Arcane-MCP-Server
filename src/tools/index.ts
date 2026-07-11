@@ -32,6 +32,7 @@ import { registerImageUpdateTools } from "./image-update-tools.js";
 import { registerBuildTools } from "./build-tools.js";
 import { registerNetworkTopologyTools } from "./network-topology-tools.js";
 import { registerDashboardTools } from "./dashboard-tools.js";
+import { registerActivityTools } from "./activity-tools.js";
 import { registerPortTools } from "./port-tools.js";
 import { registerUpdaterTools } from "./updater-tools.js";
 
@@ -70,6 +71,7 @@ export function registerAllTools(server: McpServer, toolsConfig?: ToolsConfig): 
   registerBuildTools(server, registry);
   registerNetworkTopologyTools(server, registry);
   registerDashboardTools(server, registry);
+  registerActivityTools(server, registry);
   registerPortTools(server, registry);
   registerUpdaterTools(server, registry);
 

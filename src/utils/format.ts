@@ -51,6 +51,16 @@ export function formatSizeGB(bytes: number): string {
 }
 
 /**
+ * Format a Unix timestamp (seconds) as an ISO date string.
+ *
+ * Example: "2026-07-11T19:03:39.000Z"
+ */
+export function formatUnixTimestamp(seconds: number | undefined | null): string {
+  if (!seconds) return "unknown";
+  return new Date(seconds * 1000).toISOString();
+}
+
+/**
  * Validate a file path parameter to prevent path traversal attacks.
  * Rejects paths containing ".." sequences.
  */

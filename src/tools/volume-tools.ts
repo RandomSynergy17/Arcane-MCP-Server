@@ -38,14 +38,14 @@ export function registerVolumeTools(server: McpServer, registry?: ToolRegistry):
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Volume[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/volumes`, { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No volumes found.";
       }
 
-      const lines = [`Found ${response.pagination.total} volumes:\n`];
+      const lines = [`Found ${response.pagination.totalItems} volumes:\n`];
       for (const vol of response.data) {
         lines.push(`${vol.name}`);
         lines.push(`    Driver: ${vol.driver}`);

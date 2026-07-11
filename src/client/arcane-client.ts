@@ -11,6 +11,7 @@ import {
   RETRY_BASE_DELAY_MS,
   MAX_RESPONSE_SIZE,
   RETRYABLE_STATUS_CODES,
+  BACKGROUND_REQUEST_TIMEOUT_MS,
 } from "../constants.js";
 
 export interface RequestOptions {
@@ -30,9 +31,10 @@ export interface PaginatedResponse<T> {
   success: boolean;
   data: T[];
   pagination: {
-    total: number;
-    start: number;
-    limit: number;
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
   };
 }
 
@@ -257,6 +259,19 @@ export class ArcaneClient {
    */
   async delete<T>(path: string, params?: Record<string, string | number | boolean | undefined>, body?: unknown): Promise<T> {
     return this.request<T>(path, { method: "DELETE", params, body });
+  }
+
+  /**
+   * Fire a long-running POST without awaiting its completion.
+   * Uses a generous timeout so the built-in timeout retry never re-triggers
+   * the operation on the server (e.g. duplicate image-update checks).
+   * Errors are logged instead of thrown — callers respond immediately.
+   */
+  postInBackground(path: string, body?: unknown): void {
+    this.request(path, { method: "POST", body, timeout: BACKGROUND_REQUEST_TIMEOUT_MS }).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.warn(`Background request POST ${path} failed: ${message}`);
+    });
   }
 
   /**

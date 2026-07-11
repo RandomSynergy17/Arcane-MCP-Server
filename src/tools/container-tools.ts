@@ -37,14 +37,14 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
     toolHandler(async ({ environmentId, search, sort, order, start, limit, includeInternal }, client) => {
       const response = await client.get<{
         data: Container[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/containers`, { search, sort, order, start, limit, includeInternal });
 
       if (!response.data || response.data.length === 0) {
         return "No containers found.";
       }
 
-      const lines = [`Found ${response.pagination.total} containers:\n`];
+      const lines = [`Found ${response.pagination.totalItems} containers:\n`];
       for (const container of response.data) {
         const status = container.state === "running" ? "[RUNNING]" : "[STOPPED]";
         lines.push(`${status} ${container.name}`);

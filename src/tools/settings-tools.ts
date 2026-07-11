@@ -205,14 +205,14 @@ export function registerSettingsTools(server: McpServer, registry?: ToolRegistry
           lastUsedAt?: string;
           expiresAt?: string;
         }>;
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/api-keys", { start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No API keys found.";
       }
 
-      const lines = [`Found ${response.pagination.total} API keys:\n`];
+      const lines = [`Found ${response.pagination.totalItems} API keys:\n`];
       for (const key of response.data) {
         lines.push(`${key.name}`);
         lines.push(`    ID: ${key.id}`);

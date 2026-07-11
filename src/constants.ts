@@ -10,6 +10,9 @@ export const TOKEN_REFRESH_BUFFER_MS = 60 * 1000;
 /** Default HTTP request timeout */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
 
+/** Timeout for fire-and-forget background requests (long-running server-side operations) */
+export const BACKGROUND_REQUEST_TIMEOUT_MS = 10 * 60 * 1000;
+
 /** Session timeout - 30 minutes of inactivity */
 export const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 

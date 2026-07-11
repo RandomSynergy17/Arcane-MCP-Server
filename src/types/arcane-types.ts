@@ -70,9 +70,11 @@ export interface Image {
   id: string;
   repoTags: string[];
   repoDigests?: string[];
-  created: string;
+  /** Unix timestamp (seconds) */
+  created: number;
   size: number;
   virtualSize?: number;
+  inUse?: boolean;
 }
 
 // === Image Updates ===

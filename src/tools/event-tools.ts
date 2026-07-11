@@ -34,14 +34,14 @@ export function registerEventTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ type, severity, start, limit }, client) => {
       const response = await client.get<{
         data: Event[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/events", { type, severity, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No events found.";
       }
 
-      const lines = [`Found ${response.pagination.total} events:\n`];
+      const lines = [`Found ${response.pagination.totalItems} events:\n`];
       for (const event of response.data.slice(0, MAX_DISPLAY_EVENTS)) {
         const time = new Date(event.createdAt).toLocaleString();
         lines.push(`[${time}] [${event.severity.toUpperCase()}] ${event.type}`);
@@ -85,14 +85,14 @@ export function registerEventTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, type, start, limit }, client) => {
       const response = await client.get<{
         data: Event[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>(`/events/environment/${environmentId}`, { type, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No events found for this environment.";
       }
 
-      const lines = [`Found ${response.pagination.total} events:\n`];
+      const lines = [`Found ${response.pagination.totalItems} events:\n`];
       for (const event of response.data.slice(0, MAX_DISPLAY_EVENTS)) {
         const time = new Date(event.createdAt).toLocaleString();
         lines.push(`[${time}] [${event.severity.toUpperCase()}] ${event.type}`);
