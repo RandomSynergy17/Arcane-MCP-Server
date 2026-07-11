@@ -50,6 +50,18 @@ export interface Backup {
 
 // === Projects ===
 
+export interface ProjectUpdateInfo {
+  status: string;
+  hasUpdate: boolean;
+  imageCount?: number;
+  checkedImageCount?: number;
+  imagesWithUpdates?: number;
+  updatedImageRefs?: string[] | null;
+  errorCount?: number;
+  errorMessage?: string;
+  lastCheckedAt?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -60,6 +72,7 @@ export interface Project {
     status: string;
     containerCount?: number;
   }>;
+  updateInfo?: ProjectUpdateInfo;
   createdAt?: string;
   updatedAt?: string;
 }

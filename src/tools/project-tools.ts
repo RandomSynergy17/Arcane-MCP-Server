@@ -17,7 +17,7 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
     "arcane_project_list",
     {
       title: "List projects",
-      description: "List Docker Compose projects/stacks in an environment",
+      description: "List Docker Compose projects/stacks in an environment. Use the `updates` filter (e.g. 'has_update') to list projects with pending image updates, including which images are outdated.",
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -27,26 +27,29 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       search: z.string().optional().describe("Search query to filter projects"),
+      status: z.string().optional().describe("Filter by status (comma-separated: running,stopped,partially running)"),
+      updates: z.enum(["has_update", "up_to_date", "error", "unknown"]).optional().describe("Filter by image update status — 'has_update' lists only projects with pending updates"),
       sort: z.string().optional().describe("Column to sort by"),
       order: z.enum(["asc", "desc"]).optional().default("asc").describe("Sort direction"),
       start: z.number().optional().default(0).describe("Pagination start index"),
-      limit: z.number().optional().default(20).describe("Items per page"),
+      limit: z.number().optional().default(20).describe("Items per page (-1 for all)"),
     },
     },
-    toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
+    toolHandler(async ({ environmentId, search, status, updates, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Project[];
         pagination: { totalItems: number };
-      }>(`/environments/${environmentId}/projects`, { search, sort, order, start, limit });
+      }>(`/environments/${environmentId}/projects`, { search, status, updates, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
-        return "No projects found.";
+        return updates ? `No projects with update status "${updates}" found.` : "No projects found.";
       }
 
       const lines = [`Found ${response.pagination.totalItems} projects:\n`];
       for (const project of response.data) {
-        const status = project.status === "running" ? "[RUNNING]" : "[STOPPED]";
-        lines.push(`${status} ${project.name}`);
+        const projectStatus = project.status === "running" ? "[RUNNING]" : "[STOPPED]";
+        const updateFlag = project.updateInfo?.hasUpdate ? " [UPDATES AVAILABLE]" : "";
+        lines.push(`${projectStatus}${updateFlag} ${project.name}`);
         lines.push(`    ID: ${project.id}`);
         lines.push(`    Services: ${project.services?.length || 0}`);
         if (project.services && project.services.length > 0) {
@@ -56,6 +59,14 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
           if (project.services.length > MAX_DISPLAY_SERVICES) {
             lines.push(`      ... and ${project.services.length - MAX_DISPLAY_SERVICES} more`);
           }
+        }
+        const u = project.updateInfo;
+        if (u?.hasUpdate) {
+          const refs = u.updatedImageRefs?.length ? u.updatedImageRefs.join(", ") : `${u.imagesWithUpdates ?? "?"} of ${u.imageCount ?? "?"} images`;
+          lines.push(`    Updates: ${refs}`);
+          if (u.lastCheckedAt) lines.push(`    Last checked: ${u.lastCheckedAt}`);
+        } else if (u?.status === "error" && u.errorMessage) {
+          lines.push(`    Update check error: ${u.errorMessage}`);
         }
         lines.push("");
       }
@@ -94,10 +105,17 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
         `  Path: ${proj.path || "N/A"}`,
         `  Created: ${proj.createdAt || "N/A"}`,
         `  Updated: ${proj.updatedAt || "N/A"}`,
-        "",
-        "Services:",
       ];
 
+      const u = proj.updateInfo;
+      if (u?.hasUpdate) {
+        const refs = u.updatedImageRefs?.length ? u.updatedImageRefs.join(", ") : `${u.imagesWithUpdates ?? "?"} of ${u.imageCount ?? "?"} images`;
+        lines.push(`  Image updates available: ${refs}`);
+      } else if (u) {
+        lines.push(`  Image updates: ${u.status}${u.errorMessage ? ` (${u.errorMessage})` : ""}`);
+      }
+
+      lines.push("", "Services:");
       for (const svc of proj.services || []) {
         lines.push(`  - ${svc.name}: ${svc.status} (${svc.containerCount || 0} containers)`);
       }

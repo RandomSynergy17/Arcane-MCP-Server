@@ -34,7 +34,8 @@ When the user says something general, map it to the right tool sequence:
 | "What's running?" / "Show me my containers" | `arcane_container_list` |
 | "How's everything looking?" / "Status" | `arcane_dashboard_get` |
 | "Deploy this compose file" | `arcane_project_create` then `arcane_project_up` |
-| "Update everything" | `arcane_image_update_check_all` then `arcane_updater_run` (with `dryRun: true` first) |
+| "Update everything" | `arcane_project_list` with `updates: "has_update"`, then `arcane_updater_run` (with `dryRun: true` first) |
+| "Which projects/stacks have updates?" | `arcane_project_list` with `updates: "has_update"` — shows exactly which image refs are outdated. Do NOT check images one by one |
 | "What needs attention?" | `arcane_dashboard_get` then `arcane_event_list` (severity filter) |
 | "Is anything vulnerable?" | `arcane_vulnerability_get_environment_summary` |
 | "Set up a new stack" | `arcane_project_create` with compose YAML |
@@ -108,15 +109,20 @@ For Docker Swarm clusters:
 4. **Monitor** — `arcane_swarm_list_services` + `arcane_swarm_get_service` for task status
 5. **Tasks** — `arcane_swarm_get_service` for task status when debugging
 
-### Auto-Update Management
+### Update Overview & Auto-Update Management
 
-Set up hands-off container updates:
+To see what has pending updates, use the cached results — do not check images individually:
 
-1. `arcane_updater_get_status` — check current schedule
-2. `arcane_container_set_auto_update` — enable per-container
-3. `arcane_updater_run` with `dryRun: true` — preview what would update
-4. `arcane_updater_run` — execute updates
-5. `arcane_updater_get_history` — review what was updated
+1. `arcane_project_list` with `updates: "has_update"` — compose projects with outdated images (lists the exact image refs)
+2. `arcane_image_update_get_summary` — environment-wide counts
+3. `arcane_image_update_check_all` — refresh the cache in the background if results are stale (track via `arcane_activity_list`)
+
+Then update:
+
+1. `arcane_updater_run` with `dryRun: true` — preview what would update
+2. `arcane_updater_run` — execute updates (optionally scoped via `resourceIds`)
+3. `arcane_updater_get_history` — review what was updated
+4. `arcane_container_set_auto_update` — enable hands-off updates per container
 
 ## Safety Rules
 

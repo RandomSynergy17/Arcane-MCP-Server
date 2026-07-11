@@ -19,6 +19,7 @@ Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec ref
 ### Added
 - `arcane_notification_delete_settings` — delete a provider's notification settings (`DELETE /notifications/settings/{provider}`).
 - `arcane_activity_list` / `arcane_activity_get` — track Arcane v2's background activities (image update checks, updater runs, prunes, scans), including progress and messages.
+- `arcane_project_list` supports v2's `updates` filter (`has_update`, `up_to_date`, `error`, `unknown`) plus a `status` filter, and shows per-project update info including exactly which image refs are outdated (same data as the dashboard's update overview). `arcane_project_get` shows it too.
 
 ### Fixed (after testing against a live v2.3.2 instance)
 - Paginated list tools printed `Found undefined …`: v2 renamed `pagination.total` to `pagination.totalItems` — updated all 16 list modules.
