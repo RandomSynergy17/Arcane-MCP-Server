@@ -29,6 +29,14 @@ interface RefreshResponse {
   expiresAt: string;
 }
 
+/** Auth endpoints wrap their payload in `{ success, data }` — unwrap if present. */
+function unwrapAuthResponse<T>(json: unknown): T {
+  if (json && typeof json === "object" && "data" in json && (json as { data?: unknown }).data) {
+    return (json as { data: T }).data;
+  }
+  return json as T;
+}
+
 export class AuthManager {
   private apiKey?: string;
   private jwtTokens?: JwtTokens;
@@ -126,7 +134,7 @@ export class AuthManager {
       throw new Error(`Login failed: ${response.status} ${error}`);
     }
 
-    const data = await response.json() as LoginResponse;
+    const data = unwrapAuthResponse<LoginResponse>(await response.json());
 
     this.jwtTokens = {
       accessToken: data.token,
@@ -180,7 +188,7 @@ export class AuthManager {
       throw new Error(`Token refresh failed: ${response.status} ${error}`);
     }
 
-    const data = await response.json() as RefreshResponse;
+    const data = unwrapAuthResponse<RefreshResponse>(await response.json());
 
     this.jwtTokens = {
       accessToken: data.token,

@@ -34,14 +34,14 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     toolHandler(async ({ search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Environment[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>("/environments", { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No environments found.";
       }
 
-      const lines = [`Found ${response.pagination.total} environments:\n`];
+      const lines = [`Found ${response.pagination.totalItems} environments:\n`];
       for (const env of response.data) {
         const status = env.status || "unknown";
         lines.push(`[${status.toUpperCase()}] ${env.name} (ID: ${env.id})`);
@@ -77,9 +77,12 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
         `  ID: ${env.id}`,
         `  Status: ${env.status || "unknown"}`,
         `  API URL: ${env.apiUrl || "N/A"}`,
-        `  Created: ${env.createdAt || "N/A"}`,
-        `  Updated: ${env.updatedAt || "N/A"}`,
+        `  Enabled: ${env.enabled ? "yes" : "no"}`,
+        `  Connected: ${env.connected ? "yes" : "no"}`,
+        `  Edge Agent: ${env.isEdge ? "yes" : "no"}`,
       ];
+      if (env.connectedAt) lines.push(`  Connected At: ${env.connectedAt}`);
+      if (env.lastSeen) lines.push(`  Last Seen: ${env.lastSeen}`);
 
       return lines.join("\n");
     })
@@ -100,14 +103,16 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
       inputSchema: {
       name: z.string().describe("Name for the environment"),
       apiUrl: z.string().optional().describe("API URL for the Docker host"),
-      tlsEnabled: z.boolean().optional().default(false).describe("Enable TLS for Docker API"),
+      isEdge: z.boolean().optional().describe("Register as an edge agent environment"),
+      accessToken: z.string().optional().describe("Access token for connecting to the environment's agent"),
     },
     },
-    toolHandler(async ({ name, apiUrl, tlsEnabled }, client) => {
+    toolHandler(async ({ name, apiUrl, isEdge, accessToken }, client) => {
       const response = await client.post<{ data: Environment & { apiKey?: string } }>("/environments", {
         name,
         apiUrl,
-        tlsEnabled,
+        isEdge,
+        accessToken,
       });
 
       const env = response.data;
@@ -187,8 +192,11 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.post<{ message: string }>(`/environments/${environmentId}/test`);
-      return `Connection test: ${response.message || "Success"}`;
+      const response = await client.post<{ data: { status: string; message?: string } }>(
+        `/environments/${environmentId}/test`
+      );
+      const { status, message } = response.data;
+      return `Connection test: ${status}${message ? ` - ${message}` : ""}`;
     })
   );
 
@@ -210,12 +218,12 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId, rotate }, client) => {
-      const response = await client.post<{ data: { apiKey: string; expiresAt: string } }>(
+      const response = await client.post<{ data: { token: string } }>(
         `/environments/${environmentId}/agent/pair`,
         { rotate }
       );
 
-      return `Agent pairing token generated:\n  Token: ${response.data.apiKey}\n  Expires: ${response.data.expiresAt}`;
+      return `Agent pairing token generated:\n  Token: ${response.data.token}`;
     })
   );
 
@@ -236,11 +244,11 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{ data: { version: string; buildTime?: string } }>(
+      const response = await client.get<{ data: { currentVersion: string; buildTime?: string } }>(
         `/environments/${environmentId}/version`
       );
 
-      return `Agent Version: ${response.data.version}${response.data.buildTime ? `\nBuild Time: ${response.data.buildTime}` : ""}`;
+      return `Agent Version: ${response.data.currentVersion}${response.data.buildTime ? `\nBuild Time: ${response.data.buildTime}` : ""}`;
     })
   );
 
@@ -261,30 +269,27 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{
-        data: {
-          serverVersion: string;
-          operatingSystem: string;
-          architecture: string;
-          containers: number;
-          containersRunning: number;
-          containersStopped: number;
-          images: number;
-          memTotal: number;
-          ncpu: number;
-        };
-      }>(`/environments/${environmentId}/system/docker-info`);
+      const info = await client.get<{
+        ServerVersion: string;
+        OperatingSystem: string;
+        Architecture: string;
+        Containers: number;
+        ContainersRunning: number;
+        ContainersStopped: number;
+        Images: number;
+        MemTotal: number;
+        NCPU: number;
+      }>(`/environments/${environmentId}/system/docker/info`);
 
-      const info = response.data;
       const lines = [
         "Docker System Info:",
-        `  Version: ${info.serverVersion}`,
-        `  OS: ${info.operatingSystem}`,
-        `  Architecture: ${info.architecture}`,
-        `  CPUs: ${info.ncpu}`,
-        `  Memory: ${formatSizeGB(info.memTotal)}`,
-        `  Containers: ${info.containers} (${info.containersRunning} running, ${info.containersStopped} stopped)`,
-        `  Images: ${info.images}`,
+        `  Version: ${info.ServerVersion}`,
+        `  OS: ${info.OperatingSystem}`,
+        `  Architecture: ${info.Architecture}`,
+        `  CPUs: ${info.NCPU}`,
+        `  Memory: ${formatSizeGB(info.MemTotal)}`,
+        `  Containers: ${info.Containers} (${info.ContainersRunning} running, ${info.ContainersStopped} stopped)`,
+        `  Images: ${info.Images}`,
       ];
 
       return lines.join("\n");
@@ -308,15 +313,15 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{ data: { docker?: string; dockerCompose?: string } }>(
-        `/environments/${environmentId}/deployment-snippets`
+      const response = await client.get<{ data: { dockerRun?: string; dockerCompose?: string } }>(
+        `/environments/${environmentId}/deployment`
       );
 
       const snippets = response.data;
       let text = "Deployment Snippets:\n\n";
 
-      if (snippets.docker) {
-        text += "Docker Command:\n```\n" + snippets.docker + "\n```\n\n";
+      if (snippets.dockerRun) {
+        text += "Docker Command:\n```\n" + snippets.dockerRun + "\n```\n\n";
       }
       if (snippets.dockerCompose) {
         text += "Docker Compose:\n```yaml\n" + snippets.dockerCompose + "\n```";

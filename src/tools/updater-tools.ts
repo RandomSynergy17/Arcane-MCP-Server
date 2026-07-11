@@ -16,7 +16,7 @@ export function registerUpdaterTools(server: McpServer, registry?: ToolRegistry)
     "arcane_updater_run",
     {
       title: "Run auto-updater",
-      description: "Run the auto-updater to check and update all containers with available image updates",
+      description: "Run the auto-updater to check and update containers/projects with available image updates",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -26,62 +26,37 @@ export function registerUpdaterTools(server: McpServer, registry?: ToolRegistry)
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
       dryRun: z.boolean().optional().default(false).describe("Simulate without actually updating"),
+      forceUpdate: z.boolean().optional().default(false).describe("Update even if no new image was detected"),
+      resourceIds: z.array(z.string()).optional().describe("Limit the run to specific container/project IDs"),
     },
     },
-    toolHandler(async ({ environmentId, dryRun }, client) => {
+    toolHandler(async ({ environmentId, dryRun, forceUpdate, resourceIds }, client) => {
+      const body: Record<string, unknown> = { dryRun, forceUpdate };
+      if (resourceIds && resourceIds.length > 0) body.resourceIds = resourceIds;
+
       const response = await client.post<{ data: UpdaterResult }>(
         `/environments/${environmentId}/updater/run`,
-        { dryRun }
+        body
       );
 
       const r = response.data;
       const mode = dryRun ? " (DRY RUN)" : "";
       const lines = [
         `Updater Run${mode}:`,
+        `  Checked: ${r.checked}`,
         `  Updated: ${r.updated}`,
         `  Failed: ${r.failed}`,
         `  Skipped: ${r.skipped}`,
       ];
 
-      if (r.results && r.results.length > 0) {
+      if (r.items && r.items.length > 0) {
         lines.push("");
-        for (const result of r.results) {
-          lines.push(`  [${result.status.toUpperCase()}] ${result.containerName}${result.message ? `: ${result.message}` : ""}`);
+        for (const item of r.items) {
+          lines.push(`  [${item.status.toUpperCase()}] ${item.resourceName || item.resourceId}${item.error ? `: ${item.error}` : ""}`);
         }
       }
 
       return lines.join("\n");
-    })
-  );
-
-  // arcane_updater_update_container
-  register(
-    "arcane_updater_update_container",
-    {
-      title: "Update single container",
-      description: "Update a single container to the latest image version",
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: false,
-      },
-      inputSchema: {
-      environmentId: z.string().describe("Environment ID"),
-      containerId: z.string().describe("Container ID to update"),
-    },
-    },
-    toolHandler(async ({ environmentId, containerId }, client) => {
-      const response = await client.post<{ data: UpdaterResult }>(
-        `/environments/${environmentId}/updater/containers/${containerId}`
-      );
-
-      const r = response.data;
-      if (r.results && r.results.length > 0) {
-        const result = r.results[0];
-        return `Container ${result.containerName}: ${result.status}${result.message ? ` — ${result.message}` : ""}`;
-      }
-      return `Update completed for container ${containerId}.`;
     })
   );
 
@@ -90,7 +65,7 @@ export function registerUpdaterTools(server: McpServer, registry?: ToolRegistry)
     "arcane_updater_get_status",
     {
       title: "Get updater status",
-      description: "Get the current auto-updater status and schedule",
+      description: "Get the currently running auto-update operations (containers and projects being updated)",
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -107,12 +82,15 @@ export function registerUpdaterTools(server: McpServer, registry?: ToolRegistry)
       );
 
       const s = response.data;
+      const busy = (s.updatingContainers || 0) + (s.updatingProjects || 0);
+      if (busy === 0) {
+        return "Updater Status: idle — no updates currently in progress.";
+      }
+
       const lines = [
-        `Updater Status:`,
-        `  Running: ${s.running ? "Yes" : "No"}`,
-        `  Schedule: ${s.schedule || "Not configured"}`,
-        `  Last Run: ${s.lastRunAt || "Never"}`,
-        `  Next Run: ${s.nextRunAt || "N/A"}`,
+        `Updater Status: ${busy} update(s) in progress`,
+        `  Containers updating: ${s.updatingContainers || 0}${s.containerIds?.length ? ` (${s.containerIds.join(", ")})` : ""}`,
+        `  Projects updating: ${s.updatingProjects || 0}${s.projectIds?.length ? ` (${s.projectIds.join(", ")})` : ""}`,
       ];
 
       return lines.join("\n");
@@ -146,12 +124,20 @@ export function registerUpdaterTools(server: McpServer, registry?: ToolRegistry)
         return "No update history found.";
       }
 
+      const formatImages = (versions?: Record<string, unknown>) =>
+        versions && Object.keys(versions).length > 0
+          ? Object.entries(versions).map(([k, v]) => `${k}: ${String(v)}`).join(", ")
+          : undefined;
+
       const lines = [`Update History (${response.data.length} entries):\n`];
       for (const record of response.data) {
-        lines.push(`[${record.status.toUpperCase()}] ${record.containerName}`);
-        lines.push(`    Old: ${record.oldImage}`);
-        lines.push(`    New: ${record.newImage}`);
-        lines.push(`    Date: ${record.updatedAt}`);
+        lines.push(`[${record.status.toUpperCase()}] ${record.resourceName || record.resourceId} (${record.resourceType || "container"})`);
+        const oldImages = formatImages(record.oldImageVersions);
+        const newImages = formatImages(record.newImageVersions);
+        if (oldImages) lines.push(`    Old: ${oldImages}`);
+        if (newImages) lines.push(`    New: ${newImages}`);
+        if (record.error) lines.push(`    Error: ${record.error}`);
+        lines.push(`    Date: ${record.createdAt}`);
         lines.push("");
       }
 

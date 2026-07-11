@@ -73,24 +73,24 @@ describe("container-tools", () => {
         data: [
           {
             id: "abc123def456ghi789",
-            name: "my-app",
+            names: ["/my-app"],
             image: "nginx:latest",
             status: "Up 2 hours",
             state: "running",
-            created: "2024-01-01T00:00:00Z",
+            created: 1704067200,
             ports: [{ privatePort: 80, publicPort: 8080, type: "tcp" }],
           },
           {
             id: "xyz987wvu654tsr321",
-            name: "my-db",
+            names: ["/my-db"],
             image: "postgres:16",
             status: "Exited (0) 1 hour ago",
             state: "stopped",
-            created: "2024-01-01T00:00:00Z",
+            created: 1704067200,
             ports: [],
           },
         ],
-        pagination: { total: 2, start: 0, limit: 20 },
+        pagination: { totalItems: 2, totalPages: 1, currentPage: 1, itemsPerPage: 20 },
       });
 
       const handler = server.tools.get("arcane_container_list")!;
@@ -114,7 +114,7 @@ describe("container-tools", () => {
     it("returns 'No containers found' when empty", async () => {
       mockClient.get.mockResolvedValueOnce({
         data: [],
-        pagination: { total: 0, start: 0, limit: 20 },
+        pagination: { totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: 20 },
       });
 
       const handler = server.tools.get("arcane_container_list")!;
@@ -135,10 +135,9 @@ describe("container-tools", () => {
       mockClient.get.mockResolvedValueOnce({
         data: {
           id: "abc123def456ghi789",
-          name: "my-app",
+          name: "/my-app",
           image: "nginx:latest",
-          state: "running",
-          status: "Up 2 hours",
+          state: { status: "running", running: true, health: { status: "healthy" } },
           created: "2024-01-01T00:00:00Z",
           ports: [{ privatePort: 80, publicPort: 8080, type: "tcp" }],
           labels: { "com.docker.compose.project": "myproject" },
@@ -153,7 +152,7 @@ describe("container-tools", () => {
 
       const text = result.content[0].text;
       expect(text).toContain("Container: my-app");
-      expect(text).toContain("State: running");
+      expect(text).toContain("State: running (healthy)");
       expect(text).toContain("8080:80/tcp");
       expect(text).toContain("com.docker.compose.project: myproject");
     });

@@ -67,7 +67,7 @@ Every tool carries **safety annotations** so your AI knows which operations are 
 
 ---
 
-> **🆕 Recent update — v2.1:** Tool filtering is here. All 180 tools in one turn eats your context window, so you can now pick a preset and ship only what you need. [Details below](#tool-filtering).
+> **🆕 Recent update — v3.0:** Full **Arcane v2** support (tested against v2.3.2). Endpoints, payloads, and tool set follow the new API — if you are still on Arcane v1.x, stay on server `2.x`. Breaking changes are listed in the [CHANGELOG](CHANGELOG.md).
 
 ## Tool Filtering
 
@@ -232,7 +232,7 @@ rm -rf /tmp/arcane
 
 ### What the skill teaches Claude:
 
-**Intent mapping** — When you say "what's broken?", Claude knows to call `arcane_dashboard_get` + `arcane_dashboard_get_action_items` instead of listing every container one by one.
+**Intent mapping** — When you say "what's broken?", Claude knows to call `arcane_dashboard_get` and drill into recent events instead of listing every container one by one.
 
 **Safety guardrails** — Before running `arcane_volume_prune`, Claude will suggest `arcane_volume_backup_create` first. Before `arcane_updater_run`, it'll do a dry run. Before `arcane_project_destroy`, it confirms twice.
 
@@ -273,12 +273,13 @@ And a Claude Code slash command:
 
 ## All 180 Tools
 
-### Containers (11)
+### Containers (12)
 
 | Tool | Description |
 |------|-------------|
 | `arcane_container_list` | List containers with filtering and pagination |
 | `arcane_container_get` | Get detailed container information |
+| `arcane_container_get_logs` | Fetch container logs (incremental follow via `since`) |
 | `arcane_container_create` | Create a new container |
 | `arcane_container_start` | Start a stopped container |
 | `arcane_container_stop` | Stop a running container |
@@ -299,7 +300,7 @@ And a Claude Code slash command:
 | `arcane_swarm_update_service` | Update service configuration |
 | `arcane_swarm_delete_service` | Delete a swarm service |
 | `arcane_swarm_scale_service` | Scale service replicas |
-| `arcane_swarm_get_service_logs` | Get service logs |
+| `arcane_swarm_get_service_logs` | Fetch service logs (incremental follow via `since`) |
 | `arcane_swarm_init_cluster` | Initialize a new swarm cluster |
 | `arcane_swarm_join_cluster` | Join an existing cluster |
 | `arcane_swarm_leave_cluster` | Leave the swarm cluster |
@@ -322,18 +323,20 @@ And a Claude Code slash command:
 | `arcane_vulnerability_list_ignored` | List ignored vulnerabilities |
 | `arcane_vulnerability_get_image_options` | List scannable images |
 
-### Projects / Docker Compose (12)
+### Projects / Docker Compose (14)
 
 | Tool | Description |
 |------|-------------|
 | `arcane_project_list` | List Docker Compose projects |
 | `arcane_project_get` | Get project details |
+| `arcane_project_get_logs` | Fetch stack logs (incremental follow via `since`) |
 | `arcane_project_create` | Create from compose YAML |
 | `arcane_project_update` | Update project configuration |
 | `arcane_project_up` | Deploy a project |
 | `arcane_project_down` | Stop and remove containers |
 | `arcane_project_restart` | Restart all services |
 | `arcane_project_redeploy` | Redeploy (down + up) |
+| `arcane_project_update_services` | Pull latest images + recreate services (the dedicated update action) |
 | `arcane_project_destroy` | Destroy project and volumes |
 | `arcane_project_pull_images` | Pull latest images |
 | `arcane_project_get_counts` | Get status counts |
@@ -355,7 +358,7 @@ And a Claude Code slash command:
 | `arcane_image_get_update_summary` | Get update summary |
 | `arcane_image_update_check` | Check update by reference |
 | `arcane_image_update_check_by_id` | Check update by ID |
-| `arcane_image_update_check_multiple` | Batch check |
+| `arcane_image_update_check_multiple` | Batch check by image reference |
 | `arcane_image_update_check_all` | Check all for updates |
 | `arcane_image_update_get_summary` | Get update summary |
 | `arcane_build_image` | Build from Dockerfile or Git URL |
@@ -396,7 +399,7 @@ And a Claude Code slash command:
 </details>
 
 <details>
-<summary><strong>GitOps, Webhooks, Auto-Updater & Dashboard (23 tools)</strong></summary>
+<summary><strong>GitOps, Webhooks, Auto-Updater, Dashboard & Activities (23 tools)</strong></summary>
 
 | Tool | Description |
 |------|-------------|
@@ -418,15 +421,15 @@ And a Claude Code slash command:
 | `arcane_webhook_update` | Update a webhook |
 | `arcane_webhook_delete` | Delete a webhook |
 | `arcane_updater_run` | Run auto-updater (dry run supported) |
-| `arcane_updater_update_container` | Update single container |
 | `arcane_updater_get_status` | Get updater schedule |
 | `arcane_updater_get_history` | Get update history |
 | `arcane_dashboard_get` | Get dashboard snapshot |
-| `arcane_dashboard_get_action_items` | Get action items |
+| `arcane_activity_list` | List background activities (update checks, prunes, scans) |
+| `arcane_activity_get` | Get activity progress and messages |
 </details>
 
 <details>
-<summary><strong>Environments, Registries, Auth & More (69 tools)</strong></summary>
+<summary><strong>Environments, Registries, Auth & More (66 tools)</strong></summary>
 
 | Category | Tools | What it covers |
 |----------|-------|----------------|
@@ -434,8 +437,8 @@ And a Claude Code slash command:
 | **Container Registries** | 7 | Docker Hub, GHCR, ECR, GCR, ACR. Create, update, delete, test, sync registries |
 | **Templates** | 8 | Docker Compose templates with variables. Browse, create, download, manage |
 | **Jobs** | 4 | Scheduled tasks. List jobs, get schedules, run on demand |
-| **Notifications** | 6 | Alert configuration via Apprise. Get/set settings, test notifications |
-| **Events** | 4 | Activity tracking. List events by environment, create, delete |
+| **Notifications** | 4 | Alert configuration per provider (Discord, email, Telegram, Slack, ntfy, …). Get/set/delete settings, test notifications |
+| **Events** | 3 | Activity tracking. List events globally or by environment, delete |
 | **Users** | 5 | User management. List, create, update, delete users |
 | **Settings** | 8 | Server configuration and API key management |
 | **Authentication** | 8 | Login, logout, JWT token management, OIDC device flow |
@@ -515,14 +518,14 @@ src/
     arcane-client.ts    # HTTP client (retry, SSL, size limits)
   auth/
     auth-manager.ts     # JWT auto-refresh + API key auth
-  tools/                # 25 modules, 180 tools
+  tools/                # 26 modules, 180 tools
     registry.ts         # ToolRegistry — captures RegisteredTool handles, applies filter
     presets.ts          # commonly-used / read-only / minimal / deploy / full / custom
   resources/            # 4 MCP Resources
   prompts/              # 5 MCP Prompts
   types/
     arcane-types.ts     # Shared interfaces (33 types)
-    generated/          # Auto-generated from OpenAPI v1.17.0
+    generated/          # Auto-generated from OpenAPI v2.3.2
   utils/
     tool-helpers.ts     # registerTool wrapper with isError handling
     config-watcher.ts   # debounced fs.watch on ~/.arcane/config.json → hot reload

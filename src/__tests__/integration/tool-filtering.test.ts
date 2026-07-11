@@ -59,7 +59,7 @@ describe("integration: boot-per-preset", () => {
     expect(enabled).toBe(registry.allToolNames().length);
     expect(disabled).toBe(0);
     // And the registry captured the full module inventory
-    expect(registry.allModules().length).toBe(25);
+    expect(registry.allModules().length).toBe(26);
   });
 
   it("undefined config falls back to full (backwards-compatible)", () => {
@@ -79,7 +79,6 @@ describe("integration: boot-per-preset", () => {
       "arcane_container_get_counts",
       "arcane_container_list",
       "arcane_dashboard_get",
-      "arcane_dashboard_get_action_items",
     ]);
   });
 
@@ -202,7 +201,7 @@ describe("integration: hot reload cycle", () => {
       writeFileSync(tmpFile, JSON.stringify({ tools: { preset: "minimal" } }));
 
       // Wait for the watcher to debounce + apply
-      await waitFor(() => countEnabled(registry).enabled === 5);
+      await waitFor(() => countEnabled(registry).enabled === 4);
 
       const { enabledNames } = countEnabled(registry);
       expect(enabledNames.sort()).toEqual([
@@ -210,7 +209,6 @@ describe("integration: hot reload cycle", () => {
         "arcane_container_get_counts",
         "arcane_container_list",
         "arcane_dashboard_get",
-        "arcane_dashboard_get_action_items",
       ]);
     } finally {
       watcher.stop();

@@ -24,26 +24,26 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
       },
       inputSchema: {
       search: z.string().optional().describe("Search query"),
-      category: z.string().optional().describe("Filter by category"),
+      type: z.string().optional().describe("Filter by template type"),
       start: z.number().optional().default(0).describe("Pagination start"),
       limit: z.number().optional().default(20).describe("Items per page"),
     },
     },
-    toolHandler(async ({ search, category, start, limit }, client) => {
+    toolHandler(async ({ search, type, start, limit }, client) => {
       const response = await client.get<{
         data: Template[];
-        pagination: { total: number };
-      }>("/templates", { search, category, start, limit });
+        pagination: { totalItems: number };
+      }>("/templates", { search, type, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No templates found.";
       }
 
-      const lines = [`Found ${response.pagination.total} templates:\n`];
+      const lines = [`Found ${response.pagination.totalItems} templates:\n`];
       for (const tmpl of response.data) {
         lines.push(`${tmpl.name}`);
         lines.push(`    ID: ${tmpl.id}`);
-        if (tmpl.category) lines.push(`    Category: ${tmpl.category}`);
+        if (tmpl.registry?.name) lines.push(`    Registry: ${tmpl.registry.name}`);
         if (tmpl.description) lines.push(`    Description: ${tmpl.description.substring(0, 80)}...`);
         lines.push("");
       }
@@ -75,8 +75,9 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
       const lines = [
         `Template: ${tmpl.name}`,
         `  ID: ${tmpl.id}`,
-        `  Category: ${tmpl.category || "N/A"}`,
-        `  Source: ${tmpl.source || "N/A"}`,
+        `  Remote: ${tmpl.isRemote ? "Yes" : "No"}`,
+        `  Custom: ${tmpl.isCustom ? "Yes" : "No"}`,
+        `  Registry: ${tmpl.registry?.name || "N/A"}`,
         `  Description: ${tmpl.description || "N/A"}`,
       ];
 
@@ -124,14 +125,14 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
       inputSchema: {
       name: z.string().describe("Template name"),
       description: z.string().optional().describe("Template description"),
-      category: z.string().optional().describe("Category"),
       content: z.string().describe("Docker Compose YAML content"),
+      envContent: z.string().optional().describe("Environment file (.env) content"),
     },
     },
-    toolHandler(async ({ name, description, category, content }, client) => {
+    toolHandler(async ({ name, description, content, envContent }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         "/templates",
-        { name, description, category, content }
+        { name, description: description ?? "", content, envContent: envContent ?? "" }
       );
 
       return `Template created: ${response.data.name} (ID: ${response.data.id})`;
@@ -154,16 +155,16 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
       templateId: z.string().describe("Template ID"),
       name: z.string().optional().describe("New name"),
       description: z.string().optional().describe("New description"),
-      category: z.string().optional().describe("New category"),
       content: z.string().optional().describe("New YAML content"),
+      envContent: z.string().optional().describe("New environment file (.env) content"),
     },
     },
-    toolHandler(async ({ templateId, name, description, category, content }, client) => {
+    toolHandler(async ({ templateId, name, description, content, envContent }, client) => {
       const body: Record<string, unknown> = {};
       if (name) body.name = name;
       if (description) body.description = description;
-      if (category) body.category = category;
       if (content) body.content = content;
+      if (envContent) body.envContent = envContent;
 
       await client.put(`/templates/${templateId}`, body);
       return `Template ${templateId} updated.`;
@@ -204,17 +205,22 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
         idempotentHint: true,
         openWorldHint: false,
       },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
     },
-    toolHandler(async (_params, client) => {
-      const response = await client.get<{ data: Record<string, string> }>("/templates/variables");
+    },
+    toolHandler(async ({ environmentId }, client) => {
+      const response = await client.get<{ data: Array<{ key: string; value: string }> }>(
+        `/environments/${environmentId}/templates/variables`
+      );
 
-      if (!response.data || Object.keys(response.data).length === 0) {
+      if (!response.data || response.data.length === 0) {
         return "No global variables configured.";
       }
 
       const lines = ["Global Template Variables:\n"];
-      for (const [key, value] of Object.entries(response.data)) {
-        lines.push(`  ${key}: ${value}`);
+      for (const variable of response.data) {
+        lines.push(`  ${variable.key}: ${variable.value}`);
       }
 
       return lines.join("\n");
@@ -234,11 +240,13 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
         openWorldHint: false,
       },
       inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
       variables: z.record(z.string()).describe("Variables to set (key-value pairs)"),
     },
     },
-    toolHandler(async ({ variables }, client) => {
-      await client.put("/templates/variables", { variables });
+    toolHandler(async ({ environmentId, variables }, client) => {
+      const variableList = Object.entries(variables).map(([key, value]) => ({ key, value }));
+      await client.put(`/environments/${environmentId}/templates/variables`, { variables: variableList });
       return "Global variables updated.";
     })
   );

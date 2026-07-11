@@ -70,7 +70,7 @@ export function registerPrompts(server: McpServer): void {
                 "",
                 "Follow this systematic diagnostic workflow using Arcane tools:",
                 "1. Use arcane_container_get to check the container's current state, config, and labels.",
-                "2. Use arcane_dashboard_get_action_items to see if there are known issues flagged.",
+                "2. Use arcane_dashboard_get for an overview of the environment (unhealthy containers, pending updates).",
                 "3. Check if the container is part of a project with arcane_project_list, then arcane_project_get for service-level status.",
                 "4. Use arcane_image_update_check_by_id to see if the image is outdated.",
                 "5. Use arcane_port_list to check for port conflicts across the environment.",

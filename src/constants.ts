@@ -10,6 +10,21 @@ export const TOKEN_REFRESH_BUFFER_MS = 60 * 1000;
 /** Default HTTP request timeout */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
 
+/** Timeout for fire-and-forget background requests (long-running server-side operations) */
+export const BACKGROUND_REQUEST_TIMEOUT_MS = 10 * 60 * 1000;
+
+/** Log streaming (WebSocket): stop collecting when no new line arrived for this long */
+export const LOG_STREAM_IDLE_TIMEOUT_MS = 2000;
+
+/** Log streaming (WebSocket): hard cap on how long a single fetch may run */
+export const LOG_STREAM_MAX_DURATION_MS = 15000;
+
+/** Log streaming: default number of backlog lines to request */
+export const DEFAULT_LOG_TAIL = 100;
+
+/** Log streaming: hard cap on returned lines per call (protects the context window) */
+export const MAX_LOG_LINES = 500;
+
 /** Session timeout - 30 minutes of inactivity */
 export const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 

@@ -31,21 +31,20 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
         data: ContainerRegistry[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/container-registries", { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No container registries configured.";
       }
 
-      const lines = [`Found ${response.pagination.total} registries:\n`];
+      const lines = [`Found ${response.pagination.totalItems} registries:\n`];
       for (const reg of response.data) {
-        const status = reg.lastTestStatus || "untested";
-        lines.push(`${reg.name}`);
+        lines.push(`${reg.description || reg.url}`);
         lines.push(`    ID: ${reg.id}`);
         lines.push(`    URL: ${reg.url}`);
-        lines.push(`    Type: ${reg.type}`);
-        lines.push(`    Status: ${status}`);
+        lines.push(`    Type: ${reg.registryType}`);
+        lines.push(`    Enabled: ${reg.enabled ? "Yes" : "No"}`);
         lines.push("");
       }
 
@@ -76,13 +75,14 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
 
       const reg = response.data;
       const lines = [
-        `Registry: ${reg.name}`,
+        `Registry: ${reg.description || reg.url}`,
         `  ID: ${reg.id}`,
         `  URL: ${reg.url}`,
-        `  Type: ${reg.type}`,
+        `  Type: ${reg.registryType}`,
         `  Username: ${reg.username || "N/A"}`,
+        `  Enabled: ${reg.enabled ? "Yes" : "No"}`,
+        `  Insecure: ${reg.insecure ? "Yes" : "No"}`,
         `  Created: ${reg.createdAt || "N/A"}`,
-        `  Last Test: ${reg.lastTestAt || "Never"} (${reg.lastTestStatus || "N/A"})`,
       ];
 
       return lines.join("\n");
@@ -102,23 +102,36 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
         openWorldHint: false,
       },
       inputSchema: {
-      name: z.string().describe("Registry name"),
+      description: z.string().describe("Registry description (display label)"),
       url: z.string().describe("Registry URL (e.g., docker.io, ghcr.io)"),
-      type: z.enum(["dockerhub", "gcr", "ecr", "acr", "ghcr", "custom"]).describe("Registry type"),
+      registryType: z.enum(["dockerhub", "gcr", "ecr", "acr", "ghcr", "custom"]).describe("Registry type"),
       username: z.string().optional().describe("Username for authentication"),
-      password: z.string().optional().describe("Password or token"),
+      token: z.string().optional().describe("Access token / password for authentication"),
+      insecure: z.boolean().optional().default(false).describe("Allow insecure (non-TLS) connections"),
+      enabled: z.boolean().optional().default(true).describe("Whether the registry is enabled"),
       awsRegion: z.string().optional().describe("AWS region (required for ECR registries)"),
       awsAccessKeyId: z.string().optional().describe("AWS access key ID (for ECR registries)"),
       awsSecretAccessKey: z.string().optional().describe("AWS secret access key (for ECR registries)"),
     },
     },
-    toolHandler(async ({ name, url, type, username, password, awsRegion, awsAccessKeyId, awsSecretAccessKey }, client) => {
-      const response = await client.post<{ data: { id: string; name: string } }>(
+    toolHandler(async ({ description, url, registryType, username, token, insecure, enabled, awsRegion, awsAccessKeyId, awsSecretAccessKey }, client) => {
+      const response = await client.post<{ data: { id: string } }>(
         "/container-registries",
-        { name, url, type, username, password, awsRegion, awsAccessKeyId, awsSecretAccessKey }
+        {
+          description,
+          url,
+          registryType,
+          username: username ?? "",
+          token: token ?? "",
+          insecure,
+          enabled,
+          awsRegion: awsRegion ?? "",
+          awsAccessKeyId: awsAccessKeyId ?? "",
+          awsSecretAccessKey: awsSecretAccessKey ?? "",
+        }
       );
 
-      return `Registry created: ${response.data.name} (ID: ${response.data.id})`;
+      return `Registry created: ${description} (ID: ${response.data.id})`;
     })
   );
 
@@ -136,18 +149,18 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
       },
       inputSchema: {
       registryId: z.string().describe("Registry ID"),
-      name: z.string().optional().describe("New name"),
+      description: z.string().optional().describe("New description (display label)"),
       url: z.string().optional().describe("New URL"),
       username: z.string().optional().describe("New username"),
-      password: z.string().optional().describe("New password"),
+      token: z.string().optional().describe("New access token / password"),
     },
     },
-    toolHandler(async ({ registryId, name, url, username, password }, client) => {
+    toolHandler(async ({ registryId, description, url, username, token }, client) => {
       const body: Record<string, unknown> = {};
-      if (name) body.name = name;
+      if (description) body.description = description;
       if (url) body.url = url;
       if (username) body.username = username;
-      if (password) body.password = password;
+      if (token) body.token = token;
 
       await client.put(`/container-registries/${registryId}`, body);
       return `Registry ${registryId} updated.`;
@@ -193,10 +206,10 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
     },
     },
     toolHandler(async ({ registryId }, client) => {
-      const response = await client.post<{ message: string }>(
+      const response = await client.post<{ data: { message?: string } }>(
         `/container-registries/${registryId}/test`
       );
-      return response.message || "Connection successful!";
+      return response.data?.message || "Connection successful!";
     })
   );
 
@@ -214,7 +227,7 @@ export function registerRegistryTools(server: McpServer, registry?: ToolRegistry
       },
     },
     toolHandler(async (_params, client) => {
-      await client.post("/container-registries/sync");
+      await client.post("/container-registries/sync", { registries: [] });
       return "Registry sync initiated.";
     })
   );

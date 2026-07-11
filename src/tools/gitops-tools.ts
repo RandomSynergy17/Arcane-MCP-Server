@@ -36,20 +36,20 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     toolHandler(async ({ environmentId, search, start, limit }, client) => {
       const response = await client.get<{
         data: GitOpsSync[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/gitops-syncs`, { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No GitOps syncs configured.";
       }
 
-      const lines = [`Found ${response.pagination.total} GitOps syncs:\n`];
+      const lines = [`Found ${response.pagination.totalItems} GitOps syncs:\n`];
       for (const sync of response.data) {
         const status = sync.lastSyncStatus || "never synced";
         lines.push(`${sync.name}`);
         lines.push(`    ID: ${sync.id}`);
         lines.push(`    Branch: ${sync.branch}`);
-        lines.push(`    Path: ${sync.path}`);
+        lines.push(`    Path: ${sync.composePath}`);
         lines.push(`    Auto-sync: ${sync.autoSync ? "Yes" : "No"}`);
         lines.push(`    Last sync: ${sync.lastSyncAt || "Never"} (${status})`);
         lines.push("");
@@ -87,8 +87,8 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
         `  ID: ${sync.id}`,
         `  Repository ID: ${sync.repositoryId}`,
         `  Branch: ${sync.branch}`,
-        `  Path: ${sync.path}`,
-        `  Target Project: ${sync.targetProjectId || "N/A"}`,
+        `  Path: ${sync.composePath}`,
+        `  Target Project: ${sync.projectName || sync.projectId || "N/A"}`,
         `  Auto-sync: ${sync.autoSync ? `Yes (every ${sync.syncInterval}s)` : "No"}`,
         `  Last Sync: ${sync.lastSyncAt || "Never"}`,
         `  Last Status: ${sync.lastSyncStatus || "N/A"}`,
@@ -115,16 +115,16 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
       name: z.string().describe("Name for the sync"),
       repositoryId: z.string().describe("Git repository ID"),
       branch: z.string().describe("Branch to sync from"),
-      path: z.string().describe("Path to compose files in repo"),
-      folders: z.array(z.string()).optional().describe("Specific folders to sync (for folder-level sync)"),
+      composePath: z.string().describe("Path to the compose file in the repo"),
+      syncDirectory: z.boolean().optional().describe("Sync the entire directory containing the compose file"),
       autoSync: z.boolean().optional().default(false).describe("Enable automatic syncing"),
       syncInterval: z.number().optional().describe("Sync interval in seconds (for auto-sync)"),
     },
     },
-    toolHandler(async ({ environmentId, name, repositoryId, branch, path, folders, autoSync, syncInterval }, client) => {
+    toolHandler(async ({ environmentId, name, repositoryId, branch, composePath, syncDirectory, autoSync, syncInterval }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         `/environments/${environmentId}/gitops-syncs`,
-        { name, repositoryId, branch, path, folders, autoSync, syncInterval }
+        { name, repositoryId, branch, composePath, syncDirectory, autoSync, syncInterval }
       );
 
       return `GitOps sync created: ${response.data.name} (ID: ${response.data.id})`;
@@ -148,18 +148,18 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
       syncId: z.string().describe("GitOps sync ID"),
       name: z.string().optional().describe("New name"),
       branch: z.string().optional().describe("New branch"),
-      path: z.string().optional().describe("New path"),
-      folders: z.array(z.string()).optional().describe("Updated folders to sync"),
+      composePath: z.string().optional().describe("New path to the compose file in the repo"),
+      syncDirectory: z.boolean().optional().describe("Sync the entire directory containing the compose file"),
       autoSync: z.boolean().optional().describe("Enable/disable auto-sync"),
       syncInterval: z.number().optional().describe("New sync interval"),
     },
     },
-    toolHandler(async ({ environmentId, syncId, name, branch, path, folders, autoSync, syncInterval }, client) => {
+    toolHandler(async ({ environmentId, syncId, name, branch, composePath, syncDirectory, autoSync, syncInterval }, client) => {
       const body: Record<string, unknown> = {};
       if (name) body.name = name;
       if (branch) body.branch = branch;
-      if (path) body.path = path;
-      if (folders) body.folders = folders;
+      if (composePath) body.composePath = composePath;
+      if (syncDirectory !== undefined) body.syncDirectory = syncDirectory;
       if (autoSync !== undefined) body.autoSync = autoSync;
       if (syncInterval !== undefined) body.syncInterval = syncInterval;
 
@@ -234,21 +234,21 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     toolHandler(async ({ environmentId, syncId }, client) => {
       const response = await client.get<{
         data: {
-          status: string;
+          lastSyncStatus?: string;
           lastSyncAt?: string;
-          lastCommit?: string;
-          error?: string;
+          lastSyncCommit?: string;
+          lastSyncError?: string;
         };
       }>(`/environments/${environmentId}/gitops-syncs/${syncId}/status`);
 
       const status = response.data;
       const lines = [
-        `Sync Status: ${status.status}`,
+        `Sync Status: ${status.lastSyncStatus || "never synced"}`,
         `  Last Sync: ${status.lastSyncAt || "Never"}`,
-        `  Last Commit: ${status.lastCommit || "N/A"}`,
+        `  Last Commit: ${status.lastSyncCommit || "N/A"}`,
       ];
-      if (status.error) {
-        lines.push(`  Error: ${status.error}`);
+      if (status.lastSyncError) {
+        lines.push(`  Error: ${status.lastSyncError}`);
       }
 
       return lines.join("\n");
@@ -278,19 +278,18 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     toolHandler(async ({ search, start, limit }, client) => {
       const response = await client.get<{
         data: GitRepository[];
-        pagination: { total: number };
+        pagination: { totalItems: number };
       }>("/customize/git-repositories", { search, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No Git repositories configured.";
       }
 
-      const lines = [`Found ${response.pagination.total} repositories:\n`];
+      const lines = [`Found ${response.pagination.totalItems} repositories:\n`];
       for (const repo of response.data) {
         lines.push(`${repo.name}`);
         lines.push(`    ID: ${repo.id}`);
         lines.push(`    URL: ${repo.url}`);
-        lines.push(`    Branch: ${repo.branch}`);
         lines.push(`    Auth: ${repo.authType}`);
         lines.push("");
       }
@@ -314,17 +313,16 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
       inputSchema: {
       name: z.string().describe("Repository name"),
       url: z.string().describe("Repository URL"),
-      branch: z.string().optional().default("main").describe("Default branch"),
       authType: z.enum(["none", "basic", "ssh", "token"]).optional().default("none").describe("Authentication type"),
       username: z.string().optional().describe("Username (for basic auth)"),
-      password: z.string().optional().describe("Password or token"),
+      token: z.string().optional().describe("Access token / password for HTTPS auth"),
       sshKey: z.string().optional().describe("SSH private key"),
     },
     },
-    toolHandler(async ({ name, url, branch, authType, username, password, sshKey }, client) => {
+    toolHandler(async ({ name, url, authType, username, token, sshKey }, client) => {
       const response = await client.post<{ data: { id: string; name: string } }>(
         "/customize/git-repositories",
-        { name, url, branch, authType, username, password, sshKey }
+        { name, url, authType, username, token, sshKey }
       );
 
       return `Git repository added: ${response.data.name} (ID: ${response.data.id})`;
@@ -349,12 +347,12 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     },
     },
     toolHandler(async ({ repositoryId, branch }, client) => {
-      const response = await client.post<{ message: string }>(
+      const response = await client.post<{ data: { message?: string } }>(
         `/customize/git-repositories/${repositoryId}/test`,
         undefined,
         { branch }
       );
-      return response.message || "Connection successful!";
+      return response.data?.message || "Connection successful!";
     })
   );
 
@@ -376,13 +374,16 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
     },
     toolHandler(async ({ repositoryId }, client) => {
       const response = await client.get<{
-        data: { branches: string[]; defaultBranch?: string };
+        data: { branches: Array<{ name: string; isDefault: boolean }> | null };
       }>(`/customize/git-repositories/${repositoryId}/branches`);
 
-      const lines = [`Branches (default: ${response.data.defaultBranch || "unknown"}):\n`];
+      if (!response.data.branches || response.data.branches.length === 0) {
+        return "No branches found.";
+      }
+
+      const lines = ["Branches:\n"];
       for (const branch of response.data.branches) {
-        const isDefault = branch === response.data.defaultBranch ? " (default)" : "";
-        lines.push(`  - ${branch}${isDefault}`);
+        lines.push(`  - ${branch.name}${branch.isDefault ? " (default)" : ""}`);
       }
 
       return lines.join("\n");
@@ -411,15 +412,18 @@ export function registerGitopsTools(server: McpServer, registry?: ToolRegistry):
       if (path) validatePath(path);
 
       const response = await client.get<{
-        data: Array<{ name: string; type: string; path: string }>;
+        data: {
+          path: string;
+          files: Array<{ name: string; path: string; type: string; size?: number }> | null;
+        };
       }>(`/customize/git-repositories/${repositoryId}/files`, { branch, path });
 
-      if (!response.data || response.data.length === 0) {
+      if (!response.data.files || response.data.files.length === 0) {
         return `No files found at path: ${path || "/"}`;
       }
 
       const lines = [`Files at ${path || "/"}:\n`];
-      for (const file of response.data) {
+      for (const file of response.data.files) {
         const type = file.type === "dir" ? "DIR " : "FILE";
         lines.push(`${type}  ${file.name}`);
       }

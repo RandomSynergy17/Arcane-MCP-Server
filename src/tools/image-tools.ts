@@ -6,7 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { moduleRegistrar, type ToolRegistry } from "./registry.js";
-import { formatSize, formatSizeMB, formatSizeGB } from "../utils/format.js";
+import { formatSize, formatSizeMB, formatSizeGB, formatUnixTimestamp } from "../utils/format.js";
+import { resolveImageId } from "../utils/image-resolver.js";
 import { DOCKER_DIGEST_PREFIX_LENGTH, DOCKER_SHORT_ID_LENGTH } from "../constants.js";
 import type { Image } from "../types/arcane-types.js";
 
@@ -36,20 +37,20 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, search, sort, order, start, limit }, client) => {
       const response = await client.get<{
         data: Image[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/images`, { search, sort, order, start, limit });
 
       if (!response.data || response.data.length === 0) {
         return "No images found.";
       }
 
-      const lines = [`Found ${response.pagination.total} images:\n`];
+      const lines = [`Found ${response.pagination.totalItems} images:\n`];
       for (const img of response.data) {
         const tags = img.repoTags?.join(", ") || "<none>";
         lines.push(`${tags}`);
         lines.push(`    ID: ${img.id.substring(DOCKER_DIGEST_PREFIX_LENGTH, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH)}`);
         lines.push(`    Size: ${formatSize(img.size)}`);
-        lines.push(`    Created: ${img.created}`);
+        lines.push(`    Created: ${formatUnixTimestamp(img.created)}`);
         lines.push("");
       }
 
@@ -71,13 +72,23 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      imageId: z.string().describe("Image ID or tag"),
+      imageId: z.string().describe("Image ID or name:tag (names are resolved via the image list)"),
     },
     },
     toolHandler(async ({ environmentId, imageId }, client) => {
-      const response = await client.get<{ data: Image & { config?: Record<string, unknown> } }>(
-        `/environments/${environmentId}/images/${imageId}`
-      );
+      const resolvedId = await resolveImageId(client, environmentId, imageId);
+      // Unlike the list endpoint, the detail endpoint returns `created` as an ISO string
+      const response = await client.get<{
+        data: {
+          id: string;
+          repoTags?: string[] | null;
+          repoDigests?: string[] | null;
+          created: string;
+          size: number;
+          architecture?: string;
+          os?: string;
+        };
+      }>(`/environments/${environmentId}/images/${resolvedId}`);
 
       const img = response.data;
 
@@ -86,9 +97,12 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
         `  ID: ${img.id}`,
         `  Tags: ${img.repoTags?.join(", ") || "none"}`,
         `  Size: ${formatSizeMB(img.size)}`,
-        `  Created: ${img.created}`,
+        `  Created: ${img.created || "unknown"}`,
       ];
 
+      if (img.architecture || img.os) {
+        lines.push(`  Platform: ${[img.os, img.architecture].filter(Boolean).join("/")}`);
+      }
       if (img.repoDigests && img.repoDigests.length > 0) {
         lines.push(`  Digests: ${img.repoDigests[0]}`);
       }
@@ -113,15 +127,12 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       environmentId: z.string().describe("Environment ID"),
       imageName: z.string().describe("Image name (e.g., nginx, library/ubuntu, ghcr.io/owner/repo)"),
       tag: z.string().describe("Image tag (e.g., latest, v1.0, alpine) — required"),
-      registryId: z.string().optional().describe("Container registry ID for private images (credentials will be fetched automatically)"),
     },
     },
-    toolHandler(async ({ environmentId, imageName, tag, registryId }, client) => {
-      const body: Record<string, unknown> = { imageName, tag };
-      if (registryId) body.registryId = registryId;
-
+    toolHandler(async ({ environmentId, imageName, tag }, client) => {
+      // Credentials of registries configured in Arcane are applied automatically by the server
       const displayName = tag ? `${imageName}:${tag}` : imageName;
-      await client.post(`/environments/${environmentId}/images/pull`, body);
+      await client.post(`/environments/${environmentId}/images/pull`, { imageName, tag });
       return `Image ${displayName} pulled successfully.`;
     })
   );
@@ -140,13 +151,13 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      imageId: z.string().describe("Image ID or tag to delete"),
+      imageId: z.string().describe("Image ID or name:tag to delete (names are resolved via the image list)"),
       force: z.boolean().optional().default(false).describe("Force removal even if in use"),
-      pruneChildren: z.boolean().optional().default(false).describe("Also remove child images"),
     },
     },
-    toolHandler(async ({ environmentId, imageId, force, pruneChildren }, client) => {
-      await client.delete(`/environments/${environmentId}/images/${imageId}`, { force, pruneChildren });
+    toolHandler(async ({ environmentId, imageId, force }, client) => {
+      const resolvedId = await resolveImageId(client, environmentId, imageId);
+      await client.delete(`/environments/${environmentId}/images/${resolvedId}`, { force });
       return `Image ${imageId} removed successfully.`;
     })
   );
@@ -169,14 +180,14 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     },
     toolHandler(async ({ environmentId, all }, client) => {
-      const response = await client.post<{ imagesDeleted?: string[]; spaceReclaimed?: number }>(
+      const response = await client.post<{ data: { imagesDeleted?: string[]; spaceReclaimed?: number } }>(
         `/environments/${environmentId}/images/prune`,
-        { all }
+        { mode: all ? "all" : "dangling", dangling: !all }
       );
 
-      const deleted = response.imagesDeleted?.length || 0;
-      const space = response.spaceReclaimed
-        ? formatSizeMB(response.spaceReclaimed)
+      const deleted = response.data?.imagesDeleted?.length || 0;
+      const space = response.data?.spaceReclaimed
+        ? formatSizeMB(response.data.spaceReclaimed)
         : "unknown";
 
       return `Pruned ${deleted} images, reclaimed ${space} of disk space.`;
@@ -201,12 +212,16 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
-        total: number;
-        size: number;
-        danglingCount?: number;
+        data: {
+          totalImages: number;
+          totalImageSize: number;
+          imagesInuse: number;
+          imagesUnused: number;
+        };
       }>(`/environments/${environmentId}/images/counts`);
 
-      return `Image Statistics:\n  Total: ${response.total}\n  Total Size: ${formatSizeGB(response.size)}\n  Dangling: ${response.danglingCount || 0}`;
+      const c = response.data;
+      return `Image Statistics:\n  Total: ${c.totalImages}\n  Total Size: ${formatSizeGB(c.totalImageSize)}\n  In Use: ${c.imagesInuse}\n  Unused: ${c.imagesUnused}`;
     })
   );
 
@@ -228,16 +243,21 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     },
     toolHandler(async ({ environmentId, image }, client) => {
-      const response = await client.post<{
+      const response = await client.get<{
         data: {
           hasUpdate: boolean;
+          currentVersion?: string;
+          latestVersion?: string;
           currentDigest?: string;
           latestDigest?: string;
         };
-      }>(`/environments/${environmentId}/image-updates/check`, { image });
+      }>(`/environments/${environmentId}/image-updates/check`, { imageRef: image });
 
-      if (response.data.hasUpdate) {
-        return `Update available for ${image}!\n  Current: ${response.data.currentDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown"}\n  Latest: ${response.data.latestDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown"}`;
+      const u = response.data;
+      if (u.hasUpdate) {
+        const current = u.currentVersion || u.currentDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown";
+        const latest = u.latestVersion || u.latestDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown";
+        return `Update available for ${image}!\n  Current: ${current}\n  Latest: ${latest}`;
       } else {
         return `${image} is up to date.`;
       }
@@ -249,7 +269,7 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     "arcane_image_check_updates_all",
     {
       title: "Check all image updates",
-      description: "Check for updates on all images in an environment",
+      description: "Start an update check for all images in an environment. The check runs in the background (can take several minutes) — track progress with arcane_activity_list and read the results with arcane_image_get_update_summary.",
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -261,21 +281,13 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.post<{
-        data: Array<{ image: string; hasUpdate: boolean }>;
-      }>(`/environments/${environmentId}/image-updates/check-all`);
+      client.postInBackground(`/environments/${environmentId}/image-updates/check-all`, {});
 
-      const updates = response.data.filter(i => i.hasUpdate);
-      if (updates.length === 0) {
-        return "All images are up to date.";
-      }
-
-      const lines = [`Found ${updates.length} images with updates:\n`];
-      for (const img of updates) {
-        lines.push(`  - ${img.image}`);
-      }
-
-      return lines.join("\n");
+      return [
+        "Update check for all images started in the background (this can take several minutes).",
+        "Track progress with arcane_activity_list (it also appears in Arcane's Activity Center).",
+        "Once finished, read the results with arcane_image_get_update_summary.",
+      ].join("\n");
     })
   );
 
@@ -299,12 +311,14 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       const response = await client.get<{
         data: {
           totalImages: number;
-          updatesAvailable: number;
-          lastChecked?: string;
+          imagesWithUpdates: number;
+          digestUpdates: number;
+          errorsCount: number;
         };
       }>(`/environments/${environmentId}/image-updates/summary`);
 
-      return `Update Summary:\n  Total Images: ${response.data.totalImages}\n  Updates Available: ${response.data.updatesAvailable}\n  Last Checked: ${response.data.lastChecked || "Never"}`;
+      const s = response.data;
+      return `Update Summary:\n  Total Images: ${s.totalImages}\n  Updates Available: ${s.imagesWithUpdates}\n  Digest Updates: ${s.digestUpdates}\n  Check Errors: ${s.errorsCount}`;
     })
   );
 

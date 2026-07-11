@@ -27,23 +27,24 @@ export function registerJobTools(server: McpServer, registry?: ToolRegistry): vo
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{ data: Job[] }>(
+      const response = await client.get<{ isAgent: boolean; jobs: Job[] | null }>(
         `/environments/${environmentId}/jobs`
       );
 
-      if (!response.data || response.data.length === 0) {
+      if (!response.jobs || response.jobs.length === 0) {
         return "No jobs found.";
       }
 
       const lines = [`Jobs:\n`];
-      for (const job of response.data) {
+      for (const job of response.jobs) {
         const status = job.enabled ? "[ENABLED]" : "[DISABLED]";
         lines.push(`${status} ${job.name}`);
         lines.push(`    ID: ${job.id}`);
-        lines.push(`    Type: ${job.type}`);
-        lines.push(`    Schedule: ${job.schedule || "manual"}`);
-        lines.push(`    Last Run: ${job.lastRunAt || "never"}`);
-        lines.push(`    Next Run: ${job.nextRunAt || "N/A"}`);
+        lines.push(`    Category: ${job.category}`);
+        if (job.description) lines.push(`    Description: ${job.description}`);
+        lines.push(`    Schedule: ${job.isContinuous ? "continuous" : job.schedule || "manual"}`);
+        lines.push(`    Next Run: ${job.nextRun || "N/A"}`);
+        lines.push(`    Can Run Manually: ${job.canRunManually ? "yes" : "no"}`);
         lines.push("");
       }
 
@@ -79,7 +80,7 @@ export function registerJobTools(server: McpServer, registry?: ToolRegistry): vo
     "arcane_job_schedule_get",
     {
       title: "Get job schedules",
-      description: "Get job schedules for an environment",
+      description: "Get the configured job schedule intervals for an environment",
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -91,23 +92,21 @@ export function registerJobTools(server: McpServer, registry?: ToolRegistry): vo
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{
-        data: Array<{
-          jobId: string;
-          jobName: string;
-          schedule: string;
-          enabled: boolean;
-        }>;
-      }>(`/environments/${environmentId}/job-schedules`);
+      const config = await client.get<Record<string, string>>(
+        `/environments/${environmentId}/job-schedules`
+      );
 
-      if (!response.data || response.data.length === 0) {
-        return "No job schedules configured.";
+      const entries = Object.entries(config).filter(
+        ([key, value]) => key !== "$schema" && typeof value === "string"
+      );
+
+      if (entries.length === 0) {
+        return "No job schedule configuration found.";
       }
 
-      const lines = ["Job Schedules:\n"];
-      for (const schedule of response.data) {
-        const status = schedule.enabled ? "[ON]" : "[OFF]";
-        lines.push(`${status} ${schedule.jobName}: ${schedule.schedule}`);
+      const lines = ["Job Schedule Intervals:\n"];
+      for (const [key, value] of entries) {
+        lines.push(`  ${key}: ${value}`);
       }
 
       return lines.join("\n");
@@ -119,7 +118,7 @@ export function registerJobTools(server: McpServer, registry?: ToolRegistry): vo
     "arcane_job_schedule_update",
     {
       title: "Update job schedules",
-      description: "Update job schedules for an environment",
+      description: "Update job schedule intervals for an environment. Only the provided intervals are changed.",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -128,15 +127,28 @@ export function registerJobTools(server: McpServer, registry?: ToolRegistry): vo
       },
       inputSchema: {
         environmentId: z.string().describe("Environment ID"),
-        schedules: z.array(z.object({
-          jobId: z.string().describe("Job ID"),
-          schedule: z.string().optional().describe("Cron schedule expression"),
-          enabled: z.boolean().optional().describe("Enable or disable"),
-        })).describe("Schedule updates"),
+        autoHealInterval: z.string().optional().describe("Interval for the auto-heal job"),
+        autoUpdateInterval: z.string().optional().describe("Interval for the auto-update job"),
+        dockerClientRefreshInterval: z.string().optional().describe("Interval for refreshing the Docker client"),
+        environmentHealthInterval: z.string().optional().describe("Interval for environment health checks"),
+        eventCleanupInterval: z.string().optional().describe("Interval for event cleanup"),
+        expiredSessionsCleanupInterval: z.string().optional().describe("Interval for expired session cleanup"),
+        pollingInterval: z.string().optional().describe("Interval for polling"),
+        scheduledPruneInterval: z.string().optional().describe("Interval for scheduled prune"),
+        vulnerabilityScanInterval: z.string().optional().describe("Interval for vulnerability scans"),
       },
     },
-    toolHandler(async ({ environmentId, schedules }, client) => {
-      await client.put(`/environments/${environmentId}/job-schedules`, { schedules });
+    toolHandler(async ({ environmentId, ...intervals }, client) => {
+      const body: Record<string, string> = {};
+      for (const [key, value] of Object.entries(intervals)) {
+        if (value !== undefined) body[key] = value;
+      }
+
+      if (Object.keys(body).length === 0) {
+        return "No intervals provided - nothing to update.";
+      }
+
+      await client.put(`/environments/${environmentId}/job-schedules`, body);
       return "Job schedules updated.";
     })
   );

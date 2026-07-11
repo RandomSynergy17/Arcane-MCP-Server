@@ -1,7 +1,7 @@
 ---
 name: arcane-mcp-server
 description: >
-  Manages Docker infrastructure via 180+ Arcane MCP tools. Use when
+  Manages Docker infrastructure via 170+ Arcane MCP tools. Use when
   working with Docker containers, images, volumes, networks, stacks,
   Compose projects, Swarm services, registries, or environments.
   Covers deployment, rollback, troubleshooting, cleanup, GitOps sync,
@@ -12,7 +12,7 @@ compatibility: Requires the Arcane MCP server running and a configured Arcane Do
 
 # Arcane Docker Management
 
-Guides effective use of the Arcane MCP server's 180+ tools for Docker infrastructure management. This skill activates when users ask about Docker operations and `arcane_*` tools are available.
+Guides effective use of the Arcane MCP server's 170+ tools for Docker infrastructure management. This skill activates when users ask about Docker operations and `arcane_*` tools are available.
 
 **Announce:** "Using the arcane-mcp-server skill to guide this Docker operation."
 
@@ -32,10 +32,11 @@ When the user says something general, map it to the right tool sequence:
 | User says | Tools to use |
 |-----------|-------------|
 | "What's running?" / "Show me my containers" | `arcane_container_list` |
-| "How's everything looking?" / "Status" | `arcane_dashboard_get` then `arcane_dashboard_get_action_items` |
+| "How's everything looking?" / "Status" | `arcane_dashboard_get` |
 | "Deploy this compose file" | `arcane_project_create` then `arcane_project_up` |
-| "Update everything" | `arcane_image_update_check_all` then `arcane_updater_run` (with `dryRun: true` first) |
-| "What needs attention?" | `arcane_dashboard_get_action_items` |
+| "Update everything" / "Update this stack" | `arcane_project_list` with `updates: "has_update"`, then `arcane_project_update_services` per project (needs only `projects:update`) |
+| "Which projects/stacks have updates?" | `arcane_project_list` with `updates: "has_update"` — shows exactly which image refs are outdated. Do NOT check images one by one |
+| "What needs attention?" | `arcane_dashboard_get` then `arcane_event_list` (severity filter) |
 | "Is anything vulnerable?" | `arcane_vulnerability_get_environment_summary` |
 | "Set up a new stack" | `arcane_project_create` with compose YAML |
 | "Scale this up" | `arcane_swarm_scale_service` (swarm) or redeploy with updated config (compose) |
@@ -73,11 +74,12 @@ If a deployment goes wrong:
 
 When something is broken, investigate systematically:
 
-1. **Dashboard first** — `arcane_dashboard_get` + `arcane_dashboard_get_action_items`
+1. **Dashboard first** — `arcane_dashboard_get`
 2. **Container state** — `arcane_container_list` to find stopped/unhealthy containers
 3. **Container detail** — `arcane_container_get` on the suspect container
-4. **Port conflicts** — `arcane_port_list` if networking issues suspected
-5. **Vulnerability check** — `arcane_vulnerability_get_environment_summary` if security related
+4. **Logs** — `arcane_container_get_logs` (or `arcane_project_get_logs` for a whole stack); to follow live, call again with `since` set to the newest timestamp
+5. **Port conflicts** — `arcane_port_list` if networking issues suspected
+6. **Vulnerability check** — `arcane_vulnerability_get_environment_summary` if security related
 
 ### Cleanup
 
@@ -106,17 +108,22 @@ For Docker Swarm clusters:
 2. **Deploy services** — `arcane_swarm_create_service` with replicas, ports, networks
 3. **Scale** — `arcane_swarm_scale_service` to adjust replica count
 4. **Monitor** — `arcane_swarm_list_services` + `arcane_swarm_get_service` for task status
-5. **Logs** — `arcane_swarm_get_service_logs` for debugging
+5. **Logs** — `arcane_swarm_get_service_logs` for debugging (incremental via `since`)
 
-### Auto-Update Management
+### Update Overview & Auto-Update Management
 
-Set up hands-off container updates:
+To see what has pending updates, use the cached results — do not check images individually:
 
-1. `arcane_updater_get_status` — check current schedule
-2. `arcane_container_set_auto_update` — enable per-container
-3. `arcane_updater_run` with `dryRun: true` — preview what would update
-4. `arcane_updater_run` — execute updates
-5. `arcane_updater_get_history` — review what was updated
+1. `arcane_project_list` with `updates: "has_update"` — compose projects with outdated images (lists the exact image refs)
+2. `arcane_image_update_get_summary` — environment-wide counts
+3. `arcane_image_update_check_all` — refresh the cache in the background if results are stale (track via `arcane_activity_list`)
+
+Then update:
+
+1. `arcane_project_update_services` — the dedicated per-project update (pull + recreate; runs in the background, track via `arcane_activity_list`). Preferred for compose projects — needs only the `projects:update` permission, unlike pull/redeploy (`projects:deploy`)
+2. Alternatively `arcane_updater_run` with `dryRun: true` first, then for real (optionally scoped via `resourceIds`)
+3. `arcane_updater_get_history` — review what was updated
+4. `arcane_container_set_auto_update` — enable hands-off updates per container
 
 ## Safety Rules
 

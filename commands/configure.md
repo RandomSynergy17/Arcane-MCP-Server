@@ -42,7 +42,7 @@ Use this slash command to trim which Arcane MCP tools are exposed to Claude Code
        - `full` — every tool
        - `commonly-used` — every tool whose `module ∈ {container, image, project, volume, network}`
        - `deploy` — every tool whose `module ∈ {project, gitops, template, registry, environment, build}`
-       - `minimal` — `arcane_dashboard_get`, `arcane_dashboard_get_action_items`, `arcane_container_list`, `arcane_container_get`, `arcane_container_get_counts`
+       - `minimal` — `arcane_dashboard_get`, `arcane_container_list`, `arcane_container_get`, `arcane_container_get_counts`
        - `read-only` — every tool whose `name` ends with `_list`, `_get`, `_inspect`, `_stats`, `_counts`, `_check`, `_search`, `_status`, `_summary` (or contains `_list_`, `_get_`)
        - `custom` — start from every tool (modules/enabled/disabled do the narrowing)
    - `added` = `proposed − current`; `removed` = `current − proposed`.

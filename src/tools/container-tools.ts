@@ -6,7 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { toolHandler } from "../utils/tool-helpers.js";
 import { moduleRegistrar, type ToolRegistry } from "./registry.js";
-import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT } from "../constants.js";
+import { DOCKER_SHORT_ID_LENGTH, MAX_DISPLAY_LABELS, DEFAULT_PAGINATION_START, DEFAULT_PAGINATION_LIMIT, DEFAULT_LOG_TAIL, MAX_LOG_LINES } from "../constants.js";
+import { formatLogResult } from "../utils/log-format.js";
 import type { Container } from "../types/arcane-types.js";
 
 export function registerContainerTools(server: McpServer, registry?: ToolRegistry): void {
@@ -37,17 +38,20 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
     toolHandler(async ({ environmentId, search, sort, order, start, limit, includeInternal }, client) => {
       const response = await client.get<{
         data: Container[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/containers`, { search, sort, order, start, limit, includeInternal });
 
       if (!response.data || response.data.length === 0) {
         return "No containers found.";
       }
 
-      const lines = [`Found ${response.pagination.total} containers:\n`];
+      const lines = [`Found ${response.pagination.totalItems} containers:\n`];
       for (const container of response.data) {
         const status = container.state === "running" ? "[RUNNING]" : "[STOPPED]";
-        lines.push(`${status} ${container.name}`);
+        // The list returns Docker-style `names` (leading slash), not `name`
+        const name = container.names?.[0]?.replace(/^\//, "") || container.id.substring(0, DOCKER_SHORT_ID_LENGTH);
+        const updateFlag = container.updateInfo?.hasUpdate ? " [UPDATE AVAILABLE]" : "";
+        lines.push(`${status}${updateFlag} ${name}`);
         lines.push(`    ID: ${container.id.substring(0, DOCKER_SHORT_ID_LENGTH)}`);
         lines.push(`    Image: ${container.image}`);
         lines.push(`    Status: ${container.status}`);
@@ -83,19 +87,32 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
     },
     },
     toolHandler(async ({ environmentId, containerId }, client) => {
-      const response = await client.get<{ data: Container & { config?: Record<string, unknown> } }>(
-        `/environments/${environmentId}/containers/${containerId}`
-      );
+      // Unlike the list, the detail endpoint has `name` (no `names`) and `state` is an object
+      const response = await client.get<{
+        data: {
+          id: string;
+          name: string;
+          image: string;
+          created: string;
+          state?: { status?: string; running?: boolean; exitCode?: number; startedAt?: string; health?: { status?: string } };
+          ports?: Array<{ privatePort: number; publicPort?: number; type: string }>;
+          labels?: Record<string, string>;
+        };
+      }>(`/environments/${environmentId}/containers/${containerId}`);
 
       const c = response.data;
+      const stateStatus = c.state?.status || (c.state?.running ? "running" : "unknown");
+      const health = c.state?.health?.status ? ` (${c.state.health.status})` : "";
       const lines = [
-        `Container: ${c.name}`,
+        `Container: ${c.name?.replace(/^\//, "")}`,
         `  ID: ${c.id}`,
         `  Image: ${c.image}`,
-        `  State: ${c.state}`,
-        `  Status: ${c.status}`,
+        `  State: ${stateStatus}${health}`,
         `  Created: ${c.created}`,
       ];
+      if (c.state?.running === false && c.state?.exitCode !== undefined) {
+        lines.push(`  Exit Code: ${c.state.exitCode}`);
+      }
 
       if (c.ports && c.ports.length > 0) {
         lines.push("  Ports:");
@@ -115,6 +132,38 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
       }
 
       return lines.join("\n");
+    })
+  );
+
+  // arcane_container_get_logs
+  register(
+    "arcane_container_get_logs",
+    {
+      title: "Get container logs",
+      description: "Fetch recent log lines of a container. For live following, call repeatedly with 'since' set to the newest timestamp seen — each call then returns only new lines.",
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
+      containerId: z.string().describe("Container ID or name"),
+      tail: z.number().optional().default(DEFAULT_LOG_TAIL).describe("Number of most recent lines to return initially"),
+      since: z.string().optional().describe("Only return lines after this time — RFC3339 timestamp (from a previous call) or relative duration like '5m'"),
+      timestamps: z.boolean().optional().default(true).describe("Prefix each line with its timestamp (needed for incremental follow-up via 'since')"),
+      maxLines: z.number().optional().default(200).describe(`Hard cap on returned lines to protect the context window (max ${MAX_LOG_LINES})`),
+    },
+    },
+    toolHandler(async ({ environmentId, containerId, tail, since, timestamps, maxLines }, client) => {
+      const result = await client.fetchLogs(
+        `/environments/${environmentId}/ws/containers/${containerId}/logs`,
+        { follow: false, tail, since, timestamps },
+        Math.min(maxLines, MAX_LOG_LINES)
+      );
+
+      return formatLogResult(`container ${containerId}`, result, timestamps);
     })
   );
 
@@ -343,13 +392,15 @@ export function registerContainerTools(server: McpServer, registry?: ToolRegistr
     },
     toolHandler(async ({ environmentId, includeInternal }, client) => {
       const response = await client.get<{
-        running: number;
-        stopped: number;
-        paused: number;
-        total: number;
+        data: {
+          totalContainers: number;
+          runningContainers: number;
+          stoppedContainers: number;
+        };
       }>(`/environments/${environmentId}/containers/counts`, { includeInternal });
 
-      return `Container Counts:\n  Total: ${response.total}\n  Running: ${response.running}\n  Stopped: ${response.stopped}\n  Paused: ${response.paused || 0}`;
+      const c = response.data;
+      return `Container Counts:\n  Total: ${c.totalContainers}\n  Running: ${c.runningContainers}\n  Stopped: ${c.stoppedContainers}`;
     })
   );
 

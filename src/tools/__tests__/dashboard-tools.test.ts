@@ -57,27 +57,21 @@ describe("dashboard-tools", () => {
     registerDashboardTools(server as unknown as Parameters<typeof registerDashboardTools>[0]);
   });
 
-  it("registers both dashboard tools", () => {
+  it("registers the dashboard tool", () => {
     expect(server.tools.has("arcane_dashboard_get")).toBe(true);
-    expect(server.tools.has("arcane_dashboard_get_action_items")).toBe(true);
-    expect(server.tools.size).toBe(2);
+    expect(server.tools.size).toBe(1);
   });
 
   describe("arcane_dashboard_get", () => {
-    it("returns snapshot with container/project/image counts", async () => {
+    it("returns snapshot with container/image counts and action items", async () => {
       mockClient.get.mockResolvedValueOnce({
         data: {
-          containers: { total: 10, running: 7, stopped: 3 },
-          projects: { total: 4, running: 3, stopped: 1 },
-          images: { total: 15, updatesAvailable: 2 },
-          volumes: { total: 8, totalSize: "12.5 GB" },
-          networks: { total: 5 },
-          systemInfo: {
-            dockerVersion: "24.0.7",
-            osType: "linux",
-            cpus: 4,
-            memoryBytes: 8e9,
+          containers: {
+            counts: { totalContainers: 10, runningContainers: 7, stoppedContainers: 3 },
           },
+          imageUsageCounts: { totalImages: 15, totalImageSize: 5e9, imagesInuse: 12, imagesUnused: 3 },
+          actionItems: { items: [{ kind: "image_updates", severity: "info", count: 2 }] },
+          versionInfo: { currentVersion: "v2.3.2", newestVersion: "v2.4.0" },
         },
       });
 
@@ -86,24 +80,19 @@ describe("dashboard-tools", () => {
 
       const text = result.content[0].text;
       expect(text).toContain("Containers: 10 total (7 running, 3 stopped)");
-      expect(text).toContain("Projects: 4 total (3 running, 1 stopped)");
-      expect(text).toContain("Images: 15 total (2 updates available)");
-      expect(text).toContain("Volumes: 8 (12.5 GB)");
-      expect(text).toContain("Networks: 5");
-      expect(text).toContain("Docker: 24.0.7");
-      expect(text).toContain("CPUs: 4");
-      expect(text).toContain("8.0 GB");
+      expect(text).toContain("Images: 15 total (12 in use, 3 unused");
+      expect(text).toContain("[INFO] image_updates: 2");
+      expect(text).toContain("Arcane: v2.3.2 (update available: v2.4.0)");
       expect(result.isError).toBeUndefined();
     });
 
-    it("handles missing system info", async () => {
+    it("handles missing action items", async () => {
       mockClient.get.mockResolvedValueOnce({
         data: {
-          containers: { total: 1, running: 1, stopped: 0 },
-          projects: { total: 0, running: 0, stopped: 0 },
-          images: { total: 1, updatesAvailable: 0 },
-          volumes: { total: 0 },
-          networks: { total: 1 },
+          containers: {
+            counts: { totalContainers: 1, runningContainers: 1, stoppedContainers: 0 },
+          },
+          actionItems: { items: [] },
         },
       });
 
@@ -112,53 +101,13 @@ describe("dashboard-tools", () => {
 
       const text = result.content[0].text;
       expect(text).toContain("Containers: 1 total");
-      expect(text).not.toContain("System:");
-    });
-  });
-
-  describe("arcane_dashboard_get_action_items", () => {
-    it("returns action items list", async () => {
-      mockClient.get.mockResolvedValueOnce({
-        data: [
-          {
-            type: "container_unhealthy",
-            severity: "high",
-            title: "Container my-app is unhealthy",
-            description: "Health check failing for 10 minutes",
-            resourceName: "my-app",
-          },
-          {
-            type: "image_update",
-            severity: "low",
-            title: "Image update available for nginx",
-            resourceName: "nginx",
-          },
-        ],
-      });
-
-      const handler = server.tools.get("arcane_dashboard_get_action_items")!;
-      const result = await handler({ environmentId: "env-1" });
-
-      const text = result.content[0].text;
-      expect(text).toContain("2 action items");
-      expect(text).toContain("[HIGH] Container my-app is unhealthy");
-      expect(text).toContain("[LOW] Image update available for nginx");
-      expect(text).toContain("Health check failing");
-    });
-
-    it("returns 'everything looks good' when no action items", async () => {
-      mockClient.get.mockResolvedValueOnce({ data: [] });
-
-      const handler = server.tools.get("arcane_dashboard_get_action_items")!;
-      const result = await handler({ environmentId: "env-1" });
-
-      expect(result.content[0].text).toContain("everything looks good");
+      expect(text).toContain("Action Items: none");
     });
 
     it("returns isError when client throws", async () => {
       mockClient.get.mockRejectedValueOnce(new Error("Server error"));
 
-      const handler = server.tools.get("arcane_dashboard_get_action_items")!;
+      const handler = server.tools.get("arcane_dashboard_get")!;
       const result = await handler({ environmentId: "env-1" });
 
       expect(result.isError).toBe(true);

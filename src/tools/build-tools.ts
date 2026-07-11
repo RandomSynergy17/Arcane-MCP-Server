@@ -17,7 +17,7 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     "arcane_build_image",
     {
       title: "Build image",
-      description: "Build a Docker image from a Dockerfile or Git URL with support for build args and multi-platform builds",
+      description: "Build a Docker image from a build workspace directory with support for build args and multi-platform builds. Use the build workspace tools to browse/upload the build context first.",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -26,35 +26,26 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
       },
       inputSchema: {
         environmentId: z.string().describe("Environment ID"),
-        dockerfile: z.string().optional().describe("Dockerfile content to build from"),
-        gitUrl: z.string().optional().describe("Git repository URL to build from"),
+        contextDir: z.string().describe("Build context directory (path within the build workspace)"),
+        dockerfile: z.string().optional().describe("Path to the Dockerfile within the context (default: Dockerfile)"),
+        dockerfileInline: z.string().optional().describe("Inline Dockerfile content (used instead of a Dockerfile in the context)"),
         tag: z.string().describe("Image tag (e.g., myapp:latest)"),
         buildArgs: z.record(z.string()).optional().describe("Build arguments as key-value pairs"),
         platform: z.string().optional().describe("Target platform (e.g., linux/amd64, linux/arm64)"),
+        noCache: z.boolean().optional().default(false).describe("Build without using the cache"),
       },
     },
-    toolHandler(async ({ environmentId, dockerfile, gitUrl, tag, buildArgs, platform }, client) => {
-      const body: Record<string, unknown> = { tag };
+    toolHandler(async ({ environmentId, contextDir, dockerfile, dockerfileInline, tag, buildArgs, platform, noCache }, client) => {
+      const body: Record<string, unknown> = { contextDir, tags: [tag], noCache };
       if (dockerfile) body.dockerfile = dockerfile;
-      if (gitUrl) body.gitUrl = gitUrl;
+      if (dockerfileInline) body.dockerfileInline = dockerfileInline;
       if (buildArgs) body.buildArgs = buildArgs;
-      if (platform) body.platform = platform;
+      if (platform) body.platforms = [platform];
 
-      const response = await client.post<{ data: Build }>(
-        `/environments/${environmentId}/images/build`,
-        body
-      );
+      // The build endpoint streams progress and finishes when the build is done.
+      await client.post(`/environments/${environmentId}/images/build`, body);
 
-      const build = response.data;
-      const lines = [
-        `Build started:`,
-        `  Build ID: ${build.id}`,
-        `  Tag: ${build.tag || tag}`,
-        `  Status: ${build.status}`,
-      ];
-      if (build.platform) lines.push(`  Platform: ${build.platform}`);
-
-      return lines.join("\n");
+      return `Build for ${tag} finished. Use arcane_build_list to inspect the result.`;
     })
   );
 
@@ -81,7 +72,7 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, status, search, start, limit }, client) => {
       const response = await client.get<{
         data: Build[];
-        pagination: { total: number; start: number; limit: number };
+        pagination: { totalItems: number };
       }>(`/environments/${environmentId}/images/builds`, {
         status, search, start, limit,
       });
@@ -90,14 +81,14 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
         return "No builds found.";
       }
 
-      const lines = [`Found ${response.pagination.total} builds:\n`];
+      const lines = [`Found ${response.pagination.totalItems} builds:\n`];
       for (const build of response.data) {
-        lines.push(`[${build.status.toUpperCase()}] ${build.tag || build.id}`);
+        lines.push(`[${build.status.toUpperCase()}] ${build.tags?.join(", ") || build.id}`);
         lines.push(`    Build ID: ${build.id}`);
         if (build.provider) lines.push(`    Provider: ${build.provider}`);
-        if (build.startedAt) lines.push(`    Started: ${build.startedAt}`);
+        if (build.createdAt) lines.push(`    Created: ${build.createdAt}`);
         if (build.completedAt) lines.push(`    Completed: ${build.completedAt}`);
-        if (build.error) lines.push(`    Error: ${build.error}`);
+        if (build.errorMessage) lines.push(`    Error: ${build.errorMessage}`);
         lines.push("");
       }
 
@@ -132,23 +123,22 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
         `Build Details:`,
         `  Build ID: ${build.id}`,
         `  Status: ${build.status}`,
-        `  Tag: ${build.tag || "N/A"}`,
-        `  Platform: ${build.platform || "default"}`,
+        `  Tags: ${build.tags?.join(", ") || "N/A"}`,
+        `  Platforms: ${build.platforms?.join(", ") || "default"}`,
       ];
-      if (build.gitUrl) lines.push(`  Git URL: ${build.gitUrl}`);
-      if (build.startedAt) lines.push(`  Started: ${build.startedAt}`);
+      if (build.createdAt) lines.push(`  Created: ${build.createdAt}`);
       if (build.completedAt) lines.push(`  Completed: ${build.completedAt}`);
-      if (build.error) lines.push(`  Error: ${build.error}`);
+      if (build.errorMessage) lines.push(`  Error: ${build.errorMessage}`);
       if (build.buildArgs && Object.keys(build.buildArgs).length > 0) {
         lines.push(`  Build Args:`);
         for (const [key, value] of Object.entries(build.buildArgs)) {
           lines.push(`    ${key}=${value}`);
         }
       }
-      if (build.logs) {
+      if (build.output) {
         lines.push("");
-        lines.push("Build Logs:");
-        lines.push(build.logs);
+        lines.push(`Build Output${build.outputTruncated ? " (truncated)" : ""}:`);
+        lines.push(build.output);
       }
 
       return lines.join("\n");
@@ -215,12 +205,12 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, path }, client) => {
       validatePath(path);
 
-      const response = await client.get<{ data: { content: string; path: string } }>(
+      const response = await client.get<{ data: { content: string; mimeType?: string } }>(
         `/environments/${environmentId}/builds/browse/content`,
         { path }
       );
 
-      return `File: ${response.data.path}\n\n${response.data.content}`;
+      return `File: ${path}\n\n${response.data.content}`;
     })
   );
 
@@ -245,9 +235,13 @@ export function registerBuildTools(server: McpServer, registry?: ToolRegistry): 
     toolHandler(async ({ environmentId, path, content }, client) => {
       validatePath(path);
 
-      await client.post(
+      // The API expects multipart/form-data with the destination path as a query param
+      const fileName = path.split("/").pop() || "file";
+      await client.postMultipart(
         `/environments/${environmentId}/builds/browse/upload`,
-        { path, content }
+        { path },
+        fileName,
+        content
       );
 
       return `File uploaded to workspace: ${path}`;

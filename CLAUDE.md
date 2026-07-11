@@ -13,6 +13,7 @@ npm test               # vitest (50 tests)
 npm run dev            # stdio mode
 npm run dev:tcp        # HTTP mode
 npm run update-api-spec  # Refresh OpenAPI spec from live instance
+ARCANE_BASE_URL=… ARCANE_API_KEY=… node scripts/live-smoke.mjs [envId]  # Run every read-only tool against a live instance; flags undefined/[object Object]/NaN in output
 ```
 
 ## Architecture
@@ -25,7 +26,7 @@ npm run update-api-spec  # Refresh OpenAPI spec from live instance
 - `src/config.ts` — Config from env vars > config file > defaults
 - `src/constants.ts` — All shared constants (timeouts, limits, versions)
 
-### Tools (180 across 25 modules in `src/tools/`)
+### Tools (180 across 26 modules in `src/tools/`)
 
 All tools use `server.registerTool()` with:
 - `title` — human-readable name

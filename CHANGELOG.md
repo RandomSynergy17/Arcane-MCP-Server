@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-07-11
+
+Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec refreshed from v1.17.0). Tool count stays at **180** (removed tools whose endpoints no longer exist, added notification-delete and activity-tracking tools). No v1 compatibility shims — installs running Arcane v1.x should stay on `2.x` of this server.
+
+### Removed (endpoints gone in Arcane v2)
+- `arcane_dashboard_get_action_items` — `/dashboard/action-items` no longer exists.
+- `arcane_event_create` — `POST /events` no longer exists.
+- `arcane_updater_update_container` — `/updater/containers/{id}` was dropped; use `arcane_container_update` instead.
+- `arcane_notification_apprise_get` / `arcane_notification_apprise_update` / `arcane_notification_apprise_test` — Apprise config was replaced by the per-provider notification model.
+- `arcane_swarm_get_service_logs` — v2 streams all logs over WebSocket only (no REST endpoint).
+
+### Added
+- `arcane_notification_delete_settings` — delete a provider's notification settings (`DELETE /notifications/settings/{provider}`).
+- `arcane_activity_list` / `arcane_activity_get` — track Arcane v2's background activities (image update checks, updater runs, prunes, scans), including progress and messages.
+- `arcane_container_get_logs` / `arcane_project_get_logs` / `arcane_swarm_get_service_logs` — log access via Arcane's WebSocket log streams (v2 has no REST log endpoints). Fetch-and-close semantics with `tail`, `since`, `timestamps`, and a `maxLines` cap; live following works incrementally by passing the newest seen timestamp as `since` on the next call. Adds the `ws` dependency (custom auth headers on the upgrade request); ANSI color codes are stripped.
+- `arcane_project_update_services` — the dedicated project update action (`POST /projects/{id}/update-services`, permission `projects:update`): pulls latest images and recreates services (optionally a subset). Runs in the background; track via the activity tools. Preferred over manual pull + redeploy, which require `projects:deploy`.
+- `arcane_project_list` supports v2's `updates` filter (`has_update`, `up_to_date`, `error`, `unknown`) plus a `status` filter, and shows per-project update info including exactly which image refs are outdated (same data as the dashboard's update overview). `arcane_project_get` shows it too.
+
+### Fixed (after testing against a live v2.3.2 instance)
+- Paginated list tools printed `Found undefined …`: v2 renamed `pagination.total` to `pagination.totalItems` — updated all 16 list modules.
+- Image `created` is a Unix timestamp in v2 and was printed raw — now formatted as an ISO date.
+- `arcane_image_update_check_all` / `arcane_image_check_updates_all` blocked until every image was checked, which hit the MCP request timeout — and the client's timeout retry then started duplicate server-side checks. Both tools now fire the check in the background (via a new no-retry `postInBackground` client helper) and return immediately, pointing at `arcane_activity_list` / the update summary for results.
+- Image tools 404'd when given a name like `amir20/dozzle:latest` — the v2 API only accepts image IDs in paths (a `/` in the name breaks the route). Tools taking an `imageId` (`arcane_image_get`, `arcane_image_delete`, vulnerability scan/result/summary/list) now resolve names to IDs via the image list.
+- `arcane_image_get` crashed with `Invalid time value`: the detail endpoint returns `created` as an ISO string (the list returns a Unix timestamp) — each is now formatted correctly.
+- **Full response-shape audit** of all 26 modules against the v2 spec plus a live smoke test of every read-only tool (`scripts/live-smoke.mjs`). This fixed ~60 further v2 field/wrapper mismatches, including: container list `names`/detail `state` object ("undefined"/"[object Object]" output), dashboard snapshot (new v2 structure incl. aggregated action items), port mappings (`hostPort`/`containerPort`/`isPublished`), container/project counts (`totalContainers`/`totalProjects` etc.), `/version` (`currentVersion`), auth login/me/refresh (wrapped responses, `isGlobalAdmin`), jobs (flat `JobscheduleConfig`, `jobs` array), webhooks (actionType/target model instead of events), environments (test/pair/version/create fields), networks (create `options` nesting, counts/prune wrappers, `containersList`), volumes (Docker-cased `usageData`, `isDirectory`, mkdir query param), gitops (`composePath`, `lastSync*` fields, branches/files shapes), registries (`registryType`/`token`/`description` model), templates (`type` filter, required `envContent`), swarm (Docker `ServiceSpec` create/update with version index, `runningReplicas`, tasks/nodes endpoints), vulnerability scanner status (`available`) and image options (string list), builds (`tags`/`platforms`/`errorMessage`/`output`, multipart workspace upload), image pull (server-side registry credentials), settings categories/search shapes.
+- `arcane_oidc_get_config` reports "OIDC is not configured" instead of a server 500 on instances without OIDC.
+
+### Changed (breaking, follows Arcane v2 API)
+- **Notifications** rebuilt on the provider model (`discord`, `email`, `telegram`, `signal`, `slack`, `ntfy`, `pushover`, `matrix`, `generic`): `get_settings` lists providers (or one via `provider`), `update_settings` takes `provider` + `enabled` + `config`, `test` now requires a `provider`.
+- **Vulnerabilities**: scan result moved to `GET .../images/{id}/vulnerabilities` (list moved to `/vulnerabilities/list`); `ignore` is now `POST /vulnerabilities/ignore` and requires `pkgName`; `unignore` takes the ignore-entry ID (shown by `list_ignored`); all displays use the v2 field names (`vulnerabilityId`, `pkgName`, severity summary object).
+- **Image updates**: check endpoints return `hasUpdate`/`currentVersion`/`latestVersion`; batch check uses `POST /image-updates/check-batch` with `imageRefs` (was `check-multiple` + `imageIds`); batch/check-all responses are keyed by image reference; summary reports `imagesWithUpdates`/`digestUpdates`/`errorsCount`.
+- **Updater**: `run` supports `forceUpdate` and `resourceIds`; result shape follows v2 (`checked`/`items` with resource-level results); `status` now reports in-flight container/project updates; history uses `AutoUpdateRecord` (resource + old/new image version maps).
+- **System**: docker info moved to `/system/docker/info` and returns Docker's native (PascalCase) fields; `system prune` sends the v2 per-resource body (`{containers, images, networks, volumes, buildCache}` with `mode`) and gained a `buildCache` option; image prune sends `mode`/`dangling` and reads the wrapped response.
+- **Projects**: destroy moved to `DELETE /projects/{id}/destroy` (body `removeVolumes`/`removeFiles`, new `removeFiles` param).
+- **Volume backups**: delete and file listing are no longer volume-scoped (`/volumes/backups/{backupId}[/files]`); backups no longer expose a `filename`; file listing returns plain paths.
+- **Templates**: global variables moved to `/environments/{id}/templates/variables` (now requires `environmentId`; PUT sends a `{key, value}` list).
+- **Users**: `role` was removed from create/update (v2 uses role assignments); tools accept `displayName`/`email`/`password` and display `isGlobalAdmin`.
+- **Settings**: environment settings return a key/value list; public settings are environment-scoped now (`environmentId` required).
+- **Events**: list filters by `severity` instead of `resourceType`; display uses `title`/`description`/`severity` (v2 dropped `message`).
+- **Environments**: deployment snippets moved to `/environments/{id}/deployment` (`dockerRun` field).
+- **Builds**: `arcane_build_image` follows the v2 `BuildRequest` (`contextDir` required, `dockerfileInline` for inline content, `tags`/`platforms` arrays, `noCache`); Git-URL builds were dropped by the API.
+- **Auth**: login/refresh responses are unwrapped from the `{success, data}` envelope.
+- `ArcaneClient.delete()` accepts an optional JSON body (needed for `projects/{id}/destroy`).
+- OpenAPI spec (`_docs/arcane_api_docs.{json,yaml}`) and generated types refreshed to v2.3.2.
+
+---
+
 ## [2.1.0] - 2026-04-19
 
 ### Added
