@@ -13,9 +13,12 @@ function formatUpdateCheck(imageRef: string, u: ImageUpdateResponse): string {
     return `Check failed for ${imageRef}: ${u.error}`;
   }
   if (u.hasUpdate) {
-    const current = u.currentVersion || u.currentDigest?.substring(0, 12) || "unknown";
-    const latest = u.latestVersion || u.latestDigest?.substring(0, 12) || "unknown";
-    return `Update available for ${imageRef}! (${u.updateType || "update"})\n  Current: ${current}\n  Latest: ${latest}`;
+    const current = u.currentVersion || u.currentDigest?.substring(0, 19) || "unknown";
+    const latest = u.latestVersion || u.latestDigest?.substring(0, 19) || "unknown";
+    const note = u.updateType === "digest"
+      ? " (digest update: the pinned tag points to new image content — Arcane does not resolve newer version tags)"
+      : ` (${u.updateType || "update"})`;
+    return `Update available for ${imageRef}!${note}\n  Current: ${current}\n  Latest: ${latest}`;
   }
   return `${imageRef} is up to date.`;
 }
