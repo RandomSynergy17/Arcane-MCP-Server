@@ -26,14 +26,17 @@ export function registerSettingsTools(server: McpServer, registry?: ToolRegistry
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{
-        data: Record<string, unknown>;
-      }>(`/environments/${environmentId}/settings`);
+      const settings = await client.get<Array<{ key: string; value: string; type?: string }>>(
+        `/environments/${environmentId}/settings`
+      );
+
+      if (!settings || settings.length === 0) {
+        return "No settings found.";
+      }
 
       const lines = ["Environment Settings:\n"];
-      for (const [key, value] of Object.entries(response.data)) {
-        const displayValue = typeof value === "object" ? JSON.stringify(value) : String(value);
-        lines.push(`  ${key}: ${displayValue}`);
+      for (const setting of settings) {
+        lines.push(`  ${setting.key}: ${setting.value}`);
       }
 
       return lines.join("\n");
@@ -75,16 +78,22 @@ export function registerSettingsTools(server: McpServer, registry?: ToolRegistry
         idempotentHint: true,
         openWorldHint: false,
       },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
     },
-    toolHandler(async (_params, client) => {
-      const response = await client.get<{
-        data: Record<string, unknown>;
-      }>("/settings/public");
+    },
+    toolHandler(async ({ environmentId }, client) => {
+      const settings = await client.get<Array<{ key: string; value: string }>>(
+        `/environments/${environmentId}/settings/public`
+      );
+
+      if (!settings || settings.length === 0) {
+        return "No public settings found.";
+      }
 
       const lines = ["Public Settings:\n"];
-      for (const [key, value] of Object.entries(response.data)) {
-        const displayValue = typeof value === "object" ? JSON.stringify(value) : String(value);
-        lines.push(`  ${key}: ${displayValue}`);
+      for (const setting of settings) {
+        lines.push(`  ${setting.key}: ${setting.value}`);
       }
 
       return lines.join("\n");

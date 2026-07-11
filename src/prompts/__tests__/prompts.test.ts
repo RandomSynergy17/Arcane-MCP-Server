@@ -143,7 +143,7 @@ describe("prompts", () => {
       const text = result.messages[0].content.text;
       expect(text).toContain("my-app");
       expect(text).toContain("arcane_container_get");
-      expect(text).toContain("arcane_dashboard_get_action_items");
+      expect(text).toContain("arcane_dashboard_get");
       expect(text).toContain("arcane_image_update_check_by_id");
     });
   });

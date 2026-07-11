@@ -255,8 +255,8 @@ export class ArcaneClient {
   /**
    * DELETE request
    */
-  async delete<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
-    return this.request<T>(path, { method: "DELETE", params });
+  async delete<T>(path: string, params?: Record<string, string | number | boolean | undefined>, body?: unknown): Promise<T> {
+    return this.request<T>(path, { method: "DELETE", params, body });
   }
 
   /**

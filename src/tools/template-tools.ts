@@ -204,17 +204,22 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
         idempotentHint: true,
         openWorldHint: false,
       },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
     },
-    toolHandler(async (_params, client) => {
-      const response = await client.get<{ data: Record<string, string> }>("/templates/variables");
+    },
+    toolHandler(async ({ environmentId }, client) => {
+      const response = await client.get<{ data: Array<{ key: string; value: string }> }>(
+        `/environments/${environmentId}/templates/variables`
+      );
 
-      if (!response.data || Object.keys(response.data).length === 0) {
+      if (!response.data || response.data.length === 0) {
         return "No global variables configured.";
       }
 
       const lines = ["Global Template Variables:\n"];
-      for (const [key, value] of Object.entries(response.data)) {
-        lines.push(`  ${key}: ${value}`);
+      for (const variable of response.data) {
+        lines.push(`  ${variable.key}: ${variable.value}`);
       }
 
       return lines.join("\n");
@@ -234,11 +239,13 @@ export function registerTemplateTools(server: McpServer, registry?: ToolRegistry
         openWorldHint: false,
       },
       inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
       variables: z.record(z.string()).describe("Variables to set (key-value pairs)"),
     },
     },
-    toolHandler(async ({ variables }, client) => {
-      await client.put("/templates/variables", { variables });
+    toolHandler(async ({ environmentId, variables }, client) => {
+      const variableList = Object.entries(variables).map(([key, value]) => ({ key, value }));
+      await client.put(`/environments/${environmentId}/templates/variables`, { variables: variableList });
       return "Global variables updated.";
     })
   );

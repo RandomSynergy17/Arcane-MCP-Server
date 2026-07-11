@@ -57,10 +57,9 @@ describe("dashboard-tools", () => {
     registerDashboardTools(server as unknown as Parameters<typeof registerDashboardTools>[0]);
   });
 
-  it("registers both dashboard tools", () => {
+  it("registers the dashboard tool", () => {
     expect(server.tools.has("arcane_dashboard_get")).toBe(true);
-    expect(server.tools.has("arcane_dashboard_get_action_items")).toBe(true);
-    expect(server.tools.size).toBe(2);
+    expect(server.tools.size).toBe(1);
   });
 
   describe("arcane_dashboard_get", () => {
@@ -114,51 +113,11 @@ describe("dashboard-tools", () => {
       expect(text).toContain("Containers: 1 total");
       expect(text).not.toContain("System:");
     });
-  });
-
-  describe("arcane_dashboard_get_action_items", () => {
-    it("returns action items list", async () => {
-      mockClient.get.mockResolvedValueOnce({
-        data: [
-          {
-            type: "container_unhealthy",
-            severity: "high",
-            title: "Container my-app is unhealthy",
-            description: "Health check failing for 10 minutes",
-            resourceName: "my-app",
-          },
-          {
-            type: "image_update",
-            severity: "low",
-            title: "Image update available for nginx",
-            resourceName: "nginx",
-          },
-        ],
-      });
-
-      const handler = server.tools.get("arcane_dashboard_get_action_items")!;
-      const result = await handler({ environmentId: "env-1" });
-
-      const text = result.content[0].text;
-      expect(text).toContain("2 action items");
-      expect(text).toContain("[HIGH] Container my-app is unhealthy");
-      expect(text).toContain("[LOW] Image update available for nginx");
-      expect(text).toContain("Health check failing");
-    });
-
-    it("returns 'everything looks good' when no action items", async () => {
-      mockClient.get.mockResolvedValueOnce({ data: [] });
-
-      const handler = server.tools.get("arcane_dashboard_get_action_items")!;
-      const result = await handler({ environmentId: "env-1" });
-
-      expect(result.content[0].text).toContain("everything looks good");
-    });
 
     it("returns isError when client throws", async () => {
       mockClient.get.mockRejectedValueOnce(new Error("Server error"));
 
-      const handler = server.tools.get("arcane_dashboard_get_action_items")!;
+      const handler = server.tools.get("arcane_dashboard_get")!;
       const result = await handler({ environmentId: "env-1" });
 
       expect(result.isError).toBe(true);

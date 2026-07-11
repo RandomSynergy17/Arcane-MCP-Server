@@ -5,7 +5,7 @@ allowed-tools: [Read, Write, AskUserQuestion, Bash, ReadMcpResourceTool]
 
 # /arcane:configure — Tool filter setup
 
-Use this slash command to trim which Arcane MCP tools are exposed to Claude Code. The full server registers 180 tools; surfacing all of them in `tools/list` bloats the context window. This command writes a `tools` block to `~/.arcane/config.json` that selects a preset, module allowlist, and per-tool overrides. The Arcane MCP server picks up changes live when its config watcher is attached.
+Use this slash command to trim which Arcane MCP tools are exposed to Claude Code. The full server registers 174 tools; surfacing all of them in `tools/list` bloats the context window. This command writes a `tools` block to `~/.arcane/config.json` that selects a preset, module allowlist, and per-tool overrides. The Arcane MCP server picks up changes live when its config watcher is attached.
 
 ## Workflow
 
@@ -14,7 +14,7 @@ Use this slash command to trim which Arcane MCP tools are exposed to Claude Code
    - `read-only` — every `*_list` / `*_get` / `*_inspect` / `*_stats` / `*_status` / `*_summary` tool (~60 tools)
    - `minimal` — dashboard + container list/get/counts (5 tools)
    - `deploy` — project, gitops, template, registry, environment, build (~40 tools)
-   - `full` — all 180 tools (current default if the user has never configured this)
+   - `full` — all 174 tools (current default if the user has never configured this)
    - `custom` — fine-tune modules and individual tools
 
 2. **If the user picks `custom`** (or says they want to fine-tune after picking another preset):
@@ -42,7 +42,7 @@ Use this slash command to trim which Arcane MCP tools are exposed to Claude Code
        - `full` — every tool
        - `commonly-used` — every tool whose `module ∈ {container, image, project, volume, network}`
        - `deploy` — every tool whose `module ∈ {project, gitops, template, registry, environment, build}`
-       - `minimal` — `arcane_dashboard_get`, `arcane_dashboard_get_action_items`, `arcane_container_list`, `arcane_container_get`, `arcane_container_get_counts`
+       - `minimal` — `arcane_dashboard_get`, `arcane_container_list`, `arcane_container_get`, `arcane_container_get_counts`
        - `read-only` — every tool whose `name` ends with `_list`, `_get`, `_inspect`, `_stats`, `_counts`, `_check`, `_search`, `_status`, `_summary` (or contains `_list_`, `_get_`)
        - `custom` — start from every tool (modules/enabled/disabled do the narrowing)
    - `added` = `proposed − current`; `removed` = `current − proposed`.
@@ -60,6 +60,6 @@ Use this slash command to trim which Arcane MCP tools are exposed to Claude Code
 
 ## Notes
 
-- Keep the conversation tight. Do not dump the full 180-tool list — summarise the chosen preset and let the user opt into fine-tuning.
+- Keep the conversation tight. Do not dump the full 174-tool list — summarise the chosen preset and let the user opt into fine-tuning.
 - Never remove other keys from `~/.arcane/config.json`. A malformed file will brick the server.
 - For Claude Desktop and other MCP clients without slash commands, the same flow is available via the `arcane_configure_tools` prompt — this slash command is a Claude Code shortcut to the same outcome.

@@ -79,7 +79,6 @@ describe("integration: boot-per-preset", () => {
       "arcane_container_get_counts",
       "arcane_container_list",
       "arcane_dashboard_get",
-      "arcane_dashboard_get_action_items",
     ]);
   });
 
@@ -202,7 +201,7 @@ describe("integration: hot reload cycle", () => {
       writeFileSync(tmpFile, JSON.stringify({ tools: { preset: "minimal" } }));
 
       // Wait for the watcher to debounce + apply
-      await waitFor(() => countEnabled(registry).enabled === 5);
+      await waitFor(() => countEnabled(registry).enabled === 4);
 
       const { enabledNames } = countEnabled(registry);
       expect(enabledNames.sort()).toEqual([
@@ -210,7 +209,6 @@ describe("integration: hot reload cycle", () => {
         "arcane_container_get_counts",
         "arcane_container_list",
         "arcane_dashboard_get",
-        "arcane_dashboard_get_action_items",
       ]);
     } finally {
       watcher.stop();
@@ -298,7 +296,7 @@ describe("integration: upgrade notice lifecycle", () => {
     // Unconfigured state → explicit call to /arcane:configure
     const handler = handlers.get("arcane-tools-config-notice")!;
     const result = await handler(new URL("arcane://tools-config-notice"));
-    expect(result.contents[0].text).toContain("180 tools");
+    expect(result.contents[0].text).toContain("174 tools");
     expect(result.contents[0].text).toContain("/arcane:configure");
 
     // Flip to configured — body should swap

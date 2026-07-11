@@ -261,30 +261,27 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{
-        data: {
-          serverVersion: string;
-          operatingSystem: string;
-          architecture: string;
-          containers: number;
-          containersRunning: number;
-          containersStopped: number;
-          images: number;
-          memTotal: number;
-          ncpu: number;
-        };
-      }>(`/environments/${environmentId}/system/docker-info`);
+      const info = await client.get<{
+        ServerVersion: string;
+        OperatingSystem: string;
+        Architecture: string;
+        Containers: number;
+        ContainersRunning: number;
+        ContainersStopped: number;
+        Images: number;
+        MemTotal: number;
+        NCPU: number;
+      }>(`/environments/${environmentId}/system/docker/info`);
 
-      const info = response.data;
       const lines = [
         "Docker System Info:",
-        `  Version: ${info.serverVersion}`,
-        `  OS: ${info.operatingSystem}`,
-        `  Architecture: ${info.architecture}`,
-        `  CPUs: ${info.ncpu}`,
-        `  Memory: ${formatSizeGB(info.memTotal)}`,
-        `  Containers: ${info.containers} (${info.containersRunning} running, ${info.containersStopped} stopped)`,
-        `  Images: ${info.images}`,
+        `  Version: ${info.ServerVersion}`,
+        `  OS: ${info.OperatingSystem}`,
+        `  Architecture: ${info.Architecture}`,
+        `  CPUs: ${info.NCPU}`,
+        `  Memory: ${formatSizeGB(info.MemTotal)}`,
+        `  Containers: ${info.Containers} (${info.ContainersRunning} running, ${info.ContainersStopped} stopped)`,
+        `  Images: ${info.Images}`,
       ];
 
       return lines.join("\n");
@@ -308,15 +305,15 @@ export function registerEnvironmentTools(server: McpServer, registry?: ToolRegis
     },
     },
     toolHandler(async ({ environmentId }, client) => {
-      const response = await client.get<{ data: { docker?: string; dockerCompose?: string } }>(
-        `/environments/${environmentId}/deployment-snippets`
+      const response = await client.get<{ data: { dockerRun?: string; dockerCompose?: string } }>(
+        `/environments/${environmentId}/deployment`
       );
 
       const snippets = response.data;
       let text = "Deployment Snippets:\n\n";
 
-      if (snippets.docker) {
-        text += "Docker Command:\n```\n" + snippets.docker + "\n```\n\n";
+      if (snippets.dockerRun) {
+        text += "Docker Command:\n```\n" + snippets.dockerRun + "\n```\n\n";
       }
       if (snippets.dockerCompose) {
         text += "Docker Compose:\n```yaml\n" + snippets.dockerCompose + "\n```";

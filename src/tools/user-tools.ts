@@ -40,14 +40,11 @@ export function registerUserTools(server: McpServer, registry?: ToolRegistry): v
 
       const lines = [`Found ${response.pagination.total} users:\n`];
       for (const user of response.data) {
-        lines.push(`${user.username}`);
+        lines.push(`${user.username}${user.displayName ? ` (${user.displayName})` : ""}`);
         lines.push(`    ID: ${user.id}`);
-        lines.push(`    Role: ${user.role}`);
+        lines.push(`    Global Admin: ${user.isGlobalAdmin ? "Yes" : "No"}`);
         lines.push(`    Created: ${user.createdAt}`);
-        if (user.lastLoginAt) {
-          lines.push(`    Last Login: ${user.lastLoginAt}`);
-        }
-        if (user.oidcSubject) {
+        if (user.oidcSubjectId) {
           lines.push(`    OIDC: Yes`);
         }
         lines.push("");
@@ -80,10 +77,11 @@ export function registerUserTools(server: McpServer, registry?: ToolRegistry): v
       const lines = [
         `User: ${user.username}`,
         `  ID: ${user.id}`,
-        `  Role: ${user.role}`,
+        `  Display Name: ${user.displayName || "N/A"}`,
+        `  Email: ${user.email || "N/A"}`,
+        `  Global Admin: ${user.isGlobalAdmin ? "Yes" : "No"}`,
         `  Created: ${user.createdAt}`,
-        `  Last Login: ${user.lastLoginAt || "Never"}`,
-        `  OIDC: ${user.oidcSubject ? "Yes" : "No"}`,
+        `  OIDC: ${user.oidcSubjectId ? "Yes" : "No"}`,
       ];
 
       return lines.join("\n");
@@ -105,17 +103,19 @@ export function registerUserTools(server: McpServer, registry?: ToolRegistry): v
       inputSchema: {
       username: z.string().describe("Username"),
       password: z.string().min(8).describe("Password (minimum 8 characters)"),
-      role: z.enum(["admin", "user", "readonly"]).optional().default("user").describe("User role"),
+      displayName: z.string().optional().describe("Display name"),
+      email: z.string().optional().describe("Email address"),
     },
     },
-    toolHandler(async ({ username, password, role }, client) => {
+    toolHandler(async ({ username, password, displayName, email }, client) => {
       const response = await client.post<{ data: { id: string; username: string } }>("/users", {
         username,
         password,
-        role,
+        displayName,
+        email,
       });
 
-      return `User created: ${response.data.username} (ID: ${response.data.id})`;
+      return `User created: ${response.data.username} (ID: ${response.data.id})\nNote: roles are managed via Arcane's role assignments (not supported by this tool).`;
     })
   );
 
@@ -134,13 +134,17 @@ export function registerUserTools(server: McpServer, registry?: ToolRegistry): v
       inputSchema: {
       userId: z.string().describe("User ID"),
       username: z.string().optional().describe("New username"),
-      role: z.enum(["admin", "user", "readonly"]).optional().describe("New role"),
+      displayName: z.string().optional().describe("New display name"),
+      email: z.string().optional().describe("New email address"),
+      password: z.string().min(8).optional().describe("New password (minimum 8 characters)"),
     },
     },
-    toolHandler(async ({ userId, username, role }, client) => {
+    toolHandler(async ({ userId, username, displayName, email, password }, client) => {
       const body: Record<string, unknown> = {};
       if (username) body.username = username;
-      if (role) body.role = role;
+      if (displayName) body.displayName = displayName;
+      if (email) body.email = email;
+      if (password) body.password = password;
 
       await client.put(`/users/${userId}`, body);
       return `User ${userId} updated.`;

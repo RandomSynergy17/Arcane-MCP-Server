@@ -227,35 +227,6 @@ export function registerSwarmTools(server: McpServer, registry?: ToolRegistry): 
     })
   );
 
-  // arcane_swarm_get_service_logs
-  register(
-    "arcane_swarm_get_service_logs",
-    {
-      title: "Get Swarm service logs",
-      description: "Get logs from a Swarm service",
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
-      inputSchema: {
-      environmentId: z.string().describe("Environment ID"),
-      serviceId: z.string().describe("Swarm service ID"),
-      tail: z.number().optional().default(100).describe("Number of log lines to return"),
-      timestamps: z.boolean().optional().default(false).describe("Include timestamps"),
-    },
-    },
-    toolHandler(async ({ environmentId, serviceId, tail, timestamps }, client) => {
-      const response = await client.get<{ data: string }>(
-        `/environments/${environmentId}/swarm/services/${serviceId}/logs`,
-        { tail, timestamps }
-      );
-
-      return response.data || "No logs available.";
-    })
-  );
-
   // arcane_swarm_init_cluster
   register(
     "arcane_swarm_init_cluster",

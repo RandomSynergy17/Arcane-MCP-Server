@@ -44,7 +44,6 @@ export interface FileEntry {
 export interface Backup {
   id: string;
   volumeName: string;
-  filename: string;
   size: number;
   createdAt: string;
 }
@@ -79,25 +78,24 @@ export interface Image {
 // === Image Updates ===
 
 export interface ImageUpdateResponse {
-  imageRef: string;
+  hasUpdate: boolean;
+  updateType?: string;
+  currentVersion?: string;
+  latestVersion?: string;
   currentDigest?: string;
   latestDigest?: string;
-  updateAvailable: boolean;
-  currentTag?: string;
-  latestTag?: string;
+  checkTime?: string;
+  error?: string;
 }
 
-export interface BatchImageUpdateResponse {
-  results: Array<ImageUpdateResponse & { imageId: string }>;
-  total: number;
-  updatesAvailable: number;
-}
+/** Batch check result: image reference → per-image result */
+export type BatchImageUpdateResponse = Record<string, ImageUpdateResponse>;
 
 export interface ImageUpdateSummary {
   totalImages: number;
-  checkedImages: number;
-  updatesAvailable: number;
-  lastCheckedAt?: string;
+  imagesWithUpdates: number;
+  digestUpdates: number;
+  errorsCount: number;
 }
 
 // === Networks ===
@@ -187,21 +185,14 @@ export interface DashboardSnapshot {
   systemInfo?: { dockerVersion?: string; osType?: string; cpus?: number; memoryBytes?: number };
 }
 
-export interface ActionItem {
-  type: string;
-  severity: string;
-  title: string;
-  description?: string;
-  resourceId?: string;
-  resourceName?: string;
-}
-
 // === Events ===
 
 export interface Event {
   id: string;
   type: string;
-  message: string;
+  title: string;
+  description?: string;
+  severity: string;
   resourceType?: string;
   resourceId?: string;
   resourceName?: string;
@@ -310,32 +301,46 @@ export interface Template {
 
 // === Updater ===
 
+export interface UpdaterResourceResult {
+  resourceId?: string;
+  resourceName?: string;
+  resourceType?: string;
+  status: string;
+  updateAvailable?: boolean;
+  updateApplied?: boolean;
+  oldImages?: Record<string, string>;
+  newImages?: Record<string, string>;
+  error?: string;
+}
+
 export interface UpdaterResult {
+  checked: number;
   updated: number;
   failed: number;
   skipped: number;
-  results: Array<{
-    containerId: string;
-    containerName: string;
-    status: string;
-    message?: string;
-  }>;
+  items: UpdaterResourceResult[];
 }
 
 export interface UpdaterStatus {
-  running: boolean;
-  lastRunAt?: string;
-  nextRunAt?: string;
-  schedule?: string;
+  containerIds: string[];
+  projectIds: string[];
+  updatingContainers: number;
+  updatingProjects: number;
 }
 
 export interface UpdateRecord {
   id: string;
-  containerName: string;
-  oldImage: string;
-  newImage: string;
+  resourceId?: string;
+  resourceName?: string;
+  resourceType?: string;
   status: string;
-  updatedAt: string;
+  updateApplied?: boolean;
+  oldImageVersions?: Record<string, unknown>;
+  newImageVersions?: Record<string, unknown>;
+  startTime?: string;
+  endTime?: string;
+  createdAt: string;
+  error?: string;
 }
 
 // === Users ===
@@ -343,35 +348,55 @@ export interface UpdateRecord {
 export interface User {
   id: string;
   username: string;
-  role: string;
+  displayName?: string;
+  email?: string;
+  isGlobalAdmin?: boolean;
   createdAt: string;
-  lastLoginAt?: string;
-  oidcSubject?: string;
+  oidcSubjectId?: string;
 }
 
 // === Vulnerabilities ===
 
-export interface ScanResult {
-  imageId: string;
-  imageRef: string;
-  scannedAt: string;
-  status: string;
-  totalVulnerabilities: number;
+export interface SeveritySummary {
+  total: number;
   critical: number;
   high: number;
   medium: number;
   low: number;
+  unknown?: number;
+}
+
+export interface ScanResult {
+  imageId: string;
+  imageName?: string;
+  status: string;
+  scanPhase?: string;
+  scanTime?: string;
+  duration?: number;
+  error?: string;
+  summary?: SeveritySummary;
 }
 
 export interface Vulnerability {
-  id: string;
-  package: string;
-  installedVersion: string;
+  vulnerabilityId: string;
+  pkgName: string;
+  installedVersion?: string;
   fixedVersion?: string;
   severity: string;
   title?: string;
   description?: string;
-  ignored?: boolean;
+  imageName?: string;
+}
+
+export interface IgnoredVulnerability {
+  id: string;
+  vulnerabilityId: string;
+  pkgName?: string;
+  installedVersion?: string;
+  imageId?: string;
+  reason?: string;
+  createdBy?: string;
+  createdAt?: string;
 }
 
 // === Webhooks ===

@@ -8,6 +8,39 @@ import { toolHandler } from "../utils/tool-helpers.js";
 import { moduleRegistrar, type ToolRegistry } from "./registry.js";
 import type { ImageUpdateResponse, BatchImageUpdateResponse, ImageUpdateSummary } from "../types/arcane-types.js";
 
+function formatUpdateCheck(imageRef: string, u: ImageUpdateResponse): string {
+  if (u.error) {
+    return `Check failed for ${imageRef}: ${u.error}`;
+  }
+  if (u.hasUpdate) {
+    const current = u.currentVersion || u.currentDigest?.substring(0, 12) || "unknown";
+    const latest = u.latestVersion || u.latestDigest?.substring(0, 12) || "unknown";
+    return `Update available for ${imageRef}! (${u.updateType || "update"})\n  Current: ${current}\n  Latest: ${latest}`;
+  }
+  return `${imageRef} is up to date.`;
+}
+
+function formatBatchResults(batch: BatchImageUpdateResponse): string {
+  const entries = Object.entries(batch);
+  const updates = entries.filter(([, r]) => r.hasUpdate);
+  const errors = entries.filter(([, r]) => r.error);
+
+  const lines = [
+    `Checked ${entries.length} images: ${updates.length} updates available\n`,
+  ];
+
+  for (const [ref, result] of entries) {
+    const status = result.error ? "[ERROR]" : result.hasUpdate ? "[UPDATE]" : "[OK]";
+    lines.push(`${status} ${ref}${result.error ? `: ${result.error}` : ""}`);
+  }
+
+  if (updates.length === 0 && errors.length === 0) {
+    lines.push("\nAll images are up to date.");
+  }
+
+  return lines.join("\n");
+}
+
 export function registerImageUpdateTools(server: McpServer, registry?: ToolRegistry): void {
   const register = moduleRegistrar(server, registry, "image-update");
 
@@ -34,11 +67,7 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
         { imageRef }
       );
 
-      const u = response.data;
-      if (u.updateAvailable) {
-        return `Update available for ${u.imageRef}!\n  Current: ${u.currentDigest?.substring(0, 12) || u.currentTag || "unknown"}\n  Latest: ${u.latestDigest?.substring(0, 12) || u.latestTag || "unknown"}`;
-      }
-      return `${u.imageRef} is up to date.`;
+      return formatUpdateCheck(imageRef, response.data);
     })
   );
 
@@ -64,11 +93,7 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
         `/environments/${environmentId}/image-updates/check/${imageId}`
       );
 
-      const u = response.data;
-      if (u.updateAvailable) {
-        return `Update available for ${u.imageRef}!\n  Current: ${u.currentDigest?.substring(0, 12) || u.currentTag || "unknown"}\n  Latest: ${u.latestDigest?.substring(0, 12) || u.latestTag || "unknown"}`;
-      }
-      return `${u.imageRef} is up to date.`;
+      return formatUpdateCheck(imageId, response.data);
     })
   );
 
@@ -77,7 +102,7 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
     "arcane_image_update_check_multiple",
     {
       title: "Check multiple image updates",
-      description: "Check for updates on multiple images at once",
+      description: "Check for updates on multiple images at once by image reference",
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -86,26 +111,16 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      imageIds: z.array(z.string()).describe("List of image IDs to check"),
+      imageRefs: z.array(z.string()).describe("List of image references to check (e.g., ['nginx:latest'])"),
     },
     },
-    toolHandler(async ({ environmentId, imageIds }, client) => {
+    toolHandler(async ({ environmentId, imageRefs }, client) => {
       const response = await client.post<{ data: BatchImageUpdateResponse }>(
-        `/environments/${environmentId}/image-updates/check-multiple`,
-        { imageIds }
+        `/environments/${environmentId}/image-updates/check-batch`,
+        { imageRefs }
       );
 
-      const batch = response.data;
-      const lines = [
-        `Checked ${batch.total} images: ${batch.updatesAvailable} updates available\n`,
-      ];
-
-      for (const result of batch.results) {
-        const status = result.updateAvailable ? "[UPDATE]" : "[OK]";
-        lines.push(`${status} ${result.imageRef} (${result.imageId})`);
-      }
-
-      return lines.join("\n");
+      return formatBatchResults(response.data || {});
     })
   );
 
@@ -127,25 +142,11 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{ data: BatchImageUpdateResponse }>(
-        `/environments/${environmentId}/image-updates/check-all`
+        `/environments/${environmentId}/image-updates/check-all`,
+        {}
       );
 
-      const batch = response.data;
-      const lines = [
-        `Checked ${batch.total} images: ${batch.updatesAvailable} updates available\n`,
-      ];
-
-      for (const result of batch.results) {
-        if (result.updateAvailable) {
-          lines.push(`[UPDATE] ${result.imageRef}`);
-        }
-      }
-
-      if (batch.updatesAvailable === 0) {
-        lines.push("All images are up to date.");
-      }
-
-      return lines.join("\n");
+      return formatBatchResults(response.data || {});
     })
   );
 
@@ -174,9 +175,9 @@ export function registerImageUpdateTools(server: McpServer, registry?: ToolRegis
       const lines = [
         `Image Update Summary:`,
         `  Total Images: ${s.totalImages}`,
-        `  Checked: ${s.checkedImages}`,
-        `  Updates Available: ${s.updatesAvailable}`,
-        `  Last Checked: ${s.lastCheckedAt || "Never"}`,
+        `  Updates Available: ${s.imagesWithUpdates}`,
+        `  Digest Updates: ${s.digestUpdates}`,
+        `  Check Errors: ${s.errorsCount}`,
       ];
 
       return lines.join("\n");

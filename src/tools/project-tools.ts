@@ -273,10 +273,15 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
       environmentId: z.string().describe("Environment ID"),
       projectId: z.string().describe("Project ID"),
       removeVolumes: z.boolean().optional().default(false).describe("Also remove volumes (DATA LOSS!)"),
+      removeFiles: z.boolean().optional().default(false).describe("Also remove the project files from disk"),
     },
     },
-    toolHandler(async ({ environmentId, projectId, removeVolumes }, client) => {
-      await client.delete(`/environments/${environmentId}/projects/${projectId}`, { removeVolumes });
+    toolHandler(async ({ environmentId, projectId, removeVolumes, removeFiles }, client) => {
+      await client.delete(
+        `/environments/${environmentId}/projects/${projectId}/destroy`,
+        undefined,
+        { removeVolumes, removeFiles }
+      );
       return `Project ${projectId} destroyed.${removeVolumes ? " Volumes were also removed." : ""}`;
     })
   );

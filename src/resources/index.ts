@@ -186,7 +186,7 @@ export function registerResources(server: McpServer): void {
 
       const lines: string[] = [];
       if (unconfigured) {
-        lines.push("Arcane MCP Server is currently exposing all 180 tools.");
+        lines.push("Arcane MCP Server is currently exposing all 174 tools.");
         lines.push("");
         lines.push("You can reduce context bloat by picking a preset:");
         lines.push("  - commonly-used — containers, images, projects, volumes, networks (~52 tools)");

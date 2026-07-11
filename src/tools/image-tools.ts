@@ -169,14 +169,14 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     },
     toolHandler(async ({ environmentId, all }, client) => {
-      const response = await client.post<{ imagesDeleted?: string[]; spaceReclaimed?: number }>(
+      const response = await client.post<{ data: { imagesDeleted?: string[]; spaceReclaimed?: number } }>(
         `/environments/${environmentId}/images/prune`,
-        { all }
+        { mode: all ? "all" : "dangling", dangling: !all }
       );
 
-      const deleted = response.imagesDeleted?.length || 0;
-      const space = response.spaceReclaimed
-        ? formatSizeMB(response.spaceReclaimed)
+      const deleted = response.data?.imagesDeleted?.length || 0;
+      const space = response.data?.spaceReclaimed
+        ? formatSizeMB(response.data.spaceReclaimed)
         : "unknown";
 
       return `Pruned ${deleted} images, reclaimed ${space} of disk space.`;
@@ -201,12 +201,16 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.get<{
-        total: number;
-        size: number;
-        danglingCount?: number;
+        data: {
+          totalImages: number;
+          totalImageSize: number;
+          imagesInuse: number;
+          imagesUnused: number;
+        };
       }>(`/environments/${environmentId}/images/counts`);
 
-      return `Image Statistics:\n  Total: ${response.total}\n  Total Size: ${formatSizeGB(response.size)}\n  Dangling: ${response.danglingCount || 0}`;
+      const c = response.data;
+      return `Image Statistics:\n  Total: ${c.totalImages}\n  Total Size: ${formatSizeGB(c.totalImageSize)}\n  In Use: ${c.imagesInuse}\n  Unused: ${c.imagesUnused}`;
     })
   );
 
@@ -228,16 +232,21 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     },
     toolHandler(async ({ environmentId, image }, client) => {
-      const response = await client.post<{
+      const response = await client.get<{
         data: {
           hasUpdate: boolean;
+          currentVersion?: string;
+          latestVersion?: string;
           currentDigest?: string;
           latestDigest?: string;
         };
-      }>(`/environments/${environmentId}/image-updates/check`, { image });
+      }>(`/environments/${environmentId}/image-updates/check`, { imageRef: image });
 
-      if (response.data.hasUpdate) {
-        return `Update available for ${image}!\n  Current: ${response.data.currentDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown"}\n  Latest: ${response.data.latestDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown"}`;
+      const u = response.data;
+      if (u.hasUpdate) {
+        const current = u.currentVersion || u.currentDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown";
+        const latest = u.latestVersion || u.latestDigest?.substring(0, DOCKER_DIGEST_PREFIX_LENGTH + DOCKER_SHORT_ID_LENGTH) || "unknown";
+        return `Update available for ${image}!\n  Current: ${current}\n  Latest: ${latest}`;
       } else {
         return `${image} is up to date.`;
       }
@@ -262,17 +271,17 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
     },
     toolHandler(async ({ environmentId }, client) => {
       const response = await client.post<{
-        data: Array<{ image: string; hasUpdate: boolean }>;
-      }>(`/environments/${environmentId}/image-updates/check-all`);
+        data: Record<string, { hasUpdate: boolean; error?: string }>;
+      }>(`/environments/${environmentId}/image-updates/check-all`, {});
 
-      const updates = response.data.filter(i => i.hasUpdate);
+      const updates = Object.entries(response.data || {}).filter(([, r]) => r.hasUpdate);
       if (updates.length === 0) {
         return "All images are up to date.";
       }
 
       const lines = [`Found ${updates.length} images with updates:\n`];
-      for (const img of updates) {
-        lines.push(`  - ${img.image}`);
+      for (const [imageRef] of updates) {
+        lines.push(`  - ${imageRef}`);
       }
 
       return lines.join("\n");
@@ -299,12 +308,14 @@ export function registerImageTools(server: McpServer, registry?: ToolRegistry): 
       const response = await client.get<{
         data: {
           totalImages: number;
-          updatesAvailable: number;
-          lastChecked?: string;
+          imagesWithUpdates: number;
+          digestUpdates: number;
+          errorsCount: number;
         };
       }>(`/environments/${environmentId}/image-updates/summary`);
 
-      return `Update Summary:\n  Total Images: ${response.data.totalImages}\n  Updates Available: ${response.data.updatesAvailable}\n  Last Checked: ${response.data.lastChecked || "Never"}`;
+      const s = response.data;
+      return `Update Summary:\n  Total Images: ${s.totalImages}\n  Updates Available: ${s.imagesWithUpdates}\n  Digest Updates: ${s.digestUpdates}\n  Check Errors: ${s.errorsCount}`;
     })
   );
 

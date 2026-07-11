@@ -348,8 +348,7 @@ export function registerVolumeTools(server: McpServer, registry?: ToolRegistry):
 
       const lines = [`Backups for ${volumeName}:\n`];
       for (const backup of response.data) {
-        lines.push(`${backup.filename}`);
-        lines.push(`    ID: ${backup.id}`);
+        lines.push(`Backup ${backup.id}`);
         lines.push(`    Size: ${formatSizeMB(backup.size)}`);
         lines.push(`    Created: ${backup.createdAt}`);
         lines.push("");
@@ -381,7 +380,7 @@ export function registerVolumeTools(server: McpServer, registry?: ToolRegistry):
         `/environments/${environmentId}/volumes/${volumeName}/backups`
       );
 
-      return `Backup created: ${response.data.filename}\n  ID: ${response.data.id}\n  Size: ${formatSizeMB(response.data.size)}`;
+      return `Backup created for volume ${volumeName}.\n  ID: ${response.data.id}\n  Size: ${formatSizeMB(response.data.size)}`;
     })
   );
 
@@ -399,12 +398,11 @@ export function registerVolumeTools(server: McpServer, registry?: ToolRegistry):
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      volumeName: z.string().describe("Volume name"),
       backupId: z.string().describe("Backup ID to delete"),
     },
     },
-    toolHandler(async ({ environmentId, volumeName, backupId }, client) => {
-      await client.delete(`/environments/${environmentId}/volumes/${volumeName}/backups/${backupId}`);
+    toolHandler(async ({ environmentId, backupId }, client) => {
+      await client.delete(`/environments/${environmentId}/volumes/backups/${backupId}`);
       return `Backup ${backupId} deleted.`;
     })
   );
@@ -447,27 +445,21 @@ export function registerVolumeTools(server: McpServer, registry?: ToolRegistry):
       },
       inputSchema: {
       environmentId: z.string().describe("Environment ID"),
-      volumeName: z.string().describe("Volume name"),
       backupId: z.string().describe("Backup ID"),
-      path: z.string().optional().default("/").describe("Path within the backup"),
     },
     },
-    toolHandler(async ({ environmentId, volumeName, backupId, path }, client) => {
-      if (path) validatePath(path);
-
-      const response = await client.get<{ data: FileEntry[] }>(
-        `/environments/${environmentId}/volumes/${volumeName}/backups/${backupId}/files`,
-        { path }
+    toolHandler(async ({ environmentId, backupId }, client) => {
+      const response = await client.get<{ data: string[] }>(
+        `/environments/${environmentId}/volumes/backups/${backupId}/files`
       );
 
       if (!response.data || response.data.length === 0) {
-        return `Path ${path} is empty or not found in backup.`;
+        return `Backup ${backupId} contains no files.`;
       }
 
-      const lines = [`Files in backup at ${path}:\n`];
-      for (const entry of response.data) {
-        const type = entry.isDir ? "DIR " : "FILE";
-        lines.push(`${type}  ${entry.name}`);
+      const lines = [`Files in backup ${backupId}:\n`];
+      for (const file of response.data) {
+        lines.push(`  ${file}`);
       }
 
       return lines.join("\n");

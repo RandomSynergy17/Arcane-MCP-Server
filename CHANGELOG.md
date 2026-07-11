@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-07-11
+
+Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec refreshed from v1.17.0). Tool count changes from 180 to **174**. No v1 compatibility shims — installs running Arcane v1.x should stay on `2.x` of this server.
+
+### Removed (endpoints gone in Arcane v2)
+- `arcane_dashboard_get_action_items` — `/dashboard/action-items` no longer exists.
+- `arcane_event_create` — `POST /events` no longer exists.
+- `arcane_updater_update_container` — `/updater/containers/{id}` was dropped; use `arcane_container_update` instead.
+- `arcane_notification_apprise_get` / `arcane_notification_apprise_update` / `arcane_notification_apprise_test` — Apprise config was replaced by the per-provider notification model.
+- `arcane_swarm_get_service_logs` — v2 streams all logs over WebSocket only (no REST endpoint).
+
+### Added
+- `arcane_notification_delete_settings` — delete a provider's notification settings (`DELETE /notifications/settings/{provider}`).
+
+### Changed (breaking, follows Arcane v2 API)
+- **Notifications** rebuilt on the provider model (`discord`, `email`, `telegram`, `signal`, `slack`, `ntfy`, `pushover`, `matrix`, `generic`): `get_settings` lists providers (or one via `provider`), `update_settings` takes `provider` + `enabled` + `config`, `test` now requires a `provider`.
+- **Vulnerabilities**: scan result moved to `GET .../images/{id}/vulnerabilities` (list moved to `/vulnerabilities/list`); `ignore` is now `POST /vulnerabilities/ignore` and requires `pkgName`; `unignore` takes the ignore-entry ID (shown by `list_ignored`); all displays use the v2 field names (`vulnerabilityId`, `pkgName`, severity summary object).
+- **Image updates**: check endpoints return `hasUpdate`/`currentVersion`/`latestVersion`; batch check uses `POST /image-updates/check-batch` with `imageRefs` (was `check-multiple` + `imageIds`); batch/check-all responses are keyed by image reference; summary reports `imagesWithUpdates`/`digestUpdates`/`errorsCount`.
+- **Updater**: `run` supports `forceUpdate` and `resourceIds`; result shape follows v2 (`checked`/`items` with resource-level results); `status` now reports in-flight container/project updates; history uses `AutoUpdateRecord` (resource + old/new image version maps).
+- **System**: docker info moved to `/system/docker/info` and returns Docker's native (PascalCase) fields; `system prune` sends the v2 per-resource body (`{containers, images, networks, volumes, buildCache}` with `mode`) and gained a `buildCache` option; image prune sends `mode`/`dangling` and reads the wrapped response.
+- **Projects**: destroy moved to `DELETE /projects/{id}/destroy` (body `removeVolumes`/`removeFiles`, new `removeFiles` param).
+- **Volume backups**: delete and file listing are no longer volume-scoped (`/volumes/backups/{backupId}[/files]`); backups no longer expose a `filename`; file listing returns plain paths.
+- **Templates**: global variables moved to `/environments/{id}/templates/variables` (now requires `environmentId`; PUT sends a `{key, value}` list).
+- **Users**: `role` was removed from create/update (v2 uses role assignments); tools accept `displayName`/`email`/`password` and display `isGlobalAdmin`.
+- **Settings**: environment settings return a key/value list; public settings are environment-scoped now (`environmentId` required).
+- **Events**: list filters by `severity` instead of `resourceType`; display uses `title`/`description`/`severity` (v2 dropped `message`).
+- **Environments**: deployment snippets moved to `/environments/{id}/deployment` (`dockerRun` field).
+- **Builds**: `arcane_build_image` follows the v2 `BuildRequest` (`contextDir` required, `dockerfileInline` for inline content, `tags`/`platforms` arrays, `noCache`); Git-URL builds were dropped by the API.
+- **Auth**: login/refresh responses are unwrapped from the `{success, data}` envelope.
+- `ArcaneClient.delete()` accepts an optional JSON body (needed for `projects/{id}/destroy`).
+- OpenAPI spec (`_docs/arcane_api_docs.{json,yaml}`) and generated types refreshed to v2.3.2.
+
+---
+
 ## [2.1.0] - 2026-04-19
 
 ### Added
