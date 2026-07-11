@@ -275,6 +275,38 @@ export function registerProjectTools(server: McpServer, registry?: ToolRegistry)
     })
   );
 
+  // arcane_project_update_services
+  register(
+    "arcane_project_update_services",
+    {
+      title: "Update project services",
+      description: "Pull the latest images and recreate services of a Compose project (all services when none are given). This is the dedicated update action (permission projects:update) — prefer it over manual pull + redeploy. Runs in the background; track progress with arcane_activity_list.",
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+      inputSchema: {
+      environmentId: z.string().describe("Environment ID"),
+      projectId: z.string().describe("Project ID"),
+      services: z.array(z.string()).optional().describe("Service names to update; omit to update all services"),
+    },
+    },
+    toolHandler(async ({ environmentId, projectId, services }, client) => {
+      client.postInBackground(
+        `/environments/${environmentId}/projects/${projectId}/update-services`,
+        services && services.length > 0 ? { services } : {}
+      );
+
+      const scope = services && services.length > 0 ? `services ${services.join(", ")}` : "all services";
+      return [
+        `Update of ${scope} in project ${projectId} started in the background (pulls latest images and recreates the services).`,
+        "Track progress with arcane_activity_list / arcane_activity_get; verify afterwards with arcane_project_get.",
+      ].join("\n");
+    })
+  );
+
   // arcane_project_destroy
   register(
     "arcane_project_destroy",

@@ -131,7 +131,7 @@ describe("resources", () => {
       const result = await handler(new URL("arcane://tools-config-notice"));
 
       const text = result.contents[0].text;
-      expect(text).toContain("176 tools");
+      expect(text).toContain("177 tools");
       expect(text).toContain("/arcane:configure");
       expect(text).toContain("commonly-used");
     });

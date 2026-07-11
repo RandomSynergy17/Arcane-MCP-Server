@@ -1,6 +1,6 @@
 # Arcane MCP Server
 
-MCP server for Docker management via the Arcane platform. 176 tools, 2 resources, 4 prompts, companion skill, Claude Code plugin.
+MCP server for Docker management via the Arcane platform. 177 tools, 2 resources, 4 prompts, companion skill, Claude Code plugin.
 
 **Not affiliated with the Arcane project.**
 
@@ -25,7 +25,7 @@ npm run update-api-spec  # Refresh OpenAPI spec from live instance
 - `src/config.ts` — Config from env vars > config file > defaults
 - `src/constants.ts` — All shared constants (timeouts, limits, versions)
 
-### Tools (176 across 26 modules in `src/tools/`)
+### Tools (177 across 26 modules in `src/tools/`)
 
 All tools use `server.registerTool()` with:
 - `title` — human-readable name
@@ -41,7 +41,7 @@ All tools use `server.registerTool()` with:
 3. Classify annotations: list/get = readOnly, delete/prune = destructive, external calls = openWorld
 4. Use `toolHandler()` wrapper — return a plain string, it handles the MCP response envelope
 5. Register in `src/tools/index.ts`
-6. Verify: `npm run build && grep -rc 'register("arcane_' dist/tools/*.js | awk -F: '{sum+=$2} END {print sum}'` (expect 176)
+6. Verify: `npm run build && grep -rc 'register("arcane_' dist/tools/*.js | awk -F: '{sum+=$2} END {print sum}'` (expect 177)
 
 ### Resources & Prompts
 

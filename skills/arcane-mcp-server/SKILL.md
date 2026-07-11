@@ -34,7 +34,7 @@ When the user says something general, map it to the right tool sequence:
 | "What's running?" / "Show me my containers" | `arcane_container_list` |
 | "How's everything looking?" / "Status" | `arcane_dashboard_get` |
 | "Deploy this compose file" | `arcane_project_create` then `arcane_project_up` |
-| "Update everything" | `arcane_project_list` with `updates: "has_update"`, then `arcane_updater_run` (with `dryRun: true` first) |
+| "Update everything" / "Update this stack" | `arcane_project_list` with `updates: "has_update"`, then `arcane_project_update_services` per project (needs only `projects:update`) |
 | "Which projects/stacks have updates?" | `arcane_project_list` with `updates: "has_update"` — shows exactly which image refs are outdated. Do NOT check images one by one |
 | "What needs attention?" | `arcane_dashboard_get` then `arcane_event_list` (severity filter) |
 | "Is anything vulnerable?" | `arcane_vulnerability_get_environment_summary` |
@@ -119,8 +119,8 @@ To see what has pending updates, use the cached results — do not check images 
 
 Then update:
 
-1. `arcane_updater_run` with `dryRun: true` — preview what would update
-2. `arcane_updater_run` — execute updates (optionally scoped via `resourceIds`)
+1. `arcane_project_update_services` — the dedicated per-project update (pull + recreate; runs in the background, track via `arcane_activity_list`). Preferred for compose projects — needs only the `projects:update` permission, unlike pull/redeploy (`projects:deploy`)
+2. Alternatively `arcane_updater_run` with `dryRun: true` first, then for real (optionally scoped via `resourceIds`)
 3. `arcane_updater_get_history` — review what was updated
 4. `arcane_container_set_auto_update` — enable hands-off updates per container
 

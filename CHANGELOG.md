@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.0] - 2026-07-11
 
-Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec refreshed from v1.17.0). Tool count changes from 180 to **176** (removed tools whose endpoints no longer exist, added notification-delete and activity-tracking tools). No v1 compatibility shims — installs running Arcane v1.x should stay on `2.x` of this server.
+Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec refreshed from v1.17.0). Tool count changes from 180 to **177** (removed tools whose endpoints no longer exist, added notification-delete and activity-tracking tools). No v1 compatibility shims — installs running Arcane v1.x should stay on `2.x` of this server.
 
 ### Removed (endpoints gone in Arcane v2)
 - `arcane_dashboard_get_action_items` — `/dashboard/action-items` no longer exists.
@@ -19,6 +19,7 @@ Compatibility release for **Arcane v2** (tested against v2.3.2, OpenAPI spec ref
 ### Added
 - `arcane_notification_delete_settings` — delete a provider's notification settings (`DELETE /notifications/settings/{provider}`).
 - `arcane_activity_list` / `arcane_activity_get` — track Arcane v2's background activities (image update checks, updater runs, prunes, scans), including progress and messages.
+- `arcane_project_update_services` — the dedicated project update action (`POST /projects/{id}/update-services`, permission `projects:update`): pulls latest images and recreates services (optionally a subset). Runs in the background; track via the activity tools. Preferred over manual pull + redeploy, which require `projects:deploy`.
 - `arcane_project_list` supports v2's `updates` filter (`has_update`, `up_to_date`, `error`, `unknown`) plus a `status` filter, and shows per-project update info including exactly which image refs are outdated (same data as the dashboard's update overview). `arcane_project_get` shows it too.
 
 ### Fixed (after testing against a live v2.3.2 instance)
