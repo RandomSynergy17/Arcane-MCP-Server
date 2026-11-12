@@ -8,7 +8,7 @@
  * Conforms to MCP Protocol Revision: 2025-11-25
  */
 
-import express, { type Request, type Response, type NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createSessionServer, preloadHttpTemplate } from "./server.js";
 import { getConfig, loadConfig } from "./config.js";
@@ -140,25 +140,12 @@ function validateProtocolVersion(req: Request, res: Response, next: NextFunction
   });
 }
 
-export async function startTcpServer(): Promise<void> {
-  loadConfig();
-  const config = getConfig();
-
-  const port = config.httpPort;
-  const host = config.httpHost;
-
-  logger.info(`Starting Arcane MCP Server (HTTP transport) on ${host}:${port}`);
-  logger.info(`MCP Protocol Version: ${MCP_PROTOCOL_VERSION}`);
-
-  // Eagerly initialise the shared template registry so the hot-reload watcher
-  // can attach at startup (before any client connects).
-  const registry = preloadHttpTemplate();
-  const configWatcher: ConfigWatcherHandle = startConfigWatcher(registry);
-
-  // Start session cleanup interval
-  cleanupInterval = setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL_MS);
-  logger.debug(`Session cleanup interval started (every ${SESSION_CLEANUP_INTERVAL_MS / 1000}s)`);
-
+/**
+ * Build the Express application serving the MCP Streamable HTTP endpoint.
+ * Exported so the HTTP transport can be exercised in tests without binding
+ * the configured port or installing signal handlers.
+ */
+export function createHttpApp(): Express {
   const app = express();
 
   // Parse JSON bodies
@@ -302,7 +289,9 @@ export async function startTcpServer(): Promise<void> {
           };
         }
 
-        await transport.handleRequest(req, res);
+        // express.json() has already consumed the request stream, so the
+        // parsed body must be handed to the transport explicitly.
+        await transport.handleRequest(req, res, req.body);
         return;
       }
 
@@ -329,6 +318,30 @@ export async function startTcpServer(): Promise<void> {
       });
     }
   });
+
+  return app;
+}
+
+export async function startTcpServer(): Promise<void> {
+  loadConfig();
+  const config = getConfig();
+
+  const port = config.httpPort;
+  const host = config.httpHost;
+
+  logger.info(`Starting Arcane MCP Server (HTTP transport) on ${host}:${port}`);
+  logger.info(`MCP Protocol Version: ${MCP_PROTOCOL_VERSION}`);
+
+  // Eagerly initialise the shared template registry so the hot-reload watcher
+  // can attach at startup (before any client connects).
+  const registry = preloadHttpTemplate();
+  const configWatcher: ConfigWatcherHandle = startConfigWatcher(registry);
+
+  // Start session cleanup interval
+  cleanupInterval = setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL_MS);
+  logger.debug(`Session cleanup interval started (every ${SESSION_CLEANUP_INTERVAL_MS / 1000}s)`);
+
+  const app = createHttpApp();
 
   // Start the server
   const server = app.listen(port, host, () => {
