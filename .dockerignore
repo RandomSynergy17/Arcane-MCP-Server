@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.github
+_docs
+assets
+*.md
+!README.md
+!CHANGELOG.md
